@@ -95,14 +95,14 @@ flowchart LR
 
 Alle Abmessungen leiten sich dynamisch von der montierten Schreibplatte ab:
 
-| Parameter | Symbol | Formel / Erklärung | Standardwert |
-| :--- | :--- | :--- | :--- |
-| **Plattenbreite (Sichtbreite)** | $B_{\text{visible}}$ | Lichte Weite der 3 sichtbaren Monate | $42{,}0\text{ cm}$ |
-| **Monatsspalten-Breite** | $B_{\text{month}}$ | $B_{\text{month}} = \frac{B_{\text{visible}}}{3}$ | $14{,}00\text{ cm}$ |
-| **Plattenhöhe (Sichthöhe)** | $H_{\text{visible}}$ | Papierbahnbreite (Zeilenraum) | $32{,}0\text{ cm}$ |
-| **Tageszeilen-Höhe** | $H_{\text{day}}$ | $H_{\text{day}} = \frac{H_{\text{visible}}}{32}$ *(1 Kopfzeile + 31 Tage)* | $1{,}00\text{ cm}$ |
-| **Wickel-Puffer** | $\text{Puffer}$ | Freiraum für Befestigung an den Rundstäben | je $15{,}0\text{ cm}$ |
-| **Gesamte Bannerlänge** | $L_{\text{total}}$ | $L_{\text{total}} = (14 \times B_{\text{month}}) + (2 \times \text{Puffer})$ | $226{,}00\text{ cm}$ |
+| Parameter                       | Symbol               | Formel / Erklärung                                                           | Standardwert          |
+| :------------------------------ | :------------------- | :--------------------------------------------------------------------------- | :-------------------- |
+| **Plattenbreite (Sichtbreite)** | $B_{\text{visible}}$ | Lichte Weite der 3 sichtbaren Monate                                         | $42{,}0\text{ cm}$    |
+| **Monatsspalten-Breite**        | $B_{\text{month}}$   | $B_{\text{month}} = \frac{B_{\text{visible}}}{3}$                            | $14{,}00\text{ cm}$   |
+| **Plattenhöhe (Sichthöhe)**     | $H_{\text{visible}}$ | Papierbahnbreite (Zeilenraum)                                                | $32{,}0\text{ cm}$    |
+| **Tageszeilen-Höhe**            | $H_{\text{day}}$     | $H_{\text{day}} = \frac{H_{\text{visible}}}{32}$ *(1 Kopfzeile + 31 Tage)*   | $1{,}00\text{ cm}$    |
+| **Wickel-Puffer**               | $\text{Puffer}$      | Freiraum für Befestigung an den Rundstäben                                   | je $15{,}0\text{ cm}$ |
+| **Gesamte Bannerlänge**         | $L_{\text{total}}$   | $L_{\text{total}} = (14 \times B_{\text{month}}) + (2 \times \text{Puffer})$ | $226{,}00\text{ cm}$  |
 
 > [!TIP]
 > **Optimale Schreibhöhe:** Wenn du als Sichthöhe **$32\text{ cm}$** wählst, ist jede Tageszeile **exakt $1{,}0\text{ cm}$ hoch**. Das bietet optimalen Platz für handschriftliche Termine.
@@ -150,16 +150,9 @@ Alle Abmessungen leiten sich dynamisch von der montierten Schreibplatte ab:
    * Bleibt auch aufgerollt flexibel und baut nicht zu dick auf den Walzen auf.
 
 ---
-
+ 
 ## 💻 Verwendung
 
-Keine Installation, kein Node.js, kein Webserver erforderlich!
+Keine Installation und kein Node.js erforderlich. Du kannst die Anwendung lokal durch Öffnen von [index.html](./index.html) in einem modernen Webbrowser (Chrome, Firefox, Safari, Edge) verwenden oder sie über GitHub Pages aufrufen.
 
-1. Repository klonen oder herunterladen:
-   ```bash
-   git clone https://github.com/your-username/CronoScroll.git
-   cd CronoScroll
-   ```
-2. Datei [index.html](file:///Users/lasarkolja/Code/CronoScroll/index.html) per Doppelklick in einem modernen Webbrowser (Chrome, Firefox, Safari, Edge) öffnen.
-3. Maße deiner Schreibplatte eintragen, Design anpassen und auf **„Export Plotter PDF“** klicken.
-4. Die fertige PDF-Datei an einen Rollenplotter oder Druckdienstleister senden.
+Maße deiner Schreibplatte eintragen, Design anpassen und auf **„Plotter-PDF exportieren“** klicken. Die fertige PDF-Datei kannst du an einen Rollenplotter oder Druckdienstleister senden.
