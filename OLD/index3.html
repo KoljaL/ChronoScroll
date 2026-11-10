@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volumen Scroll Calendar Generator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- jsPDF CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        /* Custom scrollbar styling for the long preview banner */
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Header Navigation -->
+    <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-xs shrink-0">
+        <div class="flex items-center space-x-3">
+            <span class="text-2xl">📜</span>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-slate-800">Volumen Scroll Calendar</h1>
+                <p class="text-xs text-slate-500 font-medium">Continuous 14-Month Banner Generator for Endless Plotters</p>
+            </div>
+        </div>
+        <button id="btn-export-pdf" class="bg-rose-600 hover:bg-rose-700 text-white font-semibold px-5 py-2.5 rounded-lg shadow-sm cursor-pointer transition flex items-center space-x-2">
+            <span>🖨️</span>
+            <span>Export Plotter PDF</span>
+        </button>
+    </header>
+
+    <!-- Main Content Layout Split -->
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- Left Sidebar: Controls -->
+        <aside class="w-80 bg-white border-r border-slate-200 p-6 overflow-y-auto shrink-0 flex flex-col space-y-6 custom-scrollbar">
+            
+            <!-- Target Year Configuration -->
+            <section class="space-y-2">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Target Calendar Year</label>
+                <input type="number" id="input-year" value="2027" min="1900" max="2100" class="w-full px-3 py-2 border border-slate-300 rounded-md shadow-xs focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent font-medium">
+                <p class="text-xxs text-slate-400">Generates 14 continuous months (Dec prev. year to Jan next year).</p>
+            </section>
+
+            <!-- Physical Geometric Control Center -->
+            <section class="space-y-4">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-100 pb-1">Viewport Dimensions</h3>
+                
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700">Visible Height ($H_{visible}$)</label>
+                    <div class="relative flex items-center">
+                        <input type="number" id="input-h-visible" value="30.0" step="0.1" min="10" max="200" class="w-full px-3 py-2 border border-slate-300 rounded-md pr-10 focus:outline-none focus:ring-2 focus:ring-rose-500 font-mono text-sm">
+                        <span class="absolute right-3 text-xs text-slate-400 font-medium">cm</span>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700">3-Month Width ($B_{visible}$)</label>
+                    <div class="relative flex items-center">
+                        <input type="number" id="input-b-visible" value="42.4" step="0.1" min="10" max="500" class="w-full px-3 py-2 border border-slate-300 rounded-md pr-10 focus:outline-none focus:ring-2 focus:ring-rose-500 font-mono text-sm">
+                        <span class="absolute right-3 text-xs text-slate-400 font-medium">cm</span>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700">Roll Margins / Wickel-Puffer</label>
+                    <div class="relative flex items-center">
+                        <input type="number" id="input-margin" value="15.0" step="0.1" min="0" max="100" class="w-full px-3 py-2 border border-slate-300 rounded-md pr-10 focus:outline-none focus:ring-2 focus:ring-rose-500 font-mono text-sm">
+                        <span class="absolute right-3 text-xs text-slate-400 font-medium">cm</span>
+                    </div>
+                    <p class="text-xxs text-slate-400">Blank lead-in & lead-out space for mounting on wooden scrolls.</p>
+                </div>
+
+                <!-- Math Engine Output Panel -->
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2 text-xs">
+                    <span class="block font-bold text-slate-600 uppercase tracking-xxs text-center border-b border-slate-200 pb-1">Automatic Math Engine</span>
+                    <div class="flex justify-between font-mono"><span class="text-slate-500">Month Width ($B_{month}$):</span><span id="math-b-month" class="font-bold text-slate-700">14.13 cm</span></div>
+                    <div class="flex justify-between font-mono"><span class="text-slate-500">Day Row Height ($H_{day}$):</span><span id="math-h-day" class="font-bold text-slate-700">0.938 cm</span></div>
+                    <div class="flex justify-between border-t border-slate-200 pt-1 font-mono font-bold"><span class="text-slate-600">Total Print Length ($L_{total}$):</span><span id="math-l-total" class="text-rose-600">227.87 cm</span></div>
+                </div>
+            </section>
+
+            <!-- Typography Settings -->
+            <section class="space-y-3">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-100 pb-1">Typography</h3>
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-slate-700">Font Family</label>
+                    <select id="select-font" class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-rose-500">
+                        <option value="helvetica">Sans-Serif (Helvetica)</option>
+                        <option value="times">Serif (Times New Roman)</option>
+                        <option value="courier">Monospace (Courier)</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xxs font-medium text-slate-500">Header Scale</label>
+                        <input type="number" id="input-scale-header" value="1.0" step="0.1" min="0.5" max="3" class="w-full px-2 py-1 border border-slate-300 rounded-md font-mono text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xxs font-medium text-slate-500">Day Scale</label>
+                        <input type="number" id="input-scale-day" value="1.0" step="0.1" min="0.5" max="3" class="w-full px-2 py-1 border border-slate-300 rounded-md font-mono text-sm">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Vector Style Customizer -->
+            <section class="space-y-3">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-100 pb-1">Vector Weights & Colors</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xxs font-medium text-slate-500">Grid Line (mm)</label>
+                        <input type="number" id="input-weight-grid" value="0.2" step="0.05" min="0.05" max="2" class="w-full px-2 py-1 border border-slate-300 rounded-md font-mono text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xxs font-medium text-slate-500">Border Line (mm)</label>
+                        <input type="number" id="input-weight-border" value="0.6" step="0.05" min="0.05" max="5" class="w-full px-2 py-1 border border-slate-300 rounded-md font-mono text-sm">
+                    </div>
+                </div>
+                <div class="space-y-2 pt-1">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs text-slate-700">Grid Color</label>
+                        <input type="color" id="color-grid" value="#cbd5e1" class="w-8 h-6 p-0 border border-slate-300 rounded-md cursor-pointer">
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs text-slate-700">Text Color</label>
+                        <input type="color" id="color-text" value="#0f172a" class="w-8 h-6 p-0 border border-slate-300 rounded-md cursor-pointer">
+                    </div>
+                    <div class="flex items-center justify-between border-t border-slate-100 pt-2">
+                        <label class="text-xs font-medium text-slate-700">Weekend Fill</label>
+                        <input type="color" id="color-wknd-fill" value="#f1f5f9" class="w-8 h-6 p-0 border border-slate-300 rounded-md cursor-pointer">
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-medium text-slate-700">Weekend Text</label>
+                        <input type="color" id="color-wknd-text" value="#e11d48" class="w-8 h-6 p-0 border border-slate-300 rounded-md cursor-pointer">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Custom Events Configuration -->
+            <section class="space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-1">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Custom Events / Vacations</h3>
+                    <button id="btn-add-event" class="text-xxs font-semibold bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 px-2 py-0.5 rounded-md cursor-pointer transition">Add Event</button>
+                </div>
+                <div id="events-list-container" class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar pr-1">
+                    <!-- Dynamic Event Items Rendered Here -->
+                </div>
+                <p class="text-xxs text-slate-400">Highlights distinct custom date ranges natively across the vectors.</p>
+            </section>
+
+            <!-- Design Presets via LocalStorage -->
+            <section class="space-y-3 pt-2 border-t border-slate-200 mt-auto">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Design Presets</h3>
+                <div class="flex space-x-2">
+                    <input type="text" id="input-preset-name" placeholder="Layout Name..." class="w-full px-2 py-1.5 border border-slate-300 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-rose-500">
+                    <button id="btn-save-preset" class="bg-slate-800 hover:bg-slate-900 text-white font-medium text-xs px-3 rounded-md cursor-pointer transition">Save</button>
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-xxs font-medium text-slate-500">Saved Layouts</label>
+                    <select id="select-preset" class="w-full px-2 py-1.5 border border-slate-300 rounded-md text-xs bg-white focus:outline-none">
+                        <option value="">-- Load a Saved Preset --</option>
+                    </select>
+                </div>
+            </section>
+
+        </aside>
+
+        <!-- Right Side: Live Banner Continuous Viewport Workspace -->
+        <main class="flex-1 bg-slate-100 p-8 flex flex-col items-center justify-center overflow-hidden relative">
+            
+            <!-- Canvas Canvas Utilities bar -->
+            <div class="w-full max-w-6xl mb-3 flex items-center justify-between text-xs text-slate-500 font-medium">
+                <div class="flex items-center space-x-4">
+                    <span>Live Banner Continuous Preview</span>
+                    <div class="flex items-center space-x-1 bg-white border border-slate-200 rounded-md px-2 py-0.5 shadow-2xs">
+                        <span id="canvas-status-tag" class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                        <span id="canvas-status-text" class="text-slate-600 font-mono text-xxs">Vector Engine Ready</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span id="canvas-dimensions-label" class="bg-slate-200 px-2 py-0.5 rounded font-mono text-slate-700">0.0 cm × 0.0 cm</span>
+                    <button id="btn-zoom-fit" class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-3 py-1 rounded-md shadow-2xs cursor-pointer transition font-medium">Fit All</button>
+                </div>
+            </div>
+
+            <!-- Viewport Workspace Box container -->
+            <div id="canvas-viewport-container" class="w-full max-w-6xl flex-1 bg-white border border-slate-200 rounded-xl shadow-xs overflow-auto flex items-center justify-start p-12 custom-scrollbar relative">
+                
+                <!-- The Real Interactive Continuous Vector Preview Map Layout -->
+                <div id="scroll-calendar-canvas" class="relative bg-white border border-slate-300 select-none shadow-md shrink-0 origin-left">
+                    <!-- Complete vector lines grids and elements rendered via runtime JavaScript here -->
+                </div>
+
+            </div>
+
+            <!-- Descriptive Footer instructions -->
+            <div class="mt-3 text-xxs text-slate-400 font-medium tracking-wide text-center">
+                💡 Tip: Use your mouse wheel or trackpad horizontally to examine the absolute linear continuity of the entire banner layout.
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Application Engine Implementation -->
+    <script>
+        (function() {
+            // Global State Engine
+            const state = {
+                year: 2027,
+                hVisible: 30.0,
+                bVisible: 42.4,
+                margin: 15.0,
+                fontFamily: 'helvetica',
+                scaleHeader: 1.0,
+                scaleDay: 1.0,
+                weightGrid: 0.2,
+                weightBorder: 0.6,
+                colorGrid: '#cbd5e1',
+                colorText: '#0f172a',
+                colorWkndFill: '#f1f5f9',
+                colorWkndText: '#e11d48',
+                events: []
+            };
+
+            // Dynamic derived measurements parameters calculation cache
+            let computed = {
+                bMonth: 0,
+                hDay: 0,
+                lTotal: 0,
+                monthsData: []
+            };
+
+            // DOM Selectors
+            const inputYear = document.getElementById('input-year');
+            const inputHVisible = document.getElementById('input-h-visible');
+            const inputBVisible = document.getElementById('input-b-visible');
+            const inputMargin = document.getElementById('input-margin');
+            const selectFont = document.getElementById('select-font');
+            const inputScaleHeader = document.getElementById('input-scale-header');
+            const inputScaleDay = document.getElementById('input-scale-day');
+            const inputWeightGrid = document.getElementById('input-weight-grid');
+            const inputWeightBorder = document.getElementById('input-weight-border');
+            const colorGrid = document.getElementById('color-grid');
+            const colorText = document.getElementById('color-text');
+            const colorWkndFill = document.getElementById('color-wknd-fill');
+            const colorWkndText = document.getElementById('color-wknd-text');
+            
+            const mathBMonth = document.getElementById('math-b-month');
+            const mathHDay = document.getElementById('math-h-day');
+            const mathLTotal = document.getElementById('math-l-total');
+            const dimensionsLabel = document.getElementById('canvas-dimensions-label');
+            
+            const btnAddEvent = document.getElementById('btn-add-event');
+            const eventsContainer = document.getElementById('events-list-container');
+            const btnSavePreset = document.getElementById('btn-save-preset');
+            const inputPresetName = document.getElementById('input-preset-name');
+            const selectPreset = document.getElementById('select-preset');
+            const btnZoomFit = document.getElementById('btn-zoom-fit');
+            const btnExportPdf = document.getElementById('btn-export-pdf');
+            const previewCanvas = document.getElementById('scroll-calendar-canvas');
+            const viewportContainer = document.getElementById('canvas-viewport-container');
+
+            // Native German Month Names dictionary map matrix
+            const GERMAN_MONTHS = [
+                "Januar", "Februar", "März", "April", "Mai", "Juni",
+                "Juli", "August", "September", "Oktober", "November", "Dezember"
+            ];
+
+            const GERMAN_WEEKDAYS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+
+            // Init Engine Configuration Hook
+            function init() {
+                loadPresetsDropdown();
+                attachEventListeners();
+                readInputs();
+                recalculateCalendarData();
+                renderPreview();
+                zoomToFit();
+            }
+
+            // Sync structural inputs data to programmatic state memory object
+            function readInputs() {
+                state.year = parseInt(inputYear.value) || 2027;
+                state.hVisible = parseFloat(inputHVisible.value) || 30.0;
+                state.bVisible = parseFloat(inputBVisible.value) || 42.4;
+                state.margin = parseFloat(inputMargin.value) ?? 15.0;
+                state.fontFamily = selectFont.value;
+                state.scaleHeader = parseFloat(inputScaleHeader.value) || 1.0;
+                state.scaleDay = parseFloat(inputScaleDay.value) || 1.0;
+                state.weightGrid = parseFloat(inputWeightGrid.value) || 0.2;
+                state.weightBorder = parseFloat(inputWeightBorder.value) || 0.6;
+                state.colorGrid = colorGrid.value;
+                state.colorText = colorText.value;
+                state.colorWkndFill = colorWkndFill.value;
+                state.colorWkndText = colorWkndText.value;
+            }
+
+            // Math engine execution loop context
+            function recalculateCalendarData() {
+                // Determine sizes in cm
+                computed.bMonth = state.bVisible / 3;
+                computed.hDay = state.hVisible / 32; // 31 days + 1 month name row
+                computed.lTotal = (14 * computed.bMonth) + (2 * state.margin);
+
+                // Update UI read-only panels text labels
+                mathBMonth.textContent = `${computed.bMonth.toFixed(2)} cm`;
+                mathHDay.textContent = `${computed.hDay.toFixed(3)} cm`;
+                mathLTotal.textContent = `${computed.lTotal.toFixed(2)} cm (${(computed.lTotal/100).toFixed(2)} m)`;
+                dimensionsLabel.textContent = `${computed.lTotal.toFixed(1)} cm × ${state.hVisible.toFixed(1)} cm`;
+
+                // Re-build 14-month date structures matrix array sequentially
+                computed.monthsData = [];
+                
+                // Build range: Dec (Year - 1), Jan - Dec (Year), Jan (Year + 1)
+                const monthSequence = [
+                    { y: state.year - 1, m: 11 }, // Dec
+                    ...Array.from({length: 12}, (_, i) => ({ y: state.year, m: i })),
+                    { y: state.year + 1, m: 0 }   // Jan
+                ];
+
+                monthSequence.forEach(target => {
+                    const monthDays = new Date(target.y, target.m + 1, 0).getDate();
+                    const daysArray = [];
+
+                    for (let d = 1; d <= 31; d++) {
+                        if (d <= monthDays) {
+                            const dateObj = new Date(target.y, target.m, d);
+                            const dayOfWeek = dateObj.getDay(); // 0 = Sunday, 6 = Saturday
+                            const dateString = `${target.y}-${String(target.m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                            
+                            // Check match across custom defined event layers
+                            let matchedEvent = null;
+                            for (let ev of state.events) {
+                                if (dateString >= ev.start && dateString <= ev.end) {
+                                    matchedEvent = ev;
+                                    break;
+                                }
+                            }
+
+                            daysArray.push({
+                                exists: true,
+                                dayNum: d,
+                                weekdayLabel: GERMAN_WEEKDAYS[dayOfWeek],
+                                isWeekend: (dayOfWeek === 0 || dayOfWeek === 6),
+                                dateString: dateString,
+                                event: matchedEvent
+                            });
+                        } else {
+                            // Blank filler box for months shorter than 31 days
+                            daysArray.push({ exists: false });
+                        }
+                    }
+
+                    computed.monthsData.push({
+                        label: `${GERMAN_MONTHS[target.m]} ${target.y}`,
+                        year: target.y,
+                        monthIdx: target.m,
+                        days: daysArray
+                    });
+                });
+            }
+
+            // High precision DOM-based preview rendering module
+            function renderPreview() {
+                // Apply pixel scale configuration mapping for screen space
+                const scale = 4.0; // 1cm = 4px inside structural space map
+                
+                previewCanvas.innerHTML = '';
+                previewCanvas.style.width = `${computed.lTotal * scale}px`;
+                previewCanvas.style.height = `${state.hVisible * scale}px`;
+
+                // Render Left Lead-In Margin Puffer Block
+                if (state.margin > 0) {
+                    const leadIn = document.createElement('div');
+                    leadIn.style.position = 'absolute';
+                    leadIn.style.left = '0px';
+                    leadIn.style.top = '0px';
+                    leadIn.style.width = `${state.margin * scale}px`;
+                    leadIn.style.height = '100%';
+                    leadIn.style.borderRight = `${state.weightBorder * (scale / 10)}px solid ${state.colorText}`;
+                    leadIn.className = 'bg-slate-100/50 flex items-center justify-center text-slate-300 font-mono text-[9px] uppercase tracking-widest select-none';
+                    leadIn.innerHTML = '<span class="rotate-270 transform inline-block">Wickel-Puffer</span>';
+                    previewCanvas.appendChild(leadIn);
+                }
+
+                // Render 14 Month Vectors Columns Block
+                let currentLeftCm = state.margin;
+
+                computed.monthsData.forEach((month, mIdx) => {
+                    const monthCol = document.createElement('div');
+                    monthCol.style.position = 'absolute';
+                    monthCol.style.left = `${currentLeftCm * scale}px`;
+                    monthCol.style.top = '0px';
+                    monthCol.style.width = `${computed.bMonth * scale}px`;
+                    monthCol.style.height = '100%';
+                    monthCol.style.borderRight = `${state.weightGrid * (scale / 10)}px solid ${state.colorGrid}`;
+                    monthCol.style.boxSizing = 'border-box';
+                    monthCol.className = 'flex flex-col';
+
+                    // Row height inside structural calculations mapping block
+                    const rHeightPx = computed.hDay * scale;
+
+                    // Header Row Cell Rendering
+                    const headerCell = document.createElement('div');
+                    headerCell.style.height = `${rHeightPx}px`;
+                    headerCell.style.borderBottom = `${state.weightBorder * (scale / 10)}px solid ${state.colorText}`;
+                    headerCell.style.color = state.colorText;
+                    headerCell.style.fontSize = `${13 * state.scaleHeader}px`;
+                    headerCell.className = `flex items-center justify-center font-bold tracking-wide uppercase px-2 shrink-0 truncate ${state.fontFamily === 'times' ? 'font-serif' : state.fontFamily === 'courier' ? 'font-mono' : 'font-sans'}`;
+                    headerCell.textContent = month.label;
+                    monthCol.appendChild(headerCell);
+
+                    // Render 31 Day Rows Blocks Sequential Loop
+                    month.days.forEach((day) => {
+                        const dayRow = document.createElement('div');
+                        dayRow.style.height = `${rHeightPx}px`;
+                        dayRow.style.borderBottom = `${state.weightGrid * (scale / 10)}px solid ${state.colorGrid}`;
+                        dayRow.style.boxSizing = 'border-box';
+                        dayRow.className = `flex items-center px-3 text-left w-full text-[11px] shrink-0 font-medium ${state.fontFamily === 'times' ? 'font-serif' : state.fontFamily === 'courier' ? 'font-mono' : 'font-sans'}`;
+                        
+                        if (day.exists) {
+                            // Custom active styling selectors resolution sequence tree
+                            if (day.event) {
+                                dayRow.style.backgroundColor = day.event.color;
+                                dayRow.style.color = '#ffffff';
+                            } else if (day.isWeekend) {
+                                dayRow.style.backgroundColor = state.colorWkndFill;
+                                dayRow.style.color = state.colorWkndText;
+                                dayRow.classList.add('font-bold');
+                            } else {
+                                dayRow.style.color = state.colorText;
+                            }
+
+                            // Dynamic inner element contents text node insertion
+                            const labelSpan = document.createElement('span');
+                            labelSpan.className = 'w-10 font-mono tracking-tighter opacity-80 shrink-0';
+                            labelSpan.textContent = `${String(day.dayNum).padStart(2, '0')} ${day.weekdayLabel}`;
+                            dayRow.appendChild(labelSpan);
+
+                            if (day.event) {
+                                const evSpan = document.createElement('span');
+                                evSpan.className = 'ml-2 truncate font-bold text-[10px] tracking-wide uppercase opacity-90';
+                                evSpan.textContent = day.event.title;
+                                dayRow.appendChild(evSpan);
+                            }
+                        } else {
+                            // Empty filler slot node styles overrides execution path
+                            dayRow.className = 'bg-slate-50/40 shrink-0';
+                            dayRow.style.height = `${rHeightPx}px`;
+                            dayRow.style.borderBottom = `${state.weightGrid * (scale / 10)}px solid ${state.colorGrid}`;
+                        }
+
+                        monthCol.appendChild(dayRow);
+                    });
+
+                    previewCanvas.appendChild(monthCol);
+                    currentLeftCm += computed.bMonth;
+                });
+
+                // Overwrite last column line border definition to enforce strong envelope limits bounding box
+                const rightBorderPos = (computed.lTotal - state.margin) * scale;
+                const outerBorderFix = document.createElement('div');
+                outerBorderFix.style.position = 'absolute';
+                outerBorderFix.style.left = `${rightBorderPos}px`;
+                outerBorderFix.style.top = '0px';
+                outerBorderFix.style.width = '0px';
+                outerBorderFix.style.height = '100%';
+                outerBorderFix.style.borderLeft = `${state.weightBorder * (scale / 10)}px solid ${state.colorText}`;
+                previewCanvas.appendChild(outerBorderFix);
+
+                // Render Right Lead-Out Margin Puffer Block
+                if (state.margin > 0) {
+                    const leadOut = document.createElement('div');
+                    leadOut.style.position = 'absolute';
+                    leadOut.style.left = `${rightBorderPos}px`;
+                    leadOut.style.top = '0px';
+                    leadOut.style.width = `${state.margin * scale}px`;
+                    leadOut.style.height = '100%';
+                    leadOut.className = 'bg-slate-100/50 flex items-center justify-center text-slate-300 font-mono text-[9px] uppercase tracking-widest select-none';
+                    leadOut.innerHTML = '<span class="rotate-90 transform inline-block">Wickel-Puffer</span>';
+                    previewCanvas.appendChild(leadOut);
+                }
+
+                // Append Geometric Physical Overlay Indicator Frame Box
+                renderViewportOverlayBox(scale);
+            }
+
+            // Physically maps and highlights the exact 3-Month Viewport size frame directly inside screen preview space
+            function renderViewportOverlayBox(scale) {
+                const overlay = document.createElement('div');
+                overlay.id = 'canvas-physical-overlay';
+                overlay.style.position = 'absolute';
+                overlay.style.top = '-4px';
+                overlay.style.height = `calc(100% + 8px)`;
+                overlay.style.width = `${state.bVisible * scale}px`;
+                overlay.style.border = '3px dashed #ef4444';
+                overlay.style.borderRadius = '6px';
+                overlay.style.pointerEvents = 'none';
+                overlay.style.zIndex = '50';
+                overlay.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.15)';
+                
+                // Position centered over the first 3 core operational columns for immediate initialization layout structure
+                overlay.style.left = `${state.margin * scale}px`;
+
+                // Add an indicator label tag to notify layout parameters validation mapping values
+                const indicatorTag = document.createElement('div');
+                indicatorTag.className = 'bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded absolute -top-5 left-0 shadow-xs tracking-wider uppercase pointer-events-auto cursor-help';
+                indicatorTag.textContent = `Sichtfenster: ${state.bVisible} cm`;
+                indicatorTag.title = "Dieser Bereich ist später gleichzeitig durch die Rahmenöffnung Ihrer Holzkonstruktion sichtbar.";
+                overlay.appendChild(indicatorTag);
+
+                previewCanvas.appendChild(overlay);
+            }
+
+            // Automatic zoom scaling logic calculation to fit large custom banner safely on browser screens canvas
+            function zoomToFit() {
+                const containerWidth = viewportContainer.clientWidth - 96; // Adjust padding margins safety bounding spaces
+                const canvasWidth = computed.lTotal * 4.0; // Base baseline pixel mapping metric multiplier
+                
+                const ratio = containerWidth / canvasWidth;
+                const finalZoom = Math.min(Math.max(ratio, 0.05), 1.5); // Bound viewport scale values safety protection metrics
+                
+                previewCanvas.style.transform = `scale(${finalZoom})`;
+            }
+
+            // Core Input Observers Router Binding Registry
+            function attachEventListeners() {
+                const interactiveInputs = [
+                    inputYear, inputHVisible, inputBVisible, inputMargin, 
+                    selectFont, inputScaleHeader, inputScaleDay, 
+                    inputWeightGrid, inputWeightBorder, colorGrid, colorText,
+                    colorWkndFill, colorWkndText
+                ];
+
+                interactiveInputs.forEach(element => {
+                    element.addEventListener('input', () => {
+                        readInputs();
+                        recalculateCalendarData();
+                        renderPreview();
+                    });
+                });
+
+                window.addEventListener('resize', zoomToFit);
+                btnZoomFit.addEventListener('click', zoomToFit);
+                
+                btnAddEvent.addEventListener('click', () => addEventRowUI());
+                btnSavePreset.addEventListener('click', savePresetToStorage);
+                selectPreset.addEventListener('change', loadPresetFromStorage);
+                btnExportPdf.addEventListener('click', generatePlotterVectorPDF);
+            }
+
+            // Management layer block for tracking customs events configurations allocations UI elements rows
+            function addEventRowUI(startVal = '', endVal = '', titleVal = '', colorVal = '#e11d48', idVal = null) {
+                const evId = idVal || 'ev-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
+                
+                const row = document.createElement('div');
+                row.id = evId;
+                row.className = 'bg-slate-50 border border-slate-200 rounded-lg p-2.5 space-y-2 relative shadow-2xs transition hover:border-slate-300';
+                
+                row.innerHTML = `
+                    <button class="absolute top-1 right-2 text-slate-400 hover:text-rose-500 font-bold text-xs cursor-pointer transition removal-trigger-btn">×</button>
+                    <input type="text" placeholder="Urlaub / Feiertag..." value="${titleVal}" class="w-full bg-white border border-slate-300 rounded px-2 py-0.5 text-xxs font-semibold focus:outline-none focus:ring-1 focus:ring-rose-500 text-slate-700 ev-title-input">
+                    <div class="grid grid-cols-2 gap-1.5 text-xxs font-mono text-slate-500">
+                        <div>
+                            <span class="block tracking-xxs font-sans font-medium text-slate-400 uppercase">Start:</span>
+                            <input type="date" value="${startVal}" class="w-full border border-slate-300 rounded px-1 py-0.5 bg-white focus:outline-none ev-start-input">
+                        </div>
+                        <div>
+                            <span class="block tracking-xxs font-sans font-medium text-slate-400 uppercase">Ende:</span>
+                            <input type="date" value="${endVal}" class="w-full border border-slate-300 rounded px-1 py-0.5 bg-white focus:outline-none ev-end-input">
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-xxs pt-1">
+                        <span class="text-slate-400 font-medium">Highlight Color:</span>
+                        <input type="color" value="${colorVal}" class="w-6 h-4 p-0 border border-slate-300 rounded cursor-pointer ev-color-input">
+                    </div>
+                `;
+
+                // Wire internal tracking hooks for interactive subelements components instances
+                row.querySelector('.removal-trigger-btn').addEventListener('click', () => {
+                    row.remove();
+                    syncEventsStateData();
+                });
+
+                const dataInputs = row.querySelectorAll('.ev-title-input, .ev-start-input, .ev-end-input, .ev-color-input');
+                dataInputs.forEach(i => i.addEventListener('input', syncEventsStateData));
+
+                eventsContainer.appendChild(row);
+                if(!idVal) syncEventsStateData(); // Trigger re-sync pass on newly instantiated blank object layers tracking lists
+            }
+
+            // Syncs the DOM dynamic event rows data arrays context directly into system structural memory definitions state
+            function syncEventsStateData() {
+                state.events = [];
+                const rows = eventsContainer.querySelectorAll('[id^="ev-"]');
+                
+                rows.forEach(r => {
+                    const title = r.querySelector('.ev-title-input').value.trim();
+                    const start = r.querySelector('.ev-start-input').value;
+                    const end = r.querySelector('.ev-end-input').value;
+                    const color = r.querySelector('.ev-color-input').value;
+
+                    if (title && start && end) {
+                        state.events.push({ id: r.id, title, start, end, color });
+                    }
+                });
+
+                recalculateCalendarData();
+                renderPreview();
+            }
+
+            // LocalStorage Core Driver Interop Modules Interface Engine
+            function savePresetToStorage() {
+                const name = inputPresetName.value.trim();
+                if (!name) {
+                    alert("Bitte geben Sie zuerst einen Namen für das Layout-Preset ein.");
+                    return;
+                }
+
+                const presets = JSON.parse(localStorage.getItem('volumen_scroll_presets') || '{}');
+                presets[name] = {
+                    year: state.year, hVisible: state.hVisible, bVisible: state.bVisible, margin: state.margin,
+                    fontFamily: state.fontFamily, scaleHeader: state.scaleHeader, scaleDay: state.scaleDay,
+                    weightGrid: state.weightGrid, weightBorder: state.weightBorder, colorGrid: state.colorGrid,
+                    colorText: state.colorText, colorWkndFill: state.colorWkndFill, colorWkndText: state.colorWkndText,
+                    events: state.events
+                };
+
+                localStorage.setItem('volumen_scroll_presets', JSON.stringify(presets));
+                inputPresetName.value = '';
+                loadPresetsDropdown(name);
+                alert(`Layout-Preset "${name}" erfolgreich im Browser gespeichert.`);
+            }
+
+            function loadPresetsDropdown(selectedName = '') {
+                selectPreset.innerHTML = '<option value="">-- Load a Saved Preset --</option>';
+                const presets = JSON.parse(localStorage.getItem('volumen_scroll_presets') || '{}');
+                
+                Object.keys(presets).forEach(k => {
+                    const opt = document.createElement('option');
+                    opt.value = k;
+                    opt.textContent = k;
+                    if (k === selectedName) opt.selected = true;
+                    selectPreset.appendChild(opt);
+                });
+            }
+
+            function loadPresetFromStorage() {
+                const name = selectPreset.value;
+                if (!name) return;
+
+                const presets = JSON.parse(localStorage.getItem('volumen_scroll_presets') || '{}');
+                const target = presets[name];
+                if (!target) return;
+
+                // Bind parameter structural values restoration context tree
+                inputYear.value = target.year;
+                inputHVisible.value = target.hVisible;
+                inputBVisible.value = target.bVisible;
+                inputMargin.value = target.margin;
+                selectFont.value = target.fontFamily;
+                inputScaleHeader.value = target.scaleHeader;
+                inputScaleDay.value = target.scaleDay;
+                inputWeightGrid.value = target.weightGrid;
+                inputWeightBorder.value = target.weightBorder;
+                colorGrid.value = target.colorGrid;
+                colorText.value = target.colorText;
+                colorWkndFill.value = target.colorWkndFill;
+                colorWkndText.value = target.colorWkndText;
+
+                // Repopulate dynamic DOM list container elements context tracking lists
+                eventsContainer.innerHTML = '';
+                state.events = target.events || [];
+                state.events.forEach(ev => addEventRowUI(ev.start, ev.end, ev.title, ev.color, ev.id));
+
+                readInputs();
+                recalculateCalendarData();
+                renderPreview();
+                zoomToFit();
+            }
+
+            // High Precision Millimeter Vector PDF Engine Compilation Core
+            function generatePlotterVectorPDF() {
+                const { jsPDF } = window.jspdf;
+                
+                // Read fresh values metrics data configurations mapping states bound definitions
+                const hMm = state.hVisible * 10;
+                const bMonthMm = computed.bMonth * 10;
+                const marginMm = state.margin * 10;
+                const totalLengthMm = computed.lTotal * 10;
+                const hDayMm = computed.hDay * 10;
+
+                // Instantiate high precision landscape millimeter custom dimensions engine canvas context instance
+                const doc = new jsPDF({
+                    orientation: 'l',
+                    unit: 'mm',
+                    format: [totalLengthMm, hMm],
+                    putOnlyUsedFonts: true
+                });
+
+                // Set execution runtime font family mapping options parameters keys
+                let fFamily = 'Helvetica';
+                if (state.fontFamily === 'times') fFamily = 'Times';
+                if (state.fontFamily === 'courier') fFamily = 'Courier';
+
+                // --- 1. RENDER BLANK LEAD-IN MARGIN BLOCK BUFFER ---
+                if (marginMm > 0) {
+                    doc.setDrawColor(state.colorText);
+                    doc.setLineWidth(state.weightBorder);
+                    // Draw outer border termination dividing line anchor vector segment
+                    doc.line(marginMm, 0, marginMm, hMm);
+                }
+
+                // --- 2. RENDER 14 CYCLICAL CONTINUOUS MONTH DATA COLUMNS MATRIX ---
+                let currentXMm = marginMm;
+
+                computed.monthsData.forEach((month, mIdx) => {
+                    
+                    // A. Header Month Name Title Box Layer Rendering Call pass block
+                    doc.setFillColor(255, 255, 255); // Reset text bounding envelope area fill contexts
+                    
+                    // Render individual day matrix rows cells configurations pass loops
+                    month.days.forEach((day, dIdx) => {
+                        const cellTopY = (dIdx + 1) * hDayMm;
+
+                        if (day.exists) {
+                            // Resolve color space allocation profiles rulesets
+                            if (day.event) {
+                                // Draw colored custom calendar events backgrounds vectors markers blocks
+                                doc.setFillColor(day.event.color);
+                                doc.rect(currentXMm, cellTopY, bMonthMm, hDayMm, 'F');
+                            } else if (day.isWeekend) {
+                                // Draw standard weekends rows fill layers vectors definitions blocks
+                                doc.setFillColor(state.colorWkndFill);
+                                doc.rect(currentXMm, cellTopY, bMonthMm, hDayMm, 'F');
+                            }
+                        } else {
+                            // Shorter months padding structural blocks backgrounds configuration overrides
+                            doc.setFillColor('#f8fafc');
+                            doc.rect(currentXMm, cellTopY, bMonthMm, hDayMm, 'F');
+                        }
+
+                        // Draw thin precise vector grid lines segments alignments matrix boundaries
+                        doc.setDrawColor(state.colorGrid);
+                        doc.setLineWidth(state.weightGrid);
+                        doc.line(currentXMm, cellTopY + hDayMm, currentXMm + bMonthMm, cellTopY + hDayMm);
+                    });
+
+                    // Render Strong Outer Structural Columns Borders Separators Lines segments arrays
+                    doc.setDrawColor(state.colorGrid);
+                    doc.setLineWidth(state.weightGrid);
+                    doc.line(currentXMm + bMonthMm, 0, currentXMm + bMonthMm, hMm);
+
+                    // B. WRITE VECTOR TEXT LABELS INJECTION SEQUENCES ---
+                    // Write Header Text Content
+                    doc.setFont(fFamily, 'Bold');
+                    doc.setTextColor(state.colorText);
+                    // Standard typographical conversion mapping scaling formula parameters rule
+                    const headerFontSizePt = Math.round(14 * state.scaleHeader);
+                    doc.setFontSize(headerFontSizePt);
+                    
+                    // Precision center month titles strings within individual vector bounds box spaces
+                    const textYCenterOffset = (hDayMm / 2) + (headerFontSizePt * 0.3527 / 2); 
+                    doc.text(month.label, currentXMm + (bMonthMm / 2), textYCenterOffset, { align: 'center' });
+
+                    // Draw high structural row boundary demarcation accent bar beneath heading title blocks
+                    doc.setDrawColor(state.colorText);
+                    doc.setLineWidth(state.weightBorder);
+                    doc.line(currentXMm, hDayMm, currentXMm + bMonthMm, hDayMm);
+
+                    // Write Sequential Days String Rows Blocks Text Fields content lines
+                    const dayFontSizePt = Math.round(9 * state.scaleDay);
+                    doc.setFontSize(dayFontSizePt);
+
+                    month.days.forEach((day, dIdx) => {
+                        if (!day.exists) return; // Terminate early processing on layout filler spaces
+
+                        const cellTopY = (dIdx + 1) * hDayMm;
+                        const dayTextY = cellTopY + (hDayMm / 2) + (dayFontSizePt * 0.3527 / 2);
+
+                        if (day.event) {
+                            doc.setFont(fFamily, 'Bold');
+                            doc.setTextColor('#ffffff'); // Invert label strings to contrast nicely over background highlight colors
+                        } else if (day.isWeekend) {
+                            doc.setFont(fFamily, 'Bold');
+                            doc.setTextColor(state.colorWkndText);
+                        } else {
+                            doc.setFont(fFamily, 'Normal');
+                            doc.setTextColor(state.colorText);
+                        }
+
+                        // Inject Date Strings Markers into the local vector space grids columns layers
+                        const dateLabelStr = `${String(day.dayNum).padStart(2, '0')} ${day.weekdayLabel}`;
+                        doc.text(dateLabelStr, currentXMm + 4, dayTextY, { align: 'left' });
+
+                        // Render secondary event titles strings descriptions text elements labels overlays
+                        if (day.event) {
+                            doc.setFont(fFamily, 'Bold');
+                            doc.setFontSize(Math.round(8 * state.scaleDay));
+                            doc.text(day.event.title.toUpperCase(), currentXMm + bMonthMm - 4, dayTextY, { align: 'right' });
+                            doc.setFontSize(dayFontSizePt); // Restore main standard text context size metric configuration parameter
+                        }
+                    });
+
+                    currentXMm += bMonthMm;
+                });
+
+                // Enforce precise high margin outer border bounding boxes lines segments bounds limits
+                const finalBorderXMm = totalLengthMm - marginMm;
+                doc.setDrawColor(state.colorText);
+                doc.setLineWidth(state.weightBorder);
+                doc.line(finalBorderXMm, 0, finalBorderXMm, hMm);
+                
+                // Draw Outer Enclosing Edge Envelope Guards Boundaries lines paths framing blocks
+                doc.line(marginMm, 0, finalBorderXMm, 0); // Top line wire
+                doc.line(marginMm, hMm, finalBorderXMm, hMm); // Bottom line wire
+
+                // Save compile execution buffer out to standard document streams downloads triggering events
+                doc.save(`volumen-scroll-calendar-${state.year}.pdf`);
+            }
+
+            // Fire main runtime constructor execution cycle sequence on system startup events loop mapping hooks
+            window.addEventListener('DOMContentLoaded', init);
+        })();
+    </script>
+</body>
+</html>

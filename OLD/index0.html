@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="de" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CronoScroll — Endlos-Rollkalender Generator</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- jsPDF CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    /* Robustes CSS-Reset & Layout-Garantie */
+    html, body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #020617; /* slate-950 */
+      color: #f8fafc; /* slate-50 */
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      box-sizing: border-box;
+    }
+    *, *:before, *:after {
+      box-sizing: inherit;
+    }
+
+    /* 2-Spalten-Grid Layout: Garantiert, dass die Sidebar immer links und die Arbeitsfläche immer rechts bleibt! */
+    #app-container {
+      display: grid;
+      grid-template-rows: 56px 1fr;
+      grid-template-columns: 380px 1fr;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+    }
+
+    #app-header {
+      grid-column: 1 / -1;
+      height: 56px;
+      z-index: 30;
+    }
+
+    #app-sidebar {
+      grid-column: 1;
+      grid-row: 2;
+      height: calc(100vh - 56px);
+      width: 380px;
+      overflow-y: auto;
+      z-index: 20;
+    }
+
+    #app-workspace {
+      grid-column: 2;
+      grid-row: 2;
+      height: calc(100vh - 56px);
+      display: grid;
+      grid-template-rows: 52px 1fr 32px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(51, 65, 85, 0.8);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(71, 85, 105, 1);
+    }
+  </style>
+</head>
+<body class="select-none">
+
+  <!-- HAUPT-CONTAINER (CSS-GRID) -->
+  <div id="app-container">
+
+    <!-- 1. OBERER KOPFBEREICH (HEADER) -->
+    <header id="app-header" class="bg-slate-900 border-b border-slate-800 px-5 flex items-center justify-between shadow-md">
+      <div class="flex items-center space-x-3">
+        <div class="bg-amber-500 text-slate-950 p-2 rounded-lg font-bold flex items-center justify-center w-8 h-8 shadow">
+          <i class="fa-solid fa-scroll text-sm"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-slate-100 text-base leading-tight">CronoScroll — Volumen Rollkalender</h1>
+          <p class="text-xs text-slate-400">14-Monate-Endlosbanner für 3-Monats-Schreibplatten & Rollenplotter</p>
+        </div>
+      </div>
+
+      <!-- Export-Aktion -->
+      <button id="btn-export-pdf" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs shadow-md transition flex items-center space-x-2 cursor-pointer active:scale-95">
+        <i class="fa-solid fa-file-pdf text-sm"></i>
+        <span>Plotter-PDF exportieren</span>
+      </button>
+    </header>
+
+    <!-- 2. LINKE SIDEBAR: STEUERUNG & EINSTELLUNGEN -->
+    <aside id="app-sidebar" class="bg-slate-900 border-r border-slate-800 flex flex-col">
+      
+      <!-- REITER-NAVIGATION -->
+      <div class="flex border-b border-slate-800 bg-slate-950/70 text-xs font-medium shrink-0">
+        <button data-tab="tab-geometry" class="tab-btn flex-1 py-3 px-2 text-center text-amber-400 border-b-2 border-amber-400 font-semibold transition">
+          <i class="fa-solid fa-ruler-combined mr-1"></i> Maße
+        </button>
+        <button data-tab="tab-style" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition">
+          <i class="fa-solid fa-palette mr-1"></i> Stil
+        </button>
+        <button data-tab="tab-holidays" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition">
+          <i class="fa-solid fa-calendar-check mr-1"></i> Feiertage
+        </button>
+        <button data-tab="tab-presets" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition">
+          <i class="fa-solid fa-bookmark mr-1"></i> Vorlagen
+        </button>
+      </div>
+
+      <!-- INHALT DER REITER -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-5">
+
+        <!-- TAB 1: MAßE & GEOMETRIE -->
+        <div id="tab-geometry" class="tab-content space-y-5">
+          <!-- Kalender-Zieljahr -->
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex justify-between">
+              Ziel-Kalenderjahr
+              <span class="text-amber-400 font-mono" id="year-range-display">2026 – 2028</span>
+            </label>
+            <input type="number" id="input-year" value="2027" min="1900" max="2100" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-mono text-sm focus:outline-none focus:border-amber-500">
+            <p class="text-[11px] text-slate-400">Generiert 14 Monate (Dezember Vorjahr bis Januar Folgejahr).</p>
+          </div>
+
+          <!-- Physische Maße der Schreibplatte -->
+          <div class="border-t border-slate-800 pt-4 space-y-4">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Abmessungen der Schreibplatte</h3>
+            
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs text-slate-300 block mb-1">Sichthöhe ($H_{visible}$)</label>
+                <div class="relative">
+                  <input type="number" id="input-h-visible" value="32.0" step="0.1" min="10" max="150" class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-3 pr-8 py-1.5 text-sm font-mono text-slate-100 focus:outline-none focus:border-amber-500">
+                  <span class="absolute right-3 top-1.5 text-xs text-slate-500 font-mono">cm</span>
+                </div>
+              </div>
+              <div>
+                <label class="text-xs text-slate-300 block mb-1">3-Monats-Breite ($B_{visible}$)</label>
+                <div class="relative">
+                  <input type="number" id="input-b-visible" value="42.0" step="0.1" min="15" max="200" class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-3 pr-8 py-1.5 text-sm font-mono text-slate-100 focus:outline-none focus:border-amber-500">
+                  <span class="absolute right-3 top-1.5 text-xs text-slate-500 font-mono">cm</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label class="text-xs text-slate-300 block mb-1">Wickel-Puffer (Vorlauf je Seite)</label>
+              <div class="relative">
+                <input type="number" id="input-puffer" value="15.0" step="0.5" min="0" max="100" class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-3 pr-8 py-1.5 text-sm font-mono text-slate-100 focus:outline-none focus:border-amber-500">
+                <span class="absolute right-3 top-1.5 text-xs text-slate-500 font-mono">cm</span>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">Freier Papierstreifen zum Befestigen an den Holz-Rundstäben.</p>
+            </div>
+          </div>
+
+          <!-- Automatische Geometrie-Ergebnisse -->
+          <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 space-y-2.5">
+            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+              <span>Automatische Geometrie</span>
+              <i class="fa-solid fa-calculator text-amber-500"></i>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+              <div class="bg-slate-900 p-2 rounded border border-slate-800">
+                <span class="text-slate-500 text-[10px] block uppercase">Monatsbreite ($B_{month}$)</span>
+                <span id="calc-b-month" class="text-amber-400 font-bold">14.00 cm</span>
+              </div>
+              <div class="bg-slate-900 p-2 rounded border border-slate-800">
+                <span class="text-slate-500 text-[10px] block uppercase">Tageshöhe ($H_{day}$)</span>
+                <span id="calc-h-day" class="text-amber-400 font-bold">1.000 cm</span>
+              </div>
+            </div>
+            <div class="bg-slate-900 p-2 rounded border border-slate-800 text-xs font-mono">
+              <span class="text-slate-500 text-[10px] block uppercase">Gesamte Rollenlänge ($L_{total}$)</span>
+              <span id="calc-l-total" class="text-emerald-400 font-bold text-sm">226.00 cm (2.26 m)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: STIL & FARBEN -->
+        <div id="tab-style" class="tab-content hidden space-y-5">
+          <div class="space-y-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Typografie</h3>
+            <div>
+              <label class="text-xs text-slate-300 block mb-1">Schriftart</label>
+              <select id="select-font-family" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+                <option value="helvetica">Sans-Serif (Helvetica / Arial)</option>
+                <option value="times">Serif (Times New Roman)</option>
+                <option value="courier">Monospace (Courier)</option>
+              </select>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs text-slate-300 block mb-1">Schriftgröße Kopf</label>
+                <input type="number" id="input-font-header-scale" value="1.0" step="0.1" min="0.5" max="3.0" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-mono text-slate-100">
+              </div>
+              <div>
+                <label class="text-xs text-slate-300 block mb-1">Schriftgröße Tage</label>
+                <input type="number" id="input-font-day-scale" value="1.0" step="0.1" min="0.5" max="3.0" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-mono text-slate-100">
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t border-slate-800 pt-4 space-y-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Linienstärken (Vektor)</h3>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs text-slate-300 block mb-1">Rasterlinie (mm)</label>
+                <input type="number" id="input-line-grid" value="0.2" step="0.05" min="0.05" max="2.0" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-mono text-slate-100">
+              </div>
+              <div>
+                <label class="text-xs text-slate-300 block mb-1">Rahmenlinie (mm)</label>
+                <input type="number" id="input-line-border" value="0.6" step="0.1" min="0.1" max="5.0" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-mono text-slate-100">
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t border-slate-800 pt-4 space-y-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Farben für Raster & Text</h3>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs text-slate-300 block mb-1">Rasterlinien</label>
+                <div class="flex items-center space-x-2">
+                  <input type="color" id="color-grid" value="#cbd5e1" class="w-8 h-8 rounded bg-transparent cursor-pointer">
+                  <span id="hex-grid" class="text-xs font-mono text-slate-400">#cbd5e1</span>
+                </div>
+              </div>
+              <div>
+                <label class="text-xs text-slate-300 block mb-1">Textfarbe</label>
+                <div class="flex items-center space-x-2">
+                  <input type="color" id="color-text" value="#0f172a" class="w-8 h-8 rounded bg-transparent cursor-pointer">
+                  <span id="hex-text" class="text-xs font-mono text-slate-400">#0f172a</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="border-t border-slate-800/60 pt-3">
+              <label class="text-xs text-slate-300 block mb-1">Wochenenden (Sa / So)</label>
+              <div class="grid grid-cols-2 gap-3">
+                <div class="flex items-center space-x-2">
+                  <input type="color" id="color-weekend-bg" value="#f1f5f9" class="w-8 h-8 rounded bg-transparent cursor-pointer">
+                  <span class="text-xs text-slate-400">Hintergrund</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <input type="color" id="color-weekend-text" value="#e11d48" class="w-8 h-8 rounded bg-transparent cursor-pointer">
+                  <span class="text-xs text-slate-400">Schrift</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: FEIERTAGE & FERIEN -->
+        <div id="tab-holidays" class="tab-content hidden space-y-4">
+          <div class="space-y-1">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Feiertage & Termine</h3>
+            <p class="text-[11px] text-slate-400">Automatische Berechnung aller gesetzlichen Feiertage und Schulferien.</p>
+          </div>
+
+          <!-- Bundesland-Auswahl -->
+          <div class="space-y-2 bg-slate-950/70 p-3 rounded-lg border border-slate-800">
+            <label class="text-xs font-semibold text-slate-300 block">Bundesland</label>
+            <select id="select-bundesland" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-amber-500 font-medium">
+              <option value="NW" selected>Nordrhein-Westfalen (NW / NRW)</option>
+              <option value="BW">Baden-Württemberg (BW)</option>
+              <option value="BY">Bayern (BY)</option>
+              <option value="BE">Berlin (BE)</option>
+              <option value="BB">Brandenburg (BB)</option>
+              <option value="HB">Bremen (HB)</option>
+              <option value="HH">Hamburg (HH)</option>
+              <option value="HE">Hessen (HE)</option>
+              <option value="MV">Mecklenburg-Vorpommern (MV)</option>
+              <option value="NI">Niedersachsen (NI)</option>
+              <option value="RP">Rheinland-Pfalz (RP)</option>
+              <option value="SL">Saarland (SL)</option>
+              <option value="SN">Sachsen (SN)</option>
+              <option value="ST">Sachsen-Anhalt (ST)</option>
+              <option value="SH">Schleswig-Holstein (SH)</option>
+              <option value="TH">Thüringen (TH)</option>
+            </select>
+            
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button id="btn-load-feiertage" class="text-xs bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 px-2 py-1.5 rounded border border-amber-500/30 transition flex items-center justify-center space-x-1 cursor-pointer">
+                <i class="fa-solid fa-sync text-[10px]"></i>
+                <span>Feiertage laden</span>
+              </button>
+              <button id="btn-load-ferien" class="text-xs bg-sky-500/20 text-sky-400 hover:bg-sky-500/30 px-2 py-1.5 rounded border border-sky-500/30 transition flex items-center justify-center space-x-1 cursor-pointer">
+                <i class="fa-solid fa-umbrella-beach text-[10px]"></i>
+                <span>Ferien laden</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-1">
+            <span class="text-xs font-semibold text-slate-300">Aktive Termine & Feiertage</span>
+            <button id="btn-add-holiday" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded border border-slate-700 transition flex items-center space-x-1 cursor-pointer">
+              <i class="fa-solid fa-plus text-[10px]"></i>
+              <span>+ Eigener Termin</span>
+            </button>
+          </div>
+
+          <!-- Terminliste Container -->
+          <div id="holiday-list" class="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+            <!-- Dynamisch generiert -->
+          </div>
+        </div>
+
+        <!-- TAB 4: VORLAGEN -->
+        <div id="tab-presets" class="tab-content hidden space-y-4">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Vorlagen-Verwaltung</h3>
+          
+          <div class="space-y-2">
+            <label class="text-xs text-slate-300 block">Aktuelle Einstellungen als Vorlage speichern</label>
+            <div class="flex space-x-2">
+              <input type="text" id="input-preset-name" placeholder="Name (z.B. NRW 32x42 cm)" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-amber-500">
+              <button id="btn-save-preset" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs transition cursor-pointer">
+                Speichern
+              </button>
+            </div>
+          </div>
+
+          <div class="border-t border-slate-800 pt-3 space-y-2">
+            <label class="text-xs text-slate-300 block">Gespeicherte Vorlagen</label>
+            <div id="presets-list" class="space-y-2">
+              <!-- Preset items list -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- 3. RECHTER ARBEITSBEREICH: KONTROLL-LEISTE, CANVASHÖLLE & STATUSLEISTE -->
+    <main id="app-workspace" class="bg-slate-950">
+      
+      <!-- OBERE ARBEITSLEISTE (VIEW-MODUS & NAVIGATION) -->
+      <div id="workspace-toolbar" class="bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between text-xs">
+        
+        <!-- Modus-Umschalter -->
+        <div class="flex items-center space-x-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
+          <button id="btn-mode-plate" class="px-3 py-1 rounded text-xs font-bold bg-amber-500 text-slate-950 shadow transition flex items-center space-x-1.5 cursor-pointer">
+            <i class="fa-solid fa-chalkboard"></i>
+            <span>3-Monats-Schreibplatte</span>
+          </button>
+          <button id="btn-mode-banner" class="px-3 py-1 rounded text-xs font-medium text-slate-400 hover:text-slate-200 transition flex items-center space-x-1.5 cursor-pointer">
+            <i class="fa-solid fa-scroll"></i>
+            <span>Ganze Druckrolle (14 Monate)</span>
+          </button>
+        </div>
+
+        <!-- Monats-Roll-Steuerung (für 3-Monats-Ansicht) -->
+        <div id="plate-nav-controls" class="flex items-center space-x-2">
+          <button id="btn-prev-month" class="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded flex items-center space-x-1 text-xs transition cursor-pointer" title="1 Monat zurückrollen (Taste ←)">
+            <i class="fa-solid fa-chevron-left text-[10px]"></i>
+            <span class="hidden sm:inline">Zurück</span>
+          </button>
+          <span id="plate-month-label" class="px-3 py-1 bg-slate-950 border border-slate-700 rounded text-xs font-bold text-amber-400 font-mono">
+            Jan 2027 – Mär 2027
+          </span>
+          <button id="btn-next-month" class="h-7 px-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded flex items-center space-x-1 text-xs transition cursor-pointer" title="1 Monat vorwärtsrollen (Taste →)">
+            <span class="hidden sm:inline">Vor</span>
+            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+          </button>
+        </div>
+
+        <!-- Zoom-Steuerung -->
+        <div class="flex items-center space-x-2">
+          <span class="text-xs text-slate-400 font-mono hidden md:inline" id="preview-scale-indicator">100%</span>
+          <button id="btn-zoom-out" class="w-7 h-7 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded flex items-center justify-center text-xs transition cursor-pointer" title="Verkleinern">
+            <i class="fa-solid fa-minus"></i>
+          </button>
+          <button id="btn-zoom-reset" class="px-2 h-7 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs font-mono transition cursor-pointer" title="100% Original">
+            100%
+          </button>
+          <button id="btn-zoom-fit-banner" class="px-2 h-7 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-xs font-mono transition hidden cursor-pointer" title="Rolle einpassen">
+            Fit All
+          </button>
+          <button id="btn-zoom-in" class="w-7 h-7 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded flex items-center justify-center text-xs transition cursor-pointer" title="Vergrößern">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- CANVASHÖLLE MIT ZENTRIERUNG & SCROLLUNG -->
+      <div id="canvas-container" class="w-full h-full overflow-auto flex items-center justify-center p-8 bg-slate-950">
+        <canvas id="preview-canvas" class="shadow-2xl rounded bg-white transition-transform duration-75"></canvas>
+      </div>
+
+      <!-- UNTERE STATUSLEISTE -->
+      <footer id="app-statusbar" class="h-8 bg-slate-900 border-t border-slate-800 px-4 flex items-center justify-between text-[11px] text-slate-400">
+        <div class="flex items-center space-x-3">
+          <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5"></span> Vektor-Engine bereit</span>
+          <span class="text-slate-600">|</span>
+          <span id="status-dimensions" class="font-mono text-slate-300">Sichtfenster: 42.0 cm × 32.0 cm</span>
+        </div>
+        <div class="flex items-center space-x-2 text-slate-400">
+          <i class="fa-solid fa-circle-info text-amber-500"></i>
+          <span id="status-hint">Mit [Zurück] / [Vor] oder Pfeiltasten (← / →) rollen</span>
+        </div>
+      </footer>
+
+    </main>
+
+  </div>
+
+  <!-- JAVASCRIPT ARCHITEKTUR & LOGIK -->
+  <script>
+    /**
+     * CRONOSCROLL — VOLLSTÄNDIGE JAVASCRIPT-ENGINE
+     */
+
+    const MONTH_NAMES = [
+      'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 
+      'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
+    ];
+    const DAY_SHORT_NAMES = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+
+    // 1. Gaußsche Osterformel
+    function getEaster(y) {
+      const a = y % 19, b = Math.floor(y / 100), c = y % 100;
+      const d = Math.floor(b / 4), e = b % 4;
+      const f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+      const h = (19 * a + b - d - g + 15) % 30;
+      const i = Math.floor(c / 4), k = c % 4;
+      const l = (32 + 2 * e + 2 * i - h - k) % 7;
+      const m = Math.floor((a + 11 * h + 22 * l) / 451);
+      const month = Math.floor((h + l - 7 * m + 114) / 31);
+      const day = ((h + l - 7 * m + 114) % 31) + 1;
+      return new Date(y, month - 1, day);
+    }
+
+    function addDaysToDate(d, count) {
+      const r = new Date(d);
+      r.setDate(r.getDate() + count);
+      return r;
+    }
+
+    function formatDateIso(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    // 2. Gesetzliche Feiertage nach Bundesland (14 Monate: Dez Vorjahr bis Jan Folgejahr)
+    function getGermanHolidays(targetYear, stateCode = 'NW') {
+      const holidays = [];
+      const add = (title, dateStr, color = '#fef08a') => {
+        holidays.push({ id: 'h_' + dateStr + '_' + title.replace(/\s+/g, ''), title, start: dateStr, end: dateStr, color });
+      };
+
+      const prevY = targetYear - 1;
+      const nextY = targetYear + 1;
+
+      // Dezember Vorjahr
+      add('1. Weihnachtstag', `${prevY}-12-25`);
+      add('2. Weihnachtstag', `${prevY}-12-26`);
+
+      // Zieljahr
+      add('Neujahr', `${targetYear}-01-01`);
+      if (['BW', 'BY', 'ST'].includes(stateCode)) add('Hl. Drei Könige', `${targetYear}-01-06`);
+      if (['BE', 'MV'].includes(stateCode)) add('Frauentag', `${targetYear}-03-08`);
+
+      const easter = getEaster(targetYear);
+      add('Karfreitag', formatDateIso(addDaysToDate(easter, -2)));
+      add('Ostersonntag', formatDateIso(easter));
+      add('Ostermontag', formatDateIso(addDaysToDate(easter, 1)));
+      add('Tag der Arbeit', `${targetYear}-05-01`);
+      add('Christi Himmelfahrt', formatDateIso(addDaysToDate(easter, 39)));
+      add('Pfingstsonntag', formatDateIso(addDaysToDate(easter, 49)));
+      add('Pfingstmontag', formatDateIso(addDaysToDate(easter, 50)));
+
+      if (['NW', 'BW', 'BY', 'HE', 'RP', 'SL'].includes(stateCode)) {
+        add('Fronleichnam', formatDateIso(addDaysToDate(easter, 60)));
+      }
+      if (['BY', 'SL'].includes(stateCode)) add('Mariä Himmelfahrt', `${targetYear}-08-15`);
+      if (['TH'].includes(stateCode)) add('Weltkindertag', `${targetYear}-09-20`);
+
+      add('Tag der Dt. Einheit', `${targetYear}-10-03`);
+
+      if (['BB', 'HB', 'HH', 'MV', 'NI', 'SH', 'SN', 'ST', 'TH'].includes(stateCode)) {
+        add('Reformationstag', `${targetYear}-10-31`);
+      }
+      if (['NW', 'BW', 'BY', 'RP', 'SL'].includes(stateCode)) {
+        add('Allerheiligen', `${targetYear}-11-01`);
+      }
+      if (stateCode === 'SN') {
+        const nov23 = new Date(targetYear, 10, 23);
+        const dayOfWeek = nov23.getDay();
+        const diff = (dayOfWeek >= 3) ? (dayOfWeek - 3) : (dayOfWeek + 4);
+        const bussTag = new Date(targetYear, 10, 23 - (diff === 0 ? 7 : diff));
+        add('Buß- und Bettag', formatDateIso(bussTag));
+      }
+
+      add('1. Weihnachtstag', `${targetYear}-12-25`);
+      add('2. Weihnachtstag', `${targetYear}-12-26`);
+
+      // Januar Folgejahr
+      add('Neujahr', `${nextY}-01-01`);
+      if (['BW', 'BY', 'ST'].includes(stateCode)) add('Hl. Drei Könige', `${nextY}-01-06`);
+
+      return holidays;
+    }
+
+    // 3. Schulferien (Default NRW)
+    function getSchoolVacations(targetYear, stateCode = 'NW') {
+      const easter = getEaster(targetYear);
+      const osterStart = addDaysToDate(easter, -6);
+      const osterEnd = addDaysToDate(easter, 6);
+
+      return [
+        {
+          id: `ferien_ostern_${targetYear}`,
+          title: 'Osterferien',
+          start: formatDateIso(osterStart),
+          end: formatDateIso(osterEnd),
+          color: '#bfdbfe'
+        },
+        {
+          id: `ferien_sommer_${targetYear}`,
+          title: 'Sommerferien',
+          start: `${targetYear}-07-15`,
+          end: `${targetYear}-08-25`,
+          color: '#bfdbfe'
+        },
+        {
+          id: `ferien_herbst_${targetYear}`,
+          title: 'Herbstferien',
+          start: `${targetYear}-10-11`,
+          end: `${targetYear}-10-23`,
+          color: '#fed7aa'
+        },
+        {
+          id: `ferien_weihnachten_${targetYear}`,
+          title: 'Weihnachtsferien',
+          start: `${targetYear}-12-23`,
+          end: `${targetYear + 1}-01-06`,
+          color: '#fbcfe8'
+        }
+      ];
+    }
+
+    // 4. Zentraler State
+    const state = {
+      year: 2027,
+      hVisible: 32.0,       // cm
+      bVisible: 42.0,       // cm
+      puffer: 15.0,         // cm
+      
+      fontFamily: 'helvetica',
+      fontHeaderScale: 1.0,
+      fontDayScale: 1.0,
+      lineGrid: 0.2,        // mm
+      lineBorder: 0.6,      // mm
+      colorGrid: '#cbd5e1',
+      colorText: '#0f172a',
+      colorWeekendBg: '#f1f5f9',
+      colorWeekendText: '#e11d48',
+
+      bundesland: 'NW',
+      holidays: getGermanHolidays(2027, 'NW').concat(getSchoolVacations(2027, 'NW')),
+
+      viewMode: 'plate',     // 'plate' oder 'banner'
+      currentMonthIndex: 1,  // 1 = Januar bis März des Zieljahres
+      zoom: 1.0,
+      isDraggingViewport: false,
+      dragStartX: 0
+    };
+
+    // 5. Mathematische Geometrie
+    function getGeometry() {
+      const bMonth = state.bVisible / 3;
+      const hDay = state.hVisible / 32;
+      const lTotal = (14 * bMonth) + (2 * state.puffer);
+      
+      return {
+        bVisible: state.bVisible,
+        hVisible: state.hVisible,
+        bMonth,
+        hDay,
+        lTotal,
+        bMonthMm: bMonth * 10,
+        hDayMm: hDay * 10,
+        lTotalMm: lTotal * 10,
+        hVisibleMm: state.hVisible * 10,
+        pufferMm: state.puffer * 10
+      };
+    }
+
+    // 6. 14-Monate-Zyklus Daten
+    function get14MonthsData(targetYear) {
+      const months = [];
+      months.push({ year: targetYear - 1, monthIndex: 11 }); // Dez Vorjahr
+      for (let m = 0; m < 12; m++) {
+        months.push({ year: targetYear, monthIndex: m });     // 12 Monate Zieljahr
+      }
+      months.push({ year: targetYear + 1, monthIndex: 0 });  // Jan Folgejahr
+
+      return months.map(m => {
+        const daysInMonth = new Date(m.year, m.monthIndex + 1, 0).getDate();
+        const days = [];
+
+        for (let d = 1; d <= 31; d++) {
+          if (d <= daysInMonth) {
+            const dateObj = new Date(m.year, m.monthIndex, d);
+            const dayOfWeek = dateObj.getDay();
+            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+            const isoDate = `${m.year}-${String(m.monthIndex + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const matchedHoliday = state.holidays.find(h => isoDate >= h.start && isoDate <= h.end);
+
+            days.push({
+              dayNum: d,
+              dayOfWeek,
+              dayName: DAY_SHORT_NAMES[dayOfWeek],
+              isWeekend,
+              isValid: true,
+              isoDate,
+              holiday: matchedHoliday
+            });
+          } else {
+            days.push({ isValid: false });
+          }
+        }
+
+        return {
+          year: m.year,
+          monthIndex: m.monthIndex,
+          monthName: MONTH_NAMES[m.monthIndex],
+          label: `${MONTH_NAMES[m.monthIndex]} ${m.year}`,
+          days
+        };
+      });
+    }
+
+    // 7. Canvas Renderer
+    const canvas = document.getElementById('preview-canvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('canvas-container');
+
+    function drawMonthColumn(ctx, month, monthLeftPx, monthWidthPx, dayHeightPx, baseFont) {
+      // Header
+      ctx.fillStyle = '#f1f5f9';
+      ctx.fillRect(monthLeftPx, 0, monthWidthPx, dayHeightPx);
+      ctx.strokeStyle = state.colorGrid;
+      ctx.lineWidth = Math.max(1, state.lineGrid * state.zoom * 1.5);
+      ctx.strokeRect(monthLeftPx, 0, monthWidthPx, dayHeightPx);
+
+      ctx.fillStyle = state.colorText;
+      ctx.font = `bold ${11 * state.fontHeaderScale * state.zoom}px ${baseFont}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(month.label.toUpperCase(), monthLeftPx + monthWidthPx / 2, dayHeightPx / 2);
+
+      // Tage
+      month.days.forEach((day, dIdx) => {
+        const rowTopPx = (dIdx + 1) * dayHeightPx;
+
+        if (!day.isValid) {
+          ctx.fillStyle = '#fafafa';
+          ctx.fillRect(monthLeftPx, rowTopPx, monthWidthPx, dayHeightPx);
+        } else if (day.holiday) {
+          ctx.fillStyle = day.holiday.color;
+          ctx.fillRect(monthLeftPx, rowTopPx, monthWidthPx, dayHeightPx);
+        } else if (day.isWeekend) {
+          ctx.fillStyle = state.colorWeekendBg;
+          ctx.fillRect(monthLeftPx, rowTopPx, monthWidthPx, dayHeightPx);
+        }
+
+        ctx.strokeStyle = state.colorGrid;
+        ctx.lineWidth = Math.max(0.5, state.lineGrid * state.zoom);
+        ctx.strokeRect(monthLeftPx, rowTopPx, monthWidthPx, dayHeightPx);
+
+        if (day.isValid) {
+          ctx.fillStyle = (day.isWeekend && !day.holiday) ? state.colorWeekendText : state.colorText;
+          ctx.font = `${10 * state.fontDayScale * state.zoom}px ${baseFont}`;
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+
+          const paddingLeft = 8 * state.zoom;
+          const textY = rowTopPx + dayHeightPx / 2;
+
+          ctx.fillText(`${day.dayNum} ${day.dayName}`, monthLeftPx + paddingLeft, textY);
+
+          if (day.holiday) {
+            ctx.font = `italic ${8.5 * state.zoom}px ${baseFont}`;
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#1e293b';
+            ctx.fillText(day.holiday.title, monthLeftPx + monthWidthPx - paddingLeft, textY);
+          }
+        }
+      });
+    }
+
+    function renderPreview() {
+      const geo = getGeometry();
+      const monthsData = get14MonthsData(state.year);
+      const pxPerCm = 20 * state.zoom;
+      const baseFont = state.fontFamily === 'times' ? 'serif' : (state.fontFamily === 'courier' ? 'monospace' : 'sans-serif');
+      const monthWidthPx = geo.bMonth * pxPerCm;
+      const dayHeightPx = geo.hDay * pxPerCm;
+
+      if (state.viewMode === 'plate') {
+        // --- MODUS 1: 3-MONATS-SCHREIBPLATTE ---
+        container.style.justifyContent = 'center';
+
+        canvas.width = geo.bVisible * pxPerCm;
+        canvas.height = state.hVisible * pxPerCm;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        for (let i = 0; i < 3; i++) {
+          const mIdx = state.currentMonthIndex + i;
+          const month = monthsData[mIdx];
+          if (month) {
+            drawMonthColumn(ctx, month, i * monthWidthPx, monthWidthPx, dayHeightPx, baseFont);
+          }
+        }
+
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = Math.max(2, state.lineBorder * state.zoom * 2);
+        ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+        const firstM = monthsData[state.currentMonthIndex];
+        const thirdM = monthsData[state.currentMonthIndex + 2];
+        if (firstM && thirdM) {
+          const labelText = `${firstM.monthName.substring(0, 3)} ${firstM.year} – ${thirdM.monthName.substring(0, 3)} ${thirdM.year}`;
+          document.getElementById('plate-month-label').textContent = labelText;
+          document.getElementById('status-dimensions').textContent = `Sichtfenster: ${geo.bVisible.toFixed(1)} cm × ${state.hVisible.toFixed(1)} cm (${firstM.label} bis ${thirdM.label})`;
+        }
+        document.getElementById('status-hint').textContent = 'Mit [Zurück] / [Vor] oder Pfeiltasten (← / →) rollen';
+
+      } else {
+        // --- MODUS 2: GANZE DRUCKROLLE (14 MONATE) ---
+        container.style.justifyContent = 'flex-start';
+
+        canvas.width = geo.lTotal * pxPerCm;
+        canvas.height = state.hVisible * pxPerCm;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const leadInPx = state.puffer * pxPerCm;
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(0, 0, leadInPx, canvas.height);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = `${11 * state.zoom}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText('WICKEL-PUFFER (MONTAGE)', leadInPx / 2, canvas.height / 2);
+
+        const leadOutPx = canvas.width - (state.puffer * pxPerCm);
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(leadOutPx, 0, state.puffer * pxPerCm, canvas.height);
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText('WICKEL-PUFFER (MONTAGE)', leadOutPx + (state.puffer * pxPerCm) / 2, canvas.height / 2);
+
+        monthsData.forEach((month, mIdx) => {
+          const monthLeftPx = leadInPx + (mIdx * monthWidthPx);
+          drawMonthColumn(ctx, month, monthLeftPx, monthWidthPx, dayHeightPx, baseFont);
+        });
+
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = Math.max(2, state.lineBorder * state.zoom * 2);
+        ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+        const viewportWidthPx = geo.bVisible * pxPerCm;
+        const viewportXPx = leadInPx + (state.currentMonthIndex * monthWidthPx);
+
+        ctx.save();
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([6, 4]);
+        ctx.strokeRect(viewportXPx, 0, viewportWidthPx, canvas.height);
+
+        ctx.fillStyle = '#ef4444';
+        ctx.setLineDash([]);
+        ctx.fillRect(viewportXPx, 0, 180 * state.zoom, 22 * state.zoom);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${10 * state.zoom}px sans-serif`;
+        ctx.textAlign = 'left';
+        ctx.fillText(`3-MONATS-FENSTER (${state.bVisible}cm)`, viewportXPx + 8 * state.zoom, 14 * state.zoom);
+        ctx.restore();
+
+        document.getElementById('status-dimensions').textContent = `Druckbanner: ${geo.lTotal.toFixed(1)} cm × ${state.hVisible.toFixed(1)} cm (14 Monate)`;
+        document.getElementById('status-hint').textContent = 'Klicke auf einen Monat, um das 3-Monats-Fenster zu verschieben';
+      }
+
+      updateMathEngineDisplay(geo);
+    }
+
+    function updateMathEngineDisplay(geo) {
+      document.getElementById('calc-b-month').textContent = `${geo.bMonth.toFixed(2)} cm`;
+      document.getElementById('calc-h-day').textContent = `${geo.hDay.toFixed(3)} cm`;
+      document.getElementById('calc-l-total').textContent = `${geo.lTotal.toFixed(2)} cm (${(geo.lTotal/100).toFixed(2)} m)`;
+      document.getElementById('year-range-display').textContent = `${state.year - 1} – ${state.year + 1}`;
+      document.getElementById('preview-scale-indicator').textContent = `${Math.round(state.zoom * 100)}%`;
+    }
+
+    // 8. Vektor-PDF-Export
+    function exportPlotterPDF() {
+      const { jsPDF } = window.jspdf;
+      const geo = getGeometry();
+      const monthsData = get14MonthsData(state.year);
+
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: [geo.lTotalMm, geo.hVisibleMm]
+      });
+
+      const baseFont = state.fontFamily;
+      const hexToRgb = (hex) => {
+        let c = hex.replace('#', '');
+        if (c.length === 3) c = c.split('').map(x => x + x).join('');
+        const num = parseInt(c, 16);
+        return [num >> 16, (num >> 8) & 255, num & 255];
+      };
+
+      doc.setLineWidth(state.lineGrid);
+      const gridRgb = hexToRgb(state.colorGrid);
+      doc.setDrawColor(gridRgb[0], gridRgb[1], gridRgb[2]);
+
+      const leadInMm = geo.pufferMm;
+      doc.setFillColor(248, 250, 252);
+      doc.rect(0, 0, leadInMm, geo.hVisibleMm, 'F');
+
+      monthsData.forEach((month, mIdx) => {
+        const monthLeftMm = leadInMm + (mIdx * geo.bMonthMm);
+
+        doc.setFillColor(241, 245, 249);
+        doc.rect(monthLeftMm, 0, geo.bMonthMm, geo.hDayMm, 'FD');
+
+        const textRgb = hexToRgb(state.colorText);
+        doc.setTextColor(textRgb[0], textRgb[1], textRgb[2]);
+        doc.setFont(baseFont, 'bold');
+        doc.setFontSize(10 * state.fontHeaderScale);
+        doc.text(
+          month.label.toUpperCase(),
+          monthLeftMm + (geo.bMonthMm / 2),
+          geo.hDayMm / 2 + 1.5,
+          { align: 'center' }
+        );
+
+        month.days.forEach((day, dIdx) => {
+          const rowTopMm = (dIdx + 1) * geo.hDayMm;
+
+          if (!day.isValid) {
+            doc.setFillColor(250, 250, 250);
+            doc.rect(monthLeftMm, rowTopMm, geo.bMonthMm, geo.hDayMm, 'F');
+          } else if (day.holiday) {
+            const hRgb = hexToRgb(day.holiday.color);
+            doc.setFillColor(hRgb[0], hRgb[1], hRgb[2]);
+            doc.rect(monthLeftMm, rowTopMm, geo.bMonthMm, geo.hDayMm, 'F');
+          } else if (day.isWeekend) {
+            const wkBg = hexToRgb(state.colorWeekendBg);
+            doc.setFillColor(wkBg[0], wkBg[1], wkBg[2]);
+            doc.rect(monthLeftMm, rowTopMm, geo.bMonthMm, geo.hDayMm, 'F');
+          }
+
+          doc.setLineWidth(state.lineGrid);
+          doc.setDrawColor(gridRgb[0], gridRgb[1], gridRgb[2]);
+          doc.rect(monthLeftMm, rowTopMm, geo.bMonthMm, geo.hDayMm, 'D');
+
+          if (day.isValid) {
+            if (day.isWeekend && !day.holiday) {
+              const wkText = hexToRgb(state.colorWeekendText);
+              doc.setTextColor(wkText[0], wkText[1], wkText[2]);
+            } else {
+              doc.setTextColor(textRgb[0], textRgb[1], textRgb[2]);
+            }
+
+            doc.setFont(baseFont, 'normal');
+            doc.setFontSize(8.5 * state.fontDayScale);
+
+            const textY = rowTopMm + (geo.hDayMm / 2) + 1.2;
+            doc.text(`${day.dayNum} ${day.dayName}`, monthLeftMm + 3, textY);
+
+            if (day.holiday) {
+              doc.setFont(baseFont, 'italic');
+              doc.setFontSize(7);
+              doc.setTextColor(30, 41, 59);
+              doc.text(day.holiday.title, monthLeftMm + geo.bMonthMm - 3, textY, { align: 'right' });
+            }
+          }
+        });
+      });
+
+      const leadOutMm = geo.lTotalMm - geo.pufferMm;
+      doc.setFillColor(248, 250, 252);
+      doc.rect(leadOutMm, 0, geo.pufferMm, geo.hVisibleMm, 'F');
+
+      doc.setTextColor(148, 163, 184);
+      doc.setFont(baseFont, 'normal');
+      doc.setFontSize(8);
+      doc.text('WICKEL-PUFFER (MONTAGE)', leadInMm / 2, geo.hVisibleMm / 2, { align: 'center', angle: 90 });
+      doc.text('WICKEL-PUFFER (MONTAGE)', leadOutMm + (geo.pufferMm / 2), geo.hVisibleMm / 2, { align: 'center', angle: 90 });
+
+      doc.setLineWidth(state.lineBorder);
+      doc.setDrawColor(15, 23, 42);
+      doc.rect(0, 0, geo.lTotalMm, geo.hVisibleMm, 'D');
+
+      doc.save(`Rollkalender-${state.year}.pdf`);
+    }
+
+    // 9. Klick & Drag auf Canvas
+    canvas.addEventListener('mousedown', (e) => {
+      if (state.viewMode !== 'banner') return;
+      const rect = canvas.getBoundingClientRect();
+      const pxPerCm = 20 * state.zoom;
+      const clickXCm = (e.clientX - rect.left) / (rect.width / canvas.width) / pxPerCm;
+      
+      const geo = getGeometry();
+      const viewportXCm = state.puffer + (state.currentMonthIndex * geo.bMonth);
+
+      if (clickXCm >= viewportXCm && clickXCm <= viewportXCm + state.bVisible) {
+        state.isDraggingViewport = true;
+        state.dragStartX = clickXCm - (state.currentMonthIndex * geo.bMonth);
+      } else {
+        const clickXAfterPuffer = clickXCm - state.puffer;
+        if (clickXAfterPuffer >= 0) {
+          const clickedMonthIdx = Math.floor(clickXAfterPuffer / geo.bMonth);
+          const newStartIdx = Math.max(0, Math.min(11, clickedMonthIdx - 1));
+          state.currentMonthIndex = newStartIdx;
+          renderPreview();
+        }
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (state.isDraggingViewport && state.viewMode === 'banner') {
+        const rect = canvas.getBoundingClientRect();
+        const pxPerCm = 20 * state.zoom;
+        const currentXCm = (e.clientX - rect.left) / (rect.width / canvas.width) / pxPerCm;
+        const geo = getGeometry();
+
+        let newOffset = currentXCm - state.dragStartX;
+        const maxOffset = (14 - 3) * geo.bMonth;
+        newOffset = Math.max(0, Math.min(maxOffset, newOffset));
+
+        const newMonthIdx = Math.max(0, Math.min(11, Math.round(newOffset / geo.bMonth)));
+        if (newMonthIdx !== state.currentMonthIndex) {
+          state.currentMonthIndex = newMonthIdx;
+          renderPreview();
+        }
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      state.isDraggingViewport = false;
+    });
+
+    // 10. Feiertage & Termine UI
+    function renderHolidaysList() {
+      const container = document.getElementById('holiday-list');
+      container.innerHTML = '';
+
+      state.holidays.forEach(h => {
+        const item = document.createElement('div');
+        item.className = 'bg-slate-950 border border-slate-800 rounded-lg p-2.5 space-y-2 text-xs';
+        item.innerHTML = `
+          <div class="flex items-center justify-between">
+            <input type="text" value="${h.title}" data-id="${h.id}" data-field="title" placeholder="Bezeichnung / Anlass" class="holiday-input bg-transparent font-semibold text-slate-200 focus:outline-none focus:border-b border-amber-500 w-2/3">
+            <button data-id="${h.id}" title="Löschen" class="btn-delete-holiday text-slate-500 hover:text-rose-400 p-1 cursor-pointer">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[10px] text-slate-400">Beginn</label>
+              <input type="date" value="${h.start}" data-id="${h.id}" data-field="start" class="holiday-input bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-slate-200 w-full font-mono text-[11px]">
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-400">Ende</label>
+              <input type="date" value="${h.end}" data-id="${h.id}" data-field="end" class="holiday-input bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-slate-200 w-full font-mono text-[11px]">
+            </div>
+          </div>
+          <div class="flex items-center space-x-2 pt-0.5">
+            <input type="color" value="${h.color}" data-id="${h.id}" data-field="color" class="holiday-input w-5 h-5 rounded cursor-pointer bg-transparent">
+            <span class="text-[10px] text-slate-400">Farbe im Kalender</span>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+
+      document.querySelectorAll('.holiday-input').forEach(input => {
+        input.addEventListener('input', (e) => {
+          const id = e.target.getAttribute('data-id');
+          const field = e.target.getAttribute('data-field');
+          const item = state.holidays.find(x => x.id === id);
+          if (item) {
+            item[field] = e.target.value;
+            renderPreview();
+          }
+        });
+      });
+
+      document.querySelectorAll('.btn-delete-holiday').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = e.currentTarget.getAttribute('data-id');
+          state.holidays = state.holidays.filter(x => x.id !== id);
+          renderHolidaysList();
+          renderPreview();
+        });
+      });
+    }
+
+    document.getElementById('btn-add-holiday').addEventListener('click', () => {
+      const newId = 'termin_' + Date.now();
+      state.holidays.push({
+        id: newId,
+        title: 'Neuer Termin',
+        start: `${state.year}-06-01`,
+        end: `${state.year}-06-05`,
+        color: '#bfdbfe'
+      });
+      renderHolidaysList();
+      renderPreview();
+    });
+
+    document.getElementById('btn-load-feiertage').addEventListener('click', () => {
+      const bundesland = document.getElementById('select-bundesland').value;
+      state.bundesland = bundesland;
+      const nonFeiertage = state.holidays.filter(h => !h.id.startsWith('h_'));
+      const freshFeiertage = getGermanHolidays(state.year, bundesland);
+      state.holidays = freshFeiertage.concat(nonFeiertage);
+      renderHolidaysList();
+      renderPreview();
+    });
+
+    document.getElementById('btn-load-ferien').addEventListener('click', () => {
+      const bundesland = document.getElementById('select-bundesland').value;
+      const vacations = getSchoolVacations(state.year, bundesland);
+      const nonVacations = state.holidays.filter(h => !h.id.startsWith('ferien_'));
+      state.holidays = nonVacations.concat(vacations);
+      renderHolidaysList();
+      renderPreview();
+    });
+
+    document.getElementById('select-bundesland').addEventListener('change', (e) => {
+      state.bundesland = e.target.value;
+      const nonFeiertage = state.holidays.filter(h => !h.id.startsWith('h_'));
+      const freshFeiertage = getGermanHolidays(state.year, state.bundesland);
+      state.holidays = freshFeiertage.concat(nonFeiertage);
+      renderHolidaysList();
+      renderPreview();
+    });
+
+    // 11. Vorlagen-Manager
+    function getPresets() {
+      const saved = localStorage.getItem('volumen_calendar_presets');
+      return saved ? JSON.parse(saved) : {};
+    }
+
+    function savePresets(presets) {
+      localStorage.setItem('volumen_calendar_presets', JSON.stringify(presets));
+    }
+
+    function renderPresetsList() {
+      const presets = getPresets();
+      const container = document.getElementById('presets-list');
+      container.innerHTML = '';
+
+      const keys = Object.keys(presets);
+      if (keys.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-500 italic">Noch keine Vorlagen gespeichert.</p>';
+        return;
+      }
+
+      keys.forEach(name => {
+        const item = document.createElement('div');
+        item.className = 'bg-slate-950 border border-slate-800 rounded-lg p-2.5 flex items-center justify-between text-xs';
+        item.innerHTML = `
+          <span class="font-medium text-slate-200">${name}</span>
+          <div class="flex items-center space-x-2">
+            <button data-name="${name}" class="btn-load-preset bg-slate-800 hover:bg-slate-700 text-amber-400 px-2 py-1 rounded text-[11px] transition cursor-pointer">Laden</button>
+            <button data-name="${name}" class="btn-delete-preset text-slate-500 hover:text-rose-400 p-1 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+
+      document.querySelectorAll('.btn-load-preset').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const name = e.currentTarget.getAttribute('data-name');
+          const data = presets[name];
+          if (data) {
+            Object.assign(state, data);
+            syncInputsFromState();
+            renderHolidaysList();
+            renderPreview();
+          }
+        });
+      });
+
+      document.querySelectorAll('.btn-delete-preset').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const name = e.currentTarget.getAttribute('data-name');
+          delete presets[name];
+          savePresets(presets);
+          renderPresetsList();
+        });
+      });
+    }
+
+    document.getElementById('btn-save-preset').addEventListener('click', () => {
+      const input = document.getElementById('input-preset-name');
+      const name = input.value.trim();
+      if (!name) return;
+
+      const presets = getPresets();
+      presets[name] = { ...state };
+      savePresets(presets);
+      input.value = '';
+      renderPresetsList();
+    });
+
+    // 12. Input-Bindung & Initialisierung
+    function syncInputsFromState() {
+      document.getElementById('input-year').value = state.year;
+      document.getElementById('input-h-visible').value = state.hVisible;
+      document.getElementById('input-b-visible').value = state.bVisible;
+      document.getElementById('input-puffer').value = state.puffer;
+
+      document.getElementById('select-font-family').value = state.fontFamily;
+      document.getElementById('input-font-header-scale').value = state.fontHeaderScale;
+      document.getElementById('input-font-day-scale').value = state.fontDayScale;
+      document.getElementById('input-line-grid').value = state.lineGrid;
+      document.getElementById('input-line-border').value = state.lineBorder;
+
+      document.getElementById('color-grid').value = state.colorGrid;
+      document.getElementById('hex-grid').textContent = state.colorGrid;
+      document.getElementById('color-text').value = state.colorText;
+      document.getElementById('hex-text').textContent = state.colorText;
+      document.getElementById('color-weekend-bg').value = state.colorWeekendBg;
+      document.getElementById('color-weekend-text').value = state.colorWeekendText;
+
+      if (document.getElementById('select-bundesland')) {
+        document.getElementById('select-bundesland').value = state.bundesland || 'NW';
+      }
+    }
+
+    function bindEvents() {
+      const bindNum = (id, prop) => {
+        document.getElementById(id).addEventListener('input', (e) => {
+          state[prop] = parseFloat(e.target.value) || 0;
+          renderPreview();
+        });
+      };
+
+      document.getElementById('input-year').addEventListener('input', (e) => {
+        state.year = parseInt(e.target.value) || 2027;
+        renderPreview();
+      });
+
+      document.getElementById('input-year').addEventListener('change', (e) => {
+        state.year = parseInt(e.target.value) || 2027;
+        const bundesland = state.bundesland || 'NW';
+        const nonAuto = state.holidays.filter(h => !h.id.startsWith('h_') && !h.id.startsWith('ferien_'));
+        state.holidays = getGermanHolidays(state.year, bundesland).concat(getSchoolVacations(state.year, bundesland)).concat(nonAuto);
+        renderHolidaysList();
+        renderPreview();
+      });
+
+      bindNum('input-h-visible', 'hVisible');
+      bindNum('input-b-visible', 'bVisible');
+      bindNum('input-puffer', 'puffer');
+      bindNum('input-font-header-scale', 'fontHeaderScale');
+      bindNum('input-font-day-scale', 'fontDayScale');
+      bindNum('input-line-grid', 'lineGrid');
+      bindNum('input-line-border', 'lineBorder');
+
+      document.getElementById('select-font-family').addEventListener('change', (e) => {
+        state.fontFamily = e.target.value;
+        renderPreview();
+      });
+
+      const bindColor = (id, prop, hexLabelId) => {
+        document.getElementById(id).addEventListener('input', (e) => {
+          state[prop] = e.target.value;
+          if (hexLabelId) document.getElementById(hexLabelId).textContent = e.target.value;
+          renderPreview();
+        });
+      };
+
+      bindColor('color-grid', 'colorGrid', 'hex-grid');
+      bindColor('color-text', 'colorText', 'hex-text');
+      bindColor('color-weekend-bg', 'colorWeekendBg');
+      bindColor('color-weekend-text', 'colorWeekendText');
+
+      document.getElementById('btn-export-pdf').addEventListener('click', exportPlotterPDF);
+
+      // Reiter-Umschaltung
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tabId = btn.getAttribute('data-tab');
+          document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.remove('text-amber-400', 'border-b-2', 'border-amber-400', 'font-semibold');
+            b.classList.add('text-slate-400');
+          });
+          btn.classList.add('text-amber-400', 'border-b-2', 'border-amber-400', 'font-semibold');
+          btn.classList.remove('text-slate-400');
+
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+          document.getElementById(tabId).classList.remove('hidden');
+        });
+      });
+
+      // Ansichts-Modus Umschaltung
+      const btnModePlate = document.getElementById('btn-mode-plate');
+      const btnModeBanner = document.getElementById('btn-mode-banner');
+      const plateNav = document.getElementById('plate-nav-controls');
+      const btnFitBanner = document.getElementById('btn-zoom-fit-banner');
+
+      btnModePlate.addEventListener('click', () => {
+        state.viewMode = 'plate';
+        btnModePlate.className = 'px-3 py-1 rounded text-xs font-bold bg-amber-500 text-slate-950 shadow transition flex items-center space-x-1.5 cursor-pointer';
+        btnModeBanner.className = 'px-3 py-1 rounded text-xs font-medium text-slate-400 hover:text-slate-200 transition flex items-center space-x-1.5 cursor-pointer';
+        plateNav.classList.remove('hidden');
+        btnFitBanner.classList.add('hidden');
+        state.zoom = 1.0;
+        renderPreview();
+      });
+
+      btnModeBanner.addEventListener('click', () => {
+        state.viewMode = 'banner';
+        btnModeBanner.className = 'px-3 py-1 rounded text-xs font-bold bg-amber-500 text-slate-950 shadow transition flex items-center space-x-1.5 cursor-pointer';
+        btnModePlate.className = 'px-3 py-1 rounded text-xs font-medium text-slate-400 hover:text-slate-200 transition flex items-center space-x-1.5 cursor-pointer';
+        plateNav.classList.add('hidden');
+        btnFitBanner.classList.remove('hidden');
+        renderPreview();
+        container.scrollLeft = 0;
+      });
+
+      // Monats-Navigation
+      const stepMonth = (delta) => {
+        const newIdx = state.currentMonthIndex + delta;
+        if (newIdx >= 0 && newIdx <= 11) {
+          state.currentMonthIndex = newIdx;
+          renderPreview();
+        }
+      };
+
+      document.getElementById('btn-prev-month').addEventListener('click', () => stepMonth(-1));
+      document.getElementById('btn-next-month').addEventListener('click', () => stepMonth(1));
+
+      window.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+        if (e.key === 'ArrowLeft') stepMonth(-1);
+        if (e.key === 'ArrowRight') stepMonth(1);
+      });
+
+      // Zoom
+      document.getElementById('btn-zoom-in').addEventListener('click', () => {
+        state.zoom = Math.min(3.0, state.zoom + 0.2);
+        renderPreview();
+      });
+      document.getElementById('btn-zoom-out').addEventListener('click', () => {
+        state.zoom = Math.max(0.2, state.zoom - 0.2);
+        renderPreview();
+      });
+      document.getElementById('btn-zoom-reset').addEventListener('click', () => {
+        state.zoom = 1.0;
+        renderPreview();
+      });
+      btnFitBanner.addEventListener('click', () => {
+        const geo = getGeometry();
+        const availableW = container.clientWidth - 80;
+        const fullWidthAt1x = geo.lTotal * 20;
+        state.zoom = Math.max(0.15, Math.min(1.0, availableW / fullWidthAt1x));
+        renderPreview();
+      });
+    }
+
+    // 13. Initialisierung beim Laden
+    window.onload = function() {
+      syncInputsFromState();
+      renderHolidaysList();
+      renderPresetsList();
+      bindEvents();
+      renderPreview();
+    };
+  </script>
+</body>
+</html>
