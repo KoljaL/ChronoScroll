@@ -1,4 +1,4 @@
-# CronoScroll — Volumen Scroll Calendar 📜
+# CronoScroll — Scroll Calendar 📜
 
 > **Ein interaktiver Generator für endlose Rollkalender mit 3-Monats-Schreibplatte für Großformat-Plotter.**
 
