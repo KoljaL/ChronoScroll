@@ -33,16 +33,17 @@ html, body {
 /* 2-Spalten Layout */
 #app-container {
   display: grid;
-  grid-template-rows: 56px 1fr;
-  grid-template-columns: 400px 1fr;
+  grid-template-rows: 56px minmax(0, 1fr) 32px;
+  grid-template-columns: min(400px, 100vw) minmax(0, 1fr);
   height: 100vh;
+  height: 100dvh;
   width: 100vw;
   overflow: hidden;
   transition: grid-template-columns 0.25s ease;
 }
 
 #app-container.sidebar-collapsed {
-  grid-template-columns: 0px 1fr;
+  grid-template-columns: 0px minmax(0, 1fr);
 }
 
 #app-header {
@@ -54,8 +55,9 @@ html, body {
 #app-sidebar {
   grid-column: 1;
   grid-row: 2;
-  height: calc(100vh - 56px);
-  width: 400px;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
   overflow-y: auto;
   z-index: 20;
   transition: transform 0.25s ease;
@@ -68,11 +70,83 @@ html, body {
 #app-workspace {
   grid-column: 2;
   grid-row: 2;
-  height: calc(100vh - 56px);
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
   display: grid;
-  grid-template-rows: 52px 1fr 32px;
+  grid-template-rows: 52px minmax(0, 1fr);
   overflow: hidden;
   position: relative;
+}
+
+#app-statusbar {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.status-details {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+#status-dimensions {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-brand {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.status-logo-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+}
+
+.status-logo-link img {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.15s ease;
+}
+
+.status-logo-link:hover img,
+.status-logo-link:focus-visible img {
+  transform: scale(1.2);
+}
+
+.status-logo-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+@media (max-width: 500px) {
+  .status-engine,
+  .status-separator {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-logo-link img {
+    transition: none;
+  }
 }
 
 /* Canvas Panning Hand Cursor */
