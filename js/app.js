@@ -122,6 +122,16 @@
   const canvas = document.getElementById('preview-canvas');
   const container = document.getElementById('canvas-container');
 
+  function setFontStatus(message, isError = false, isSuccess = false) {
+    const status = document.getElementById('font-file-status');
+    if (!status) return;
+    status.textContent = message;
+    status.setAttribute('role', isError ? 'alert' : 'status');
+    status.classList.toggle('text-rose-400', isError);
+    status.classList.toggle('text-emerald-400', isSuccess && !isError);
+    status.classList.toggle('text-slate-500', !isError && !isSuccess);
+  }
+
   // Feiertage & Ferien initialisieren
   function loadDefaultHolidays() {
     const pub = window.CronoHolidays.getDACHHolidays(state.year, state.country, state.bundesland);
@@ -159,6 +169,13 @@
     setVal('select-header-align', state.headerAlign);
 
     // Stil
+    const customFontOption = document.getElementById('option-custom-font');
+    if (customFontOption) {
+      const hasCustomFont = window.CronoFonts.hasCustomFont();
+      customFontOption.hidden = !hasCustomFont;
+      if (hasCustomFont) customFontOption.textContent = `Eigene Schrift (${window.CronoFonts.getCustomFontName()})`;
+      if (state.fontFamily === 'custom' && !hasCustomFont) state.fontFamily = 'sans';
+    }
     setVal('select-font-family', state.fontFamily);
     setVal('input-font-header-scale', state.fontHeaderScale);
     setVal('input-font-day-scale', state.fontDayScale);
@@ -358,7 +375,13 @@
         const name = e.currentTarget.getAttribute('data-name');
         const data = presets[name];
         if (data) {
-          Object.assign(state, data);
+          const preset = data.fontFamily === 'custom' && !window.CronoFonts.hasCustomFont()
+            ? { ...data, fontFamily: 'sans' }
+            : data;
+          if (preset !== data) {
+            setFontStatus('Diese Vorlage verwendet eine eigene Schrift. Bitte lade die TTF-Datei erneut hoch.', true);
+          }
+          Object.assign(state, preset);
           syncInputsFromState();
           renderHolidaysList();
           renderPreview();
@@ -450,6 +473,25 @@
     });
     document.getElementById('select-font-family').addEventListener('change', (e) => {
       state.fontFamily = e.target.value;
+      renderPreview();
+    });
+    document.getElementById('input-font-file').addEventListener('change', async (e) => {
+      const input = e.currentTarget;
+      const file = input.files && input.files[0];
+      if (!file) return;
+
+      try {
+        await window.CronoFonts.loadCustomFont(file);
+      } catch (error) {
+        setFontStatus(`Schrift konnte nicht geladen werden: ${error.message}`, true);
+        return;
+      } finally {
+        input.value = '';
+      }
+
+      state.fontFamily = 'custom';
+      syncInputsFromState();
+      setFontStatus(`„${file.name}“ ist geladen und wird in die Plotter-PDF eingebettet.`, false, true);
       renderPreview();
     });
 
@@ -618,7 +660,11 @@
 
     // 11. Export-Aktionen
     document.getElementById('btn-export-pdf').addEventListener('click', () => {
-      window.CronoPDF.exportPlotterPDF(state);
+      try {
+        window.CronoPDF.exportPlotterPDF(state);
+      } catch (error) {
+        alert(`PDF konnte nicht erstellt werden: ${error.message}`);
+      }
     });
     document.getElementById('btn-export-svg').addEventListener('click', () => {
       window.CronoVector.exportSVG(state);
@@ -769,5 +815,11 @@
     renderPresetsList();
     bindEvents();
     renderPreview();
+    window.CronoFonts.loadStandardFonts().then(
+      renderPreview,
+      (error) => {
+        setFontStatus(`Standardschriften konnten nicht für die Vorschau geladen werden: ${error.message}`, true);
+      }
+    );
   });
 })();

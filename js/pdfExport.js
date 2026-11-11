@@ -44,8 +44,7 @@ window.CronoPDF = (function() {
       compress: true
     });
 
-    const baseFont = (state.fontFamily === 'times' || state.fontFamily === 'serif') ? 'times' :
-                     (state.fontFamily === 'courier' || state.fontFamily === 'mono') ? 'courier' : 'helvetica';
+    const baseFont = window.CronoFonts.registerPdfFont(doc, state.fontFamily);
 
     const gridRgb = hexToRgb(state.colorGrid);
     const textRgb = hexToRgb(state.colorText);

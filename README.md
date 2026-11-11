@@ -118,7 +118,8 @@ Alle Abmessungen leiten sich dynamisch von der montierten Schreibplatte ab:
   * Reagiert in Echtzeit auf jede Parameteränderung.
   * Stufenloser Zoom von 20 % bis 300 % und 100%-Reset.
 * **Typografie & Stil:**
-  * Wählbare Schriftarten (*Sans-Serif*, *Serif*, *Monospace*) und skalierbare Schriftgrößen für Kopf- und Tageszeilen.
+  * Wählbare, in der PDF eingebettete Schriftarten (*Lato*, *PT Serif*, *Cousine*) und skalierbare Schriftgrößen für Kopf- und Tageszeilen.
+  * Eigene TTF-Schriften können lokal geladen werden. Die gewählte Schrift erscheint in der Vorschau und wird in die Plotter-PDF eingebettet.
   * Einstellbare Linienstärken für Gitter und Umrandungen in Millimetern.
   * Farbwähler für Text, Gitterlinien und Wochenenden.
 * **Deutsche Feiertage & Schulferien (nach Bundesland):**
@@ -129,7 +130,7 @@ Alle Abmessungen leiten sich dynamisch von der montierten Schreibplatte ab:
 * **Vorlagen-Verwaltung:**
   * Layout-Presets können mit Namen im Browser (`localStorage`) gespeichert, geladen oder gelöscht werden.
 * **Vektor-PDF-Export für Endlosplotter auf Deutsch:**
-  * Generiert über **jsPDF** eine millimetergenaue Vektor-PDF (`Rollkalender-[Jahr].pdf`) mit deutschen Monatsnamen (`Januar` bis `Dezember`), deutschen Tageskürzeln (`Mo` bis `So`) und Randbeschriftungen.
+  * Generiert über **jsPDF** eine millimetergenaue Vektor-PDF (`Rollkalender-[Jahr].pdf`) mit eingebetteten TrueType-Schriften, deutschen Monatsnamen (`Januar` bis `Dezember`), deutschen Tageskürzeln (`Mo` bis `So`) und Randbeschriftungen.
   * 100 % verlustfrei und gestochen scharf auf jedem Großformat-Plotter druckbar.
 
 ---
@@ -156,3 +157,5 @@ Alle Abmessungen leiten sich dynamisch von der montierten Schreibplatte ab:
 Keine Installation und kein Node.js erforderlich. Du kannst die Anwendung lokal durch Öffnen von [index.html](./index.html) in einem modernen Webbrowser (Chrome, Firefox, Safari, Edge) verwenden oder sie über GitHub Pages aufrufen.
 
 Maße deiner Schreibplatte eintragen, Design anpassen und auf **„Plotter-PDF exportieren“** klicken. Die fertige PDF-Datei kannst du an einen Rollenplotter oder Druckdienstleister senden.
+
+Für eine eigene Schrift im Bereich **Stil → Typografie** eine TTF-Datei auswählen. Sie wird nur im Browser verarbeitet und nicht hochgeladen; eine einzelne TTF-Datei wird für normale, fette und kursive Textstellen verwendet. Eigene Schriften müssen nach einem Neuladen erneut ausgewählt werden. Die mitgelieferten Schriften Lato, PT Serif und Cousine stehen unter der SIL Open Font License 1.1; die Lizenztexte liegen in [`fonts/`](./fonts/).

@@ -309,11 +309,17 @@
             <div>
               <label class="text-xs text-slate-300 block mb-1">Schriftart</label>
               <select id="select-font-family" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100">
-                <option value="sans">Modern Sans (Inter / System-UI)</option>
-                <option value="serif">Klassisch Serif (Playfair / Times)</option>
-                <option value="mono">Tech Monospace (JetBrains / Courier)</option>
-                <option value="architect">Architekt / Geometric Sans</option>
+                <option value="sans">Modern Sans (Lato)</option>
+                <option value="serif">Klassisch Serif (PT Serif)</option>
+                <option value="mono">Tech Monospace (Cousine)</option>
+                <option value="architect">Architekt / Geometric Sans (Lato)</option>
+                <option value="custom" id="option-custom-font" hidden>Eigene Schrift</option>
               </select>
+            </div>
+            <div>
+              <label for="input-font-file" class="text-xs text-slate-300 block mb-1">Eigene TrueType-Schrift (.ttf)</label>
+              <input id="input-font-file" type="file" accept=".ttf,font/ttf,application/x-font-ttf" class="w-full text-xs text-slate-300 file:mr-2 file:rounded file:border-0 file:bg-slate-800 file:px-2 file:py-1 file:text-slate-200 hover:file:bg-slate-700">
+              <p id="font-file-status" class="mt-1 text-[10px] text-slate-500" role="status" aria-live="polite">Die Schrift wird nur lokal verarbeitet und in die Plotter-PDF eingebettet. Eine TTF-Datei wird für alle Schriftschnitte verwendet.</p>
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div>
@@ -687,6 +693,8 @@
   <script src="js/moon.js"></script>
   <script src="js/holidays.js"></script>
   <script src="js/icsParser.js"></script>
+  <script src="js/embeddedFonts.js"></script>
+  <script src="js/fontManager.js"></script>
   <script src="js/canvasRenderer.js"></script>
   <script src="js/pdfExport.js"></script>
   <script src="js/svgExport.js"></script>

@@ -8,6 +8,9 @@ window.CronoCanvas = (function() {
   'use strict';
 
   function getBaseFontFamily(fontKey) {
+    const embeddedFamily = window.CronoFonts && window.CronoFonts.getCanvasFamily(fontKey);
+    if (embeddedFamily) return embeddedFamily;
+
     switch (fontKey) {
       case 'times':
       case 'serif':
@@ -55,10 +58,11 @@ window.CronoCanvas = (function() {
 
   // Zeichnet ein Mini-Jahreskalendarium in den Vorlauf
   function drawMiniYearOverview(ctx, year, x, y, widthPx, heightPx, state) {
+    const baseFont = getBaseFontFamily(state.fontFamily);
     ctx.save();
     ctx.fillStyle = state.colorText;
     ctx.textAlign = 'center';
-    ctx.font = `bold ${9 * state.zoom}px sans-serif`;
+    ctx.font = `bold ${9 * state.zoom}px ${baseFont}`;
     ctx.fillText(`JAHRESÜBERSICHT ${year}`, x + widthPx / 2, y + 20 * state.zoom);
 
     const miniMonths = window.CronoHolidays.MONTH_NAMES;
@@ -74,7 +78,7 @@ window.CronoCanvas = (function() {
       const mY = y + 35 * state.zoom + (row * rowH);
 
       ctx.fillStyle = state.colorText;
-      ctx.font = `bold ${7 * state.zoom}px sans-serif`;
+      ctx.font = `bold ${7 * state.zoom}px ${baseFont}`;
       ctx.textAlign = 'left';
       ctx.fillText(mName.substring(0, 3).toUpperCase(), mX + 2, mY + 8 * state.zoom);
 
@@ -83,7 +87,7 @@ window.CronoCanvas = (function() {
       const firstDay = new Date(year, idx, 1).getDay(); // 0 = So
       const shift = (firstDay === 0) ? 6 : (firstDay - 1);
 
-      ctx.font = `${5.5 * state.zoom}px sans-serif`;
+      ctx.font = `${5.5 * state.zoom}px ${baseFont}`;
       ctx.fillStyle = '#64748b';
       for (let d = 1; d <= daysCount; d++) {
         const slot = shift + d - 1;
@@ -100,10 +104,11 @@ window.CronoCanvas = (function() {
 
   // Zeichnet Notizzeilen in den Puffer
   function drawBufferNotes(ctx, title, x, y, widthPx, heightPx, state) {
+    const baseFont = getBaseFontFamily(state.fontFamily);
     ctx.save();
     ctx.fillStyle = state.colorText;
     ctx.textAlign = 'center';
-    ctx.font = `bold ${10 * state.zoom}px sans-serif`;
+    ctx.font = `bold ${10 * state.zoom}px ${baseFont}`;
     ctx.fillText(title.toUpperCase(), x + widthPx / 2, y + 22 * state.zoom);
 
     const lineCount = 28;
@@ -240,7 +245,7 @@ window.CronoCanvas = (function() {
         if (state.showKW && day.isoWeek) {
           ctx.save();
           ctx.fillStyle = '#64748b';
-          ctx.font = `bold ${7.5 * state.zoom}px sans-serif`;
+          ctx.font = `bold ${7.5 * state.zoom}px ${baseFont}`;
           ctx.fillText(`KW ${day.isoWeek}`, monthLeftPx + leftOffsetPx, textY);
           leftOffsetPx += ctx.measureText(`KW ${day.isoWeek}`).width + (5 * state.zoom);
           ctx.restore();
@@ -387,15 +392,15 @@ window.CronoCanvas = (function() {
         drawBufferNotes(ctx, 'Notizen & Termine', 0, 0, leadInPx, targetHeightPx, state);
       } else if (state.pufferLeftContent === 'title') {
         ctx.fillStyle = state.colorText;
-        ctx.font = `bold ${14 * state.zoom}px sans-serif`;
+        ctx.font = `bold ${14 * state.zoom}px ${baseFont}`;
         ctx.textAlign = 'center';
         ctx.fillText(state.bannerCustomTitle || `CRONOSCROLL ${state.year}`, leadInPx / 2, targetHeightPx / 2 - 10 * state.zoom);
-        ctx.font = `${9 * state.zoom}px sans-serif`;
+        ctx.font = `${9 * state.zoom}px ${baseFont}`;
         ctx.fillStyle = '#64748b';
         ctx.fillText('14-Monate-Endlosbanner für Holz-Rollkalender', leadInPx / 2, targetHeightPx / 2 + 10 * state.zoom);
       } else {
         ctx.fillStyle = '#94a3b8';
-        ctx.font = `${11 * state.zoom}px sans-serif`;
+        ctx.font = `${11 * state.zoom}px ${baseFont}`;
         ctx.textAlign = 'center';
         ctx.fillText('WICKEL-PUFFER (MONTAGE)', leadInPx / 2, targetHeightPx / 2);
       }
@@ -415,7 +420,7 @@ window.CronoCanvas = (function() {
         drawBufferNotes(ctx, 'Jahres-Rückblick', leadOutStartPx, 0, leadOutPx, targetHeightPx, state);
       } else {
         ctx.fillStyle = '#94a3b8';
-        ctx.font = `${11 * state.zoom}px sans-serif`;
+        ctx.font = `${11 * state.zoom}px ${baseFont}`;
         ctx.textAlign = 'center';
         ctx.fillText('WICKEL-PUFFER (MONTAGE)', leadOutStartPx + (leadOutPx / 2), targetHeightPx / 2);
       }
