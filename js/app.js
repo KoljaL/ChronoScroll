@@ -122,14 +122,15 @@
   const canvas = document.getElementById('preview-canvas');
   const container = document.getElementById('canvas-container');
 
-  function setFontStatus(message, isError = false, isSuccess = false) {
+  function setFontStatus(message, isError = false, isSuccess = false, isWarning = false) {
     const status = document.getElementById('font-file-status');
     if (!status) return;
     status.textContent = message;
     status.setAttribute('role', isError ? 'alert' : 'status');
     status.classList.toggle('text-rose-400', isError);
-    status.classList.toggle('text-emerald-400', isSuccess && !isError);
-    status.classList.toggle('text-slate-500', !isError && !isSuccess);
+    status.classList.toggle('text-amber-400', isWarning && !isError);
+    status.classList.toggle('text-emerald-400', isSuccess && !isError && !isWarning);
+    status.classList.toggle('text-slate-500', !isError && !isSuccess && !isWarning);
   }
 
   // Feiertage & Ferien initialisieren
@@ -480,8 +481,9 @@
       const file = input.files && input.files[0];
       if (!file) return;
 
+      let result;
       try {
-        await window.CronoFonts.loadCustomFont(file);
+        result = await window.CronoFonts.loadCustomFont(file);
       } catch (error) {
         setFontStatus(`Schrift konnte nicht geladen werden: ${error.message}`, true);
         return;
@@ -491,7 +493,13 @@
 
       state.fontFamily = 'custom';
       syncInputsFromState();
-      setFontStatus(`„${file.name}“ ist geladen und wird in die Plotter-PDF eingebettet.`, false, true);
+      const message = `„${file.name}“ ist geladen und wird in die Plotter-PDF eingebettet.`;
+      setFontStatus(
+        result.hasOversizedKernTable
+          ? `${message} Die Kerning-Tabelle ist zu groß und wird möglicherweise vom Browser verworfen.`
+          : message,
+        false, !result.hasOversizedKernTable, result.hasOversizedKernTable
+      );
       renderPreview();
     });
 

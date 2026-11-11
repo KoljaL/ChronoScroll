@@ -59,6 +59,39 @@ window.CronoFonts = (function() {
     return { normal: base64, bold: base64, italic: base64 };
   }
 
+  function hasOversizedKerning(buffer) {
+    const view = new DataView(buffer);
+    if (view.byteLength < 12) return false;
+    const tableCount = view.getUint16(4);
+    if (tableCount > Math.floor((view.byteLength - 12) / 16)) return false;
+
+    for (let i = 0; i < tableCount; i++) {
+      const entry = 12 + i * 16;
+      if (view.getUint32(entry) !== 0x6b65726e) continue;
+      const offset = view.getUint32(entry + 8);
+      const length = view.getUint32(entry + 12);
+      if (offset > view.byteLength || length > view.byteLength - offset || length < 4) return false;
+      if (view.getUint16(offset) !== 0) return false;
+
+      const subtableCount = view.getUint16(offset + 2);
+      const end = offset + length;
+      let subtable = offset + 4;
+      for (let j = 0; j < subtableCount; j++) {
+        if (end - subtable < 6) return false;
+        const subtableLength = view.getUint16(subtable + 2);
+        const format = view.getUint16(subtable + 4) >> 8;
+        if (format === 0 && end - subtable >= 14) {
+          const pairCount = view.getUint16(subtable + 6);
+          if (14 + pairCount * 6 > 0xffff && end - subtable >= 14 + pairCount * 6) return true;
+        }
+        if (subtableLength < 6 || subtableLength > end - subtable) return false;
+        subtable += subtableLength;
+      }
+      return false;
+    }
+    return false;
+  }
+
   async function loadCustomFont(file) {
     if (!/\.ttf$/i.test(file.name)) {
       throw new Error('Bitte eine TrueType-Datei mit der Endung .ttf auswählen.');
@@ -70,6 +103,7 @@ window.CronoFonts = (function() {
       throw new Error('Die Datei ist keine unterstützte TTF-Schrift.');
     }
 
+    const hasOversizedKernTable = hasOversizedKerning(buffer);
     const base64 = encodeBase64(buffer);
     const probe = new window.jspdf.jsPDF();
     probe.addFileToVFS('CronoScrollCustomProbe.ttf', base64);
@@ -92,7 +126,7 @@ window.CronoFonts = (function() {
       styles: fontStyles,
       fileName: file.name
     };
-    return { fileName: file.name };
+    return { fileName: file.name, hasOversizedKernTable };
   }
 
   function getCanvasFamily(fontKey) {
