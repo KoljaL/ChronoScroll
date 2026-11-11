@@ -156,7 +156,13 @@ Alle Abmessungen leiten sich dynamisch von der montierten Schreibplatte ab:
 
 Keine Installation und kein Node.js erforderlich. Du kannst die Anwendung lokal durch Öffnen von [index.html](./index.html) in einem modernen Webbrowser (Chrome, Firefox, Safari, Edge) verwenden oder sie über GitHub Pages aufrufen.
 
-Die Versionsangabe in der unteren Statusleiste wird in `index.html` manuell gepflegt; Git-Commits erhöhen sie nicht automatisch. Bei einer Versionsänderung auch den Titel und die Überschrift in `index.html` entsprechend anpassen.
+Die versionierten Git-Hooks erhöhen bei einem Commit die Version in Titel, Überschrift und Statusleiste (z. B. `v2` → `v2.1` → `v2.2`). Zur Aktivierung pro Klon Python 3 installieren und im Repository `git config --local core.hooksPath .githooks` ausführen. Eine bereits konfigurierte `core.hooksPath` vorher mit `git config --show-origin --get core.hooksPath` prüfen: Die Aktivierung ersetzt diese Einstellung und damit auch dort konfigurierte Hooks. Git-Hooks werden beim Klonen nicht automatisch aktiviert.
+
+Der Pre-Commit-Hook erhöht nur die Version im Commit-Index; andere nicht gestagte Änderungen in `index.html` bleiben erhalten und gelangen nicht in den Commit. Stimmen die Versionsangaben in der Arbeitsdatei mit dem bisherigen Index überein, werden dort nur diese Angaben ebenfalls aktualisiert; andernfalls bleibt die Arbeitsdatei unverändert und der Hook warnt. Fehlende oder widersprüchliche Versionsangaben im Commit-Index oder in HEAD brechen den Commit ab.
+
+Bei `git commit -- index.html`, `git commit -a` oder `git commit --include` würde Git gegebenenfalls auch nicht gestagte Änderungen an dieser Datei übernehmen. Der Hook bricht in diesem Fall ab; gewünschte Änderungen müssen zuerst gestagt werden. Bei Pfad-Commits gleicht ein Post-Commit-Hook die Version im normalen Index ab, ohne dort vorhandene andere gestagte Änderungen zu übernehmen. Pfad-Commits mit einem abweichenden `GIT_INDEX_FILE` werden nicht unterstützt. Ein durch einen späteren Hook abgebrochener Commit kann eine bereits erhöhte Version hinterlassen; ein erneuter Versuch erhöht sie nicht nochmals.
+
+`git commit --no-verify`, serverseitige Commits und manche Git-Operationen umgehen den Pre-Commit-Hook. Die Integrationstests laufen mit `python3 -m unittest discover -s tests -p 'version_hook_test.py' -v` in temporären Git-Repositories.
 
 Maße deiner Schreibplatte eintragen, Design anpassen und auf **„Plotter-PDF exportieren“** klicken. Die fertige PDF-Datei kannst du an einen Rollenplotter oder Druckdienstleister senden.
 
