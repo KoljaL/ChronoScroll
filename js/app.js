@@ -73,7 +73,8 @@
     pufferRightContent: 'blank', // 'blank', 'notes'
     bannerCustomTitle: 'CRONOSCROLL 2027',
 
-    subColumns: 1,        // 1 bis 4 Spalten pro Tag
+    monthLayout: 'single', // 'single' oder 'double' Tageslisten pro Monat
+    subColumns: 1,        // 1 bis 4 Personen-Spalten pro Tag
     guideLinesCount: 0,   // 0, 1, 2, 3 Schreiblinien
     guideLinesStyle: 'dashed', // 'dashed', 'dotted', 'solid'
     showKW: true,
@@ -160,6 +161,7 @@
     setVal('input-custom-title', state.bannerCustomTitle);
 
     // Layout
+    setVal('select-month-layout', state.monthLayout);
     setVal('select-sub-columns', state.subColumns);
     setVal('select-guidelines-count', state.guideLinesCount);
     setVal('select-guidelines-style', state.guideLinesStyle);
@@ -438,6 +440,10 @@
     });
     document.getElementById('input-custom-title').addEventListener('input', (e) => {
       state.bannerCustomTitle = e.target.value;
+      renderPreview();
+    });
+    document.getElementById('select-month-layout').addEventListener('change', (e) => {
+      state.monthLayout = e.target.value;
       renderPreview();
     });
     document.getElementById('select-sub-columns').addEventListener('change', (e) => {

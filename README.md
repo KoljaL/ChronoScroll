@@ -100,12 +100,12 @@ Alle Abmessungen leiten sich dynamisch von der montierten Schreibplatte ab:
 | **Plattenbreite (Sichtbreite)** | $B_{\text{visible}}$ | Lichte Weite der 3 sichtbaren Monate                                         | $42{,}0\text{ cm}$    |
 | **Monatsspalten-Breite**        | $B_{\text{month}}$   | $B_{\text{month}} = \frac{B_{\text{visible}}}{3}$                            | $14{,}00\text{ cm}$   |
 | **Plattenhöhe (Sichthöhe)**     | $H_{\text{visible}}$ | Papierbahnbreite (Zeilenraum)                                                | $32{,}0\text{ cm}$    |
-| **Tageszeilen-Höhe**            | $H_{\text{day}}$     | $H_{\text{day}} = \frac{H_{\text{visible}}}{32}$ *(1 Kopfzeile + 31 Tage)*   | $1{,}00\text{ cm}$    |
+| **Tagesfeld-Höhe**               | $H_{\text{day}}$     | Einspaltig: $\frac{H_{\text{visible}}}{32}$; zweispaltig: $\frac{H_{\text{visible}}}{17}$ *(1 Kopfzeile + 16 Tageszeilen je Liste)* | $1{,}00\text{ cm}$ / $1{,}88\text{ cm}$ |
 | **Wickel-Puffer**               | $\text{Puffer}$      | Freiraum für Befestigung an den Rundstäben                                   | je $15{,}0\text{ cm}$ |
 | **Gesamte Bannerlänge**         | $L_{\text{total}}$   | $L_{\text{total}} = (14 \times B_{\text{month}}) + (2 \times \text{Puffer})$ | $226{,}00\text{ cm}$  |
 
 > [!TIP]
-> **Optimale Schreibhöhe:** Wenn du als Sichthöhe **$32\text{ cm}$** wählst, ist jede Tageszeile **exakt $1{,}0\text{ cm}$ hoch**. Das bietet optimalen Platz für handschriftliche Termine.
+> **Zwei Monatslayouts:** Im klassischen Layout steht jeder Tag in einer Zeile. Alternativ verteilen sich die Tage **1–15 links** und **16–31 rechts**; ein Tagesfeld wird dann bei 32 cm Sichthöhe etwa **1,88 cm hoch**. Beide Layouts verwenden dieselbe Monatsbreite von 14 cm, Sichthöhe von 32 cm und Bannerlänge.
 
 ---
 
@@ -117,6 +117,7 @@ Alle Abmessungen leiten sich dynamisch von der montierten Schreibplatte ab:
 * **Interaktive HTML5 Canvas Live-Vorschau:**
   * Reagiert in Echtzeit auf jede Parameteränderung.
   * Stufenloser Zoom von 20 % bis 300 % und 100%-Reset.
+  * Wahlweise eine oder zwei Tageslisten pro Monat; im zweispaltigen Layout bleiben Sichtfenster und Baugröße unverändert.
 * **Typografie & Stil:**
   * Wählbare, in der PDF eingebettete Schriftarten (*Lato*, *PT Serif*, *Cousine*) und skalierbare Schriftgrößen für Kopf- und Tageszeilen.
   * Eigene TTF-Schriften können lokal geladen werden. Die gewählte Schrift erscheint in der Vorschau und wird in die Plotter-PDF eingebettet.

@@ -132,7 +132,7 @@ window.CronoCanvas = (function() {
 
   // Zeichnet eine einzelne Monatsspalte
   function drawMonthColumn(ctx, month, monthLeftPx, monthWidthPx, dayHeightPx, baseFont, state, geo) {
-    const dpr = state.dpr || 1;
+    const dayColumnWidthPx = monthWidthPx / geo.dayColumns;
 
     // --- 1. KOPFZEILE (HEADER) ---
     ctx.fillStyle = state.colorHeaderBg || '#f1f5f9';
@@ -158,26 +158,28 @@ window.CronoCanvas = (function() {
 
     // --- 2. TAGESZEILEN (1 BIS 31) ---
     month.days.forEach((day, dIdx) => {
-      const rowTopPx = (dIdx + 1) * dayHeightPx;
+      const position = geo.getDayPosition(dIdx + 1);
+      const cellLeftPx = monthLeftPx + (position.column * dayColumnWidthPx);
+      const rowTopPx = (position.row + 1) * dayHeightPx;
 
       if (!day.isValid) {
         // Leere Tage (z. B. 29., 30., 31. Februar)
         ctx.fillStyle = state.colorEmptyDay || '#fafafa';
-        ctx.fillRect(monthLeftPx, rowTopPx, monthWidthPx, dayHeightPx);
+        ctx.fillRect(cellLeftPx, rowTopPx, dayColumnWidthPx, dayHeightPx);
       } else {
         // Tag-Hintergrund (Feiertag, Samstag, Sonntag, Normal)
         if (day.holiday && day.holiday.color) {
           ctx.fillStyle = day.holiday.color;
-          ctx.fillRect(monthLeftPx, rowTopPx, monthWidthPx, dayHeightPx);
+          ctx.fillRect(cellLeftPx, rowTopPx, dayColumnWidthPx, dayHeightPx);
         } else if (day.isSunday) {
           ctx.fillStyle = state.colorSundayBg || state.colorWeekendBg;
-          ctx.fillRect(monthLeftPx, rowTopPx, monthWidthPx, dayHeightPx);
+          ctx.fillRect(cellLeftPx, rowTopPx, dayColumnWidthPx, dayHeightPx);
         } else if (day.isSaturday) {
           ctx.fillStyle = state.colorSaturdayBg || state.colorWeekendBg;
-          ctx.fillRect(monthLeftPx, rowTopPx, monthWidthPx, dayHeightPx);
+          ctx.fillRect(cellLeftPx, rowTopPx, dayColumnWidthPx, dayHeightPx);
         } else {
           ctx.fillStyle = state.paperColor || '#ffffff';
-          ctx.fillRect(monthLeftPx, rowTopPx, monthWidthPx, dayHeightPx);
+          ctx.fillRect(cellLeftPx, rowTopPx, dayColumnWidthPx, dayHeightPx);
         }
       }
 
@@ -185,7 +187,7 @@ window.CronoCanvas = (function() {
       ctx.strokeStyle = state.colorGrid;
       ctx.lineWidth = Math.max(0.5, state.lineGrid * state.zoom);
       ctx.setLineDash([]);
-      ctx.strokeRect(monthLeftPx, rowTopPx, monthWidthPx, dayHeightPx);
+      ctx.strokeRect(cellLeftPx, rowTopPx, dayColumnWidthPx, dayHeightPx);
 
       if (day.isValid) {
         // --- 3. MEHRPERSONEN-SPALTENTEILUNG (SUB-COLUMNS) ---
@@ -195,7 +197,7 @@ window.CronoCanvas = (function() {
           ctx.lineWidth = Math.max(0.4, (state.lineGrid * 0.7) * state.zoom);
           ctx.setLineDash([2, 2]);
           for (let sc = 1; sc < geo.subColumns; sc++) {
-            const scX = monthLeftPx + (sc * (monthWidthPx / geo.subColumns));
+            const scX = cellLeftPx + (sc * (dayColumnWidthPx / geo.subColumns));
             ctx.beginPath();
             ctx.moveTo(scX, rowTopPx);
             ctx.lineTo(scX, rowTopPx + dayHeightPx);
@@ -217,8 +219,8 @@ window.CronoCanvas = (function() {
           for (let g = 1; g <= state.guideLinesCount; g++) {
             const gY = rowTopPx + (g * step);
             ctx.beginPath();
-            ctx.moveTo(monthLeftPx + 22 * state.zoom, gY);
-            ctx.lineTo(monthLeftPx + monthWidthPx - 4 * state.zoom, gY);
+            ctx.moveTo(cellLeftPx + 22 * state.zoom, gY);
+            ctx.lineTo(cellLeftPx + dayColumnWidthPx - 4 * state.zoom, gY);
             ctx.stroke();
           }
           ctx.restore();
@@ -237,7 +239,7 @@ window.CronoCanvas = (function() {
         const paddingLeft = 6 * state.zoom;
         const textY = rowTopPx + dayHeightPx / 2;
         const dateStr = `${String(day.dayNum).padStart(2, '0')} ${day.dayName}`;
-        ctx.fillText(dateStr, monthLeftPx + paddingLeft, textY);
+        ctx.fillText(dateStr, cellLeftPx + paddingLeft, textY);
 
         let leftOffsetPx = paddingLeft + ctx.measureText(dateStr).width + (4 * state.zoom);
 
@@ -246,7 +248,7 @@ window.CronoCanvas = (function() {
           ctx.save();
           ctx.fillStyle = '#64748b';
           ctx.font = `bold ${7.5 * state.zoom}px ${baseFont}`;
-          ctx.fillText(`KW ${day.isoWeek}`, monthLeftPx + leftOffsetPx, textY);
+          ctx.fillText(`KW ${day.isoWeek}`, cellLeftPx + leftOffsetPx, textY);
           leftOffsetPx += ctx.measureText(`KW ${day.isoWeek}`).width + (5 * state.zoom);
           ctx.restore();
         }
@@ -256,7 +258,7 @@ window.CronoCanvas = (function() {
           ctx.save();
           ctx.font = `${8.5 * state.zoom}px sans-serif`;
           ctx.fillStyle = '#475569';
-          ctx.fillText(day.moonPhase.unicode, monthLeftPx + leftOffsetPx, textY);
+          ctx.fillText(day.moonPhase.unicode, cellLeftPx + leftOffsetPx, textY);
           leftOffsetPx += 12 * state.zoom;
           ctx.restore();
         }
@@ -268,10 +270,10 @@ window.CronoCanvas = (function() {
           ctx.textAlign = 'right';
           ctx.fillStyle = day.holiday.textColor || '#1e293b';
 
-          const maxTitleWidth = (monthLeftPx + monthWidthPx - paddingLeft) - (monthLeftPx + leftOffsetPx + 4 * state.zoom);
+          const maxTitleWidth = (cellLeftPx + dayColumnWidthPx - paddingLeft) - (cellLeftPx + leftOffsetPx + 4 * state.zoom);
           if (maxTitleWidth > 15 * state.zoom) {
             const safeTitle = truncateTextToFit(ctx, day.holiday.title, maxTitleWidth);
-            ctx.fillText(safeTitle, monthLeftPx + monthWidthPx - paddingLeft, textY);
+            ctx.fillText(safeTitle, cellLeftPx + dayColumnWidthPx - paddingLeft, textY);
           }
           ctx.restore();
         }
@@ -280,11 +282,20 @@ window.CronoCanvas = (function() {
         if (day.events && day.events.length > 1) {
           ctx.save();
           ctx.fillStyle = '#0284c7';
-          ctx.fillRect(monthLeftPx + monthWidthPx - (3 * state.zoom), rowTopPx + 2 * state.zoom, 2.5 * state.zoom, dayHeightPx - 4 * state.zoom);
+          ctx.fillRect(cellLeftPx + dayColumnWidthPx - (3 * state.zoom), rowTopPx + 2 * state.zoom, 2.5 * state.zoom, dayHeightPx - 4 * state.zoom);
           ctx.restore();
         }
       }
     });
+
+    if (geo.dayColumns === 2) {
+      const emptyRowTopPx = geo.daysPerColumn * dayHeightPx;
+      ctx.fillStyle = state.colorEmptyDay || '#fafafa';
+      ctx.fillRect(monthLeftPx, emptyRowTopPx, dayColumnWidthPx, dayHeightPx);
+      ctx.strokeStyle = state.colorGrid;
+      ctx.lineWidth = Math.max(0.5, state.lineGrid * state.zoom);
+      ctx.strokeRect(monthLeftPx, emptyRowTopPx, dayColumnWidthPx, dayHeightPx);
+    }
   }
 
   // Haupt-Rendermethode
@@ -521,9 +532,13 @@ window.CronoCanvas = (function() {
 
     if (targetMonthIdx >= 0 && targetMonthIdx < monthsData.length) {
       const month = monthsData[targetMonthIdx];
-      const row = Math.floor(yCss / dayHeightPx);
-      if (row >= 1 && row <= 31) {
-        const day = month.days[row - 1];
+      const dayColumnWidthPx = monthWidthPx / geo.dayColumns;
+      const dayColumn = Math.floor(xInMonth / dayColumnWidthPx);
+      const row = Math.floor(yCss / dayHeightPx) - 1;
+      if (dayColumn >= 0 && dayColumn < geo.dayColumns && row >= 0 && row < geo.daysPerColumn) {
+        if (geo.dayColumns === 2 && dayColumn === 0 && row >= 15) return null;
+        const dayNum = dayColumn === 0 ? row + 1 : row + 16;
+        const day = month.days[dayNum - 1];
         if (day && day.isValid) {
           return {
             dateStr: day.isoDate,

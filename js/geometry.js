@@ -15,15 +15,25 @@ window.CronoGeometry = (function() {
     // Monatspalten-Breite (exakt 1/3 der Sichtbreite)
     const bMonth = bVisible / 3;
     
-    // Tageszeilen-Höhe (1 Header-Zeile + 31 Tage = 32 Zeilen)
-    const hDay = hVisible / 32;
+    const monthLayout = state.monthLayout === 'double' ? 'double' : 'single';
+    const dayColumns = monthLayout === 'double' ? 2 : 1;
+    const daysPerColumn = monthLayout === 'double' ? 16 : 31;
+    const hDay = hVisible / (daysPerColumn + 1);
+
+    function getDayPosition(dayNum) {
+      if (dayColumns === 1) return { column: 0, row: dayNum - 1 };
+      return dayNum <= 15
+        ? { column: 0, row: dayNum - 1 }
+        : { column: 1, row: dayNum - 16 };
+    }
     
     // Gesamte Bannerlänge für 14 Monate (Dezember Vorjahr + 12 Zieljahr + Januar Folgejahr)
     const lTotal = (14 * bMonth) + pufferLeft + pufferRight;
     
     // Unterteilung für Mehrpersonen-/Familienkalender
     const subColumns = Math.max(1, Math.min(6, parseInt(state.subColumns) || 1));
-    const subColumnWidth = bMonth / subColumns;
+    const dayColumnWidth = bMonth / dayColumns;
+    const subColumnWidth = dayColumnWidth / subColumns;
     
     // Millimeter-Werte (für Vektor-PDF und Schnittpläne)
     const bVisibleMm = bVisible * 10;
@@ -33,6 +43,7 @@ window.CronoGeometry = (function() {
     const pufferLeftMm = pufferLeft * 10;
     const pufferRightMm = pufferRight * 10;
     const lTotalMm = lTotal * 10;
+    const dayColumnWidthMm = dayColumnWidth * 10;
     const subColumnWidthMm = subColumnWidth * 10;
 
     // Berechnung des Holz-Bausatzes für den Heimwerker
@@ -54,6 +65,11 @@ window.CronoGeometry = (function() {
       bMonth,
       hDay,
       lTotal,
+      monthLayout,
+      dayColumns,
+      daysPerColumn,
+      getDayPosition,
+      dayColumnWidth,
       subColumns,
       subColumnWidth,
       // mm
@@ -64,6 +80,7 @@ window.CronoGeometry = (function() {
       pufferLeftMm,
       pufferRightMm,
       lTotalMm,
+      dayColumnWidthMm,
       subColumnWidthMm,
       // DIY Wood Kit
       woodRailLengthCm,

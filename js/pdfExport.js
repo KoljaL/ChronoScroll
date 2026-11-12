@@ -79,6 +79,7 @@ window.CronoPDF = (function() {
     // --- 3. 14 MONATE ZEICHNEN ---
     monthsData.forEach((month, mIdx) => {
       const monthLeftMm = leadInMm + (mIdx * geo.bMonthMm);
+      const dayColumnWidthMm = geo.dayColumnWidthMm;
 
       // Monatskopf (Header)
       const headerBgRgb = hexToRgb(state.colorHeaderBg || '#f1f5f9');
@@ -101,37 +102,39 @@ window.CronoPDF = (function() {
 
       // Tageszeilen (1..31)
       month.days.forEach((day, dIdx) => {
-        const rowTopMm = (dIdx + 1) * geo.hDayMm;
+        const position = geo.getDayPosition(dIdx + 1);
+        const cellLeftMm = monthLeftMm + (position.column * dayColumnWidthMm);
+        const rowTopMm = (position.row + 1) * geo.hDayMm;
 
         // Zellhintergrund
         if (!day.isValid) {
           doc.setFillColor(250, 250, 250);
-          doc.rect(monthLeftMm, rowTopMm, geo.bMonthMm, geo.hDayMm, 'F');
+          doc.rect(cellLeftMm, rowTopMm, dayColumnWidthMm, geo.hDayMm, 'F');
         } else if (day.holiday && day.holiday.color) {
           const hRgb = hexToRgb(day.holiday.color);
           doc.setFillColor(hRgb[0], hRgb[1], hRgb[2]);
-          doc.rect(monthLeftMm, rowTopMm, geo.bMonthMm, geo.hDayMm, 'F');
+          doc.rect(cellLeftMm, rowTopMm, dayColumnWidthMm, geo.hDayMm, 'F');
         } else if (day.isSunday) {
           const sunBg = hexToRgb(state.colorSundayBg || state.colorWeekendBg);
           doc.setFillColor(sunBg[0], sunBg[1], sunBg[2]);
-          doc.rect(monthLeftMm, rowTopMm, geo.bMonthMm, geo.hDayMm, 'F');
+          doc.rect(cellLeftMm, rowTopMm, dayColumnWidthMm, geo.hDayMm, 'F');
         } else if (day.isSaturday) {
           const satBg = hexToRgb(state.colorSaturdayBg || state.colorWeekendBg);
           doc.setFillColor(satBg[0], satBg[1], satBg[2]);
-          doc.rect(monthLeftMm, rowTopMm, geo.bMonthMm, geo.hDayMm, 'F');
+          doc.rect(cellLeftMm, rowTopMm, dayColumnWidthMm, geo.hDayMm, 'F');
         }
 
         // Zellrahmen
         doc.setLineWidth(state.lineGrid);
         doc.setDrawColor(gridRgb[0], gridRgb[1], gridRgb[2]);
-        doc.rect(monthLeftMm, rowTopMm, geo.bMonthMm, geo.hDayMm, 'D');
+        doc.rect(cellLeftMm, rowTopMm, dayColumnWidthMm, geo.hDayMm, 'D');
 
         if (day.isValid) {
           // Mehrpersonen-Spaltenteilung (Sub-Columns)
           if (geo.subColumns > 1) {
             doc.setLineWidth(state.lineGrid * 0.6);
             for (let sc = 1; sc < geo.subColumns; sc++) {
-              const scX = monthLeftMm + (sc * geo.subColumnWidthMm);
+              const scX = cellLeftMm + (sc * geo.subColumnWidthMm);
               doc.line(scX, rowTopMm, scX, rowTopMm + geo.hDayMm);
             }
           }
@@ -143,7 +146,7 @@ window.CronoPDF = (function() {
             const stepMm = geo.hDayMm / (state.guideLinesCount + 1);
             for (let g = 1; g <= state.guideLinesCount; g++) {
               const gY = rowTopMm + (g * stepMm);
-              doc.line(monthLeftMm + 8, gY, monthLeftMm + geo.bMonthMm - 2, gY);
+              doc.line(cellLeftMm + 8, gY, cellLeftMm + dayColumnWidthMm - 2, gY);
             }
           }
 
@@ -162,7 +165,7 @@ window.CronoPDF = (function() {
           doc.setFontSize(8.5 * state.fontDayScale);
           const textYMm = rowTopMm + (geo.hDayMm / 2) + 1.2;
           const dayLabel = `${String(day.dayNum).padStart(2, '0')} ${day.dayName}`;
-          doc.text(dayLabel, monthLeftMm + 2.5, textYMm);
+          doc.text(dayLabel, cellLeftMm + 2.5, textYMm);
 
           let leftOffsetMm = 2.5 + (doc.getTextWidth(dayLabel)) + 1.5;
 
@@ -171,7 +174,7 @@ window.CronoPDF = (function() {
             doc.setFont(baseFont, 'bold');
             doc.setFontSize(6.5);
             doc.setTextColor(100, 116, 139);
-            doc.text(`KW ${day.isoWeek}`, monthLeftMm + leftOffsetMm, textYMm);
+            doc.text(`KW ${day.isoWeek}`, cellLeftMm + leftOffsetMm, textYMm);
           }
 
           // Feiertags-/Terminbezeichnung mit Kollisionsschutz
@@ -181,17 +184,26 @@ window.CronoPDF = (function() {
             doc.setTextColor(30, 41, 59);
 
             let title = day.holiday.title;
-            const maxTitleWidthMm = geo.bMonthMm - leftOffsetMm - 6;
+            const maxTitleWidthMm = dayColumnWidthMm - leftOffsetMm - 6;
             if (maxTitleWidthMm > 10) {
               while (title.length > 3 && doc.getTextWidth(title + '…') > maxTitleWidthMm) {
                 title = title.slice(0, -1);
               }
               if (title !== day.holiday.title) title += '…';
-              doc.text(title, monthLeftMm + geo.bMonthMm - 2.5, textYMm, { align: 'right' });
+              doc.text(title, cellLeftMm + dayColumnWidthMm - 2.5, textYMm, { align: 'right' });
             }
           }
         }
       });
+
+      if (geo.dayColumns === 2) {
+        const emptyRowTopMm = geo.daysPerColumn * geo.hDayMm;
+        doc.setFillColor(250, 250, 250);
+        doc.rect(monthLeftMm, emptyRowTopMm, dayColumnWidthMm, geo.hDayMm, 'F');
+        doc.setLineWidth(state.lineGrid);
+        doc.setDrawColor(gridRgb[0], gridRgb[1], gridRgb[2]);
+        doc.rect(monthLeftMm, emptyRowTopMm, dayColumnWidthMm, geo.hDayMm, 'D');
+      }
     });
 
     // --- 4. NACHLAUF (WICKEL-PUFFER RECHTS) ---

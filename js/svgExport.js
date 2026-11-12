@@ -40,6 +40,7 @@ window.CronoVector = (function() {
     // 14 Monate
     monthsData.forEach((month, mIdx) => {
       const monthLeftMm = leadInMm + (mIdx * geo.bMonthMm);
+      const dayColumnWidthMm = geo.dayColumnWidthMm;
 
       // Header Zelle
       svg.push(`  <rect x="${monthLeftMm}" y="0" width="${geo.bMonthMm}" height="${geo.hDayMm}" fill="${state.colorHeaderBg || '#f1f5f9'}" stroke="${state.colorGrid}" stroke-width="${state.lineGrid}"/>`);
@@ -48,7 +49,9 @@ window.CronoVector = (function() {
       svg.push(`  <text x="${hX}" y="${geo.hDayMm / 2 + 1.1}" text-anchor="${hAlign}" class="header-text">${month.label.toUpperCase()}</text>`);
 
       month.days.forEach((day, dIdx) => {
-        const rowTopMm = (dIdx + 1) * geo.hDayMm;
+        const position = geo.getDayPosition(dIdx + 1);
+        const cellLeftMm = monthLeftMm + (position.column * dayColumnWidthMm);
+        const rowTopMm = (position.row + 1) * geo.hDayMm;
 
         let bg = 'none';
         if (!day.isValid) bg = '#fafafa';
@@ -57,11 +60,11 @@ window.CronoVector = (function() {
         else if (day.isSaturday) bg = state.colorSaturdayBg || state.colorWeekendBg;
 
         if (bg !== 'none') {
-          svg.push(`  <rect x="${monthLeftMm}" y="${rowTopMm}" width="${geo.bMonthMm}" height="${geo.hDayMm}" fill="${bg}"/>`);
+          svg.push(`  <rect x="${cellLeftMm}" y="${rowTopMm}" width="${dayColumnWidthMm}" height="${geo.hDayMm}" fill="${bg}"/>`);
         }
 
         // Zellrand
-        svg.push(`  <rect x="${monthLeftMm}" y="${rowTopMm}" width="${geo.bMonthMm}" height="${geo.hDayMm}" fill="none" stroke="${state.colorGrid}" stroke-width="${state.lineGrid}"/>`);
+        svg.push(`  <rect x="${cellLeftMm}" y="${rowTopMm}" width="${dayColumnWidthMm}" height="${geo.hDayMm}" fill="none" stroke="${state.colorGrid}" stroke-width="${state.lineGrid}"/>`);
 
         if (day.isValid) {
           // Schreiblinien
@@ -69,14 +72,14 @@ window.CronoVector = (function() {
             const stepMm = geo.hDayMm / (state.guideLinesCount + 1);
             for (let g = 1; g <= state.guideLinesCount; g++) {
               const gY = rowTopMm + (g * stepMm);
-              svg.push(`  <line x1="${monthLeftMm + 7}" y1="${gY}" x2="${monthLeftMm + geo.bMonthMm - 2}" y2="${gY}" stroke="${state.colorGrid}" stroke-width="0.15" stroke-dasharray="0.8,0.8"/>`);
+              svg.push(`  <line x1="${cellLeftMm + 7}" y1="${gY}" x2="${cellLeftMm + dayColumnWidthMm - 2}" y2="${gY}" stroke="${state.colorGrid}" stroke-width="0.15" stroke-dasharray="0.8,0.8"/>`);
             }
           }
 
           // Sub-Columns
           if (geo.subColumns > 1) {
             for (let sc = 1; sc < geo.subColumns; sc++) {
-              const scX = monthLeftMm + (sc * geo.subColumnWidthMm);
+              const scX = cellLeftMm + (sc * geo.subColumnWidthMm);
               svg.push(`  <line x1="${scX}" y1="${rowTopMm}" x2="${scX}" y2="${rowTopMm + geo.hDayMm}" stroke="${state.colorGrid}" stroke-width="0.2" stroke-dasharray="1,1"/>`);
             }
           }
@@ -84,17 +87,22 @@ window.CronoVector = (function() {
           // Text Tag
           const tCls = (day.isSunday || day.isSaturday) ? 'wk-text' : 'day-text';
           const textY = rowTopMm + (geo.hDayMm / 2) + 0.9;
-          svg.push(`  <text x="${monthLeftMm + 2.5}" y="${textY}" class="${tCls}">${String(day.dayNum).padStart(2,'0')} ${day.dayName}</text>`);
+          svg.push(`  <text x="${cellLeftMm + 2.5}" y="${textY}" class="${tCls}">${String(day.dayNum).padStart(2,'0')} ${day.dayName}</text>`);
 
           if (state.showKW && day.isoWeek) {
-            svg.push(`  <text x="${monthLeftMm + 13}" y="${textY}" class="kw-text">KW ${day.isoWeek}</text>`);
+            svg.push(`  <text x="${cellLeftMm + 13}" y="${textY}" class="kw-text">KW ${day.isoWeek}</text>`);
           }
 
           if (day.holiday && day.holiday.title) {
-            svg.push(`  <text x="${monthLeftMm + geo.bMonthMm - 2.5}" y="${textY}" class="holiday-text">${day.holiday.title}</text>`);
+            svg.push(`  <text x="${cellLeftMm + dayColumnWidthMm - 2.5}" y="${textY}" class="holiday-text">${day.holiday.title}</text>`);
           }
         }
       });
+
+      if (geo.dayColumns === 2) {
+        const emptyRowTopMm = geo.daysPerColumn * geo.hDayMm;
+        svg.push(`  <rect x="${monthLeftMm}" y="${emptyRowTopMm}" width="${dayColumnWidthMm}" height="${geo.hDayMm}" fill="#fafafa" stroke="${state.colorGrid}" stroke-width="${state.lineGrid}"/>`);
+      }
     });
 
     // Puffer Beschriftungen

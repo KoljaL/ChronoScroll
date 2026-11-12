@@ -35,10 +35,10 @@ Die Maße bestimmen die Kalendergeometrie und die Basis der Zuschnittliste. Die 
 | Noch benötigt? | Funktion | README | Webseite | Details / Einschränkungen |
 |---|---|---|---|---|
 | [ ] | Zieljahr wählen | Ja | Ja | Eingabefeld mit HTML-Grenzen 1900–2100; der Jahreswechsel berechnet Feiertage und Ferien neu und ersetzt die bisherige Terminliste. |
-| [ ] | Sichtbare Höhe der Schreibplatte einstellen | Ja | Ja | Standard 32 cm; die Tageshöhe ergibt sich aus der Höhe geteilt durch 32. |
+| [ ] | Sichtbare Höhe der Schreibplatte einstellen | Ja | Ja | Standard 32 cm; je nach Monatslayout wird die Höhe in 32 (einspaltig) oder 17 (zweispaltig) Zeilen aufgeteilt. |
 | [ ] | Breite des Drei-Monats-Sichtfensters einstellen | Ja | Ja | Standard 42 cm; eine Monatsspalte ist ein Drittel davon breit. |
 | [ ] | Vorlauf und Nachlauf getrennt einstellen | Teilw. | Ja | Standard jeweils 15 cm; die README beschreibt einen gemeinsamen Puffer. **Achtung:** Der Geometriecode ersetzt den Wert `0` durch 15 cm. |
-| [ ] | Automatisch berechnete Monatsbreite, Tageshöhe und Rollenlänge ablesen | Ja | Ja | Bei Standardmaßen 14 cm, 1 cm und 226 cm; die Webseite zeigt zusätzlich den Jahresbereich und den Status der aktuellen Ansicht. |
+| [ ] | Automatisch berechnete Monatsbreite, Tagesfeldhöhe und Rollenlänge ablesen | Ja | Ja | Bei Standardmaßen 14 cm, 1 cm im einspaltigen oder ca. 1,88 cm im zweispaltigen Layout sowie 226 cm; die Rollenlänge bleibt layoutunabhängig. |
 | [ ] | Inhalt des linken Vorlaufs auswählen | Nein | Teilw. | Vorschau: Montagebereich, Titel, Jahresübersicht oder Notiz-/To-do-Bereich. PDF berücksichtigt nur Titel oder Montagebeschriftung; SVG nur Montagebeschriftung. |
 | [ ] | Eigenen Titel für den Vorlauf eingeben | Nein | Teilw. | In Vorschau und PDF bei Auswahl „Großer Kalendertitel“; nicht im SVG. |
 | [ ] | Inhalt des rechten Nachlaufs auswählen | Nein | Teilw. | Vorschau: Montagebereich oder Jahresrückblick mit Notizlinien; PDF und SVG zeigen stattdessen Montagebeschriftung. |
@@ -49,6 +49,7 @@ Diese Einstellungen beeinflussen die Darstellung der Tageszeilen und Monatsköpf
 
 | Noch benötigt? | Funktion | README | Webseite | Details / Einschränkungen |
 |---|---|---|---|---|
+| [ ] | Tageslisten pro Monat ein- oder zweispaltig anordnen | Ja | Ja | Zweispaltig: Tage 1–15 links, 16–31 rechts; der Monatskopf spannt beide Listen. Sichtfenster, Monatsbreite und Bannerlänge bleiben unverändert. |
 | [ ] | Tageszeilen in Personen-Spalten aufteilen | Nein | Ja | Eine bis vier Spalten; in Vorschau, PDF und SVG vorhanden, mit unterschiedlichen Linienstilen. |
 | [ ] | Schreiblinien pro Tag einstellen | Nein | Ja | Keine bis drei Hilfslinien; auch in PDF und SVG. |
 | [ ] | Stil der Schreiblinien wählen | Nein | Teilw. | Gestrichelt, gepunktet oder durchgezogen in der Vorschau; PDF zeichnet durchgezogene, SVG gestrichelte Linien unabhängig von der Auswahl. |
