@@ -134,6 +134,7 @@ Alle Abmessungen leiten sich dynamisch von der montierten Schreibplatte ab:
   * Ein teilbarer Link öffnet die aktuellen Gestaltungseinstellungen für das Folgejahr. Individuelle und importierte Termine werden nicht übertragen; Feiertage und Ferien werden für das neue Jahr und die gewählte Region neu berechnet. Eigene Schriftdateien müssen erneut geladen werden.
 * **Vektor-PDF-Export für Endlosplotter auf Deutsch:**
   * Generiert über **jsPDF** eine millimetergenaue Vektor-PDF (`Rollkalender-[Jahr].pdf`) mit eingebetteten TrueType-Schriften, deutschen Monatsnamen (`Januar` bis `Dezember`), deutschen Tageskürzeln (`Mo` bis `So`) und Randbeschriftungen.
+  * Im rechten Montagepuffer steht ein QR-Code mit demselben Folgejahres-Link wie im Reiter „Vorlagen“. Die Rollenmaße ändern sich nicht; bei zu schmalem Puffer meldet der Export einen Fehler.
   * 100 % verlustfrei und gestochen scharf auf jedem Großformat-Plotter druckbar.
 
 ---
@@ -164,5 +165,7 @@ Die Versionsangabe in der unteren Statusleiste wird in `index.html` manuell gepf
 Maße deiner Schreibplatte eintragen, Design anpassen und auf **„Plotter-PDF exportieren“** klicken. Die fertige PDF-Datei kannst du an einen Rollenplotter oder Druckdienstleister senden.
 
 Für eine eigene Schrift im Bereich **Stil → Typografie** eine TTF-Datei auswählen. Sie wird nur im Browser verarbeitet und nicht hochgeladen; eine einzelne TTF-Datei wird für normale, fette und kursive Textstellen verwendet. Eigene Schriften müssen nach einem Neuladen erneut ausgewählt werden. Die mitgelieferten Schriften Lato, PT Serif und Cousine stehen unter der SIL Open Font License 1.1; die Lizenztexte liegen in [`fonts/`](./fonts/).
+
+Der QR-Code wird lokal mit [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) ([MIT-Lizenz](./js/qrcode.LICENSE.txt), Copyright Kazuhiko Arase) erzeugt; die Konfiguration wird nicht an einen QR-Dienst gesendet. Der Folgejahres-Link öffnet die öffentliche Anwendung und überträgt keine individuellen oder importierten Termine. Ein zum Kalenderjahr passender Jahresbestandteil im individuellen Titel wird auf das Folgejahr gesetzt. Die Jahresauswahl reicht bis 2100; für 2100 ist deshalb kein Folgejahres-Link verfügbar.
 
 Die eingebetteten PT-Serif-Dateien stammen aus der Google-Fonts-Auslieferung (Version 19: [normal](https://fonts.gstatic.com/s/ptserif/v19/EJRVQgYoZZY2vCFuvDFR.ttf), [fett](https://fonts.gstatic.com/s/ptserif/v19/EJRSQgYoZZY2vCFuvAnt65qV.ttf), [kursiv](https://fonts.gstatic.com/s/ptserif/v19/EJRTQgYoZZY2vCFuvAFTzro.ttf)). Sie enthalten GPOS-Kerning ohne die zu große ältere `kern`-Tabelle. Bei eigenen TTF-Dateien weist CronoScroll auf erkennbar übergroße Kerning-Untertabellen hin; die Datei wird nicht verändert und andere Font-Probleme lassen sich nicht vollständig vorab erkennen.

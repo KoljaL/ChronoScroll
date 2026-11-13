@@ -64,6 +64,15 @@ function nearlyEqual(actual, expected) {
   return Math.abs(actual - expected) < 1e-9;
 }
 
+function stubQrDependencies() {
+  return {
+    CronoShare: { createNextYearUrl: () => 'https://example.com/' },
+    qrcode: () => ({
+      addData() {}, make() {}, getModuleCount: () => 1, isDark: () => true
+    })
+  };
+}
+
 test('PDF export places day 16 in the second half without changing the roll size', () => {
   let exportedDoc;
   class JsPdf {
@@ -88,6 +97,7 @@ test('PDF export places day 16 in the second half without changing the roll size
 
   const context = {
     window: {
+      ...stubQrDependencies(),
       jspdf: { jsPDF: JsPdf },
       CronoGeometry: null,
       CronoHolidays: { get14MonthsData: createMonths },
@@ -168,6 +178,7 @@ test('PDF and SVG reserve and paint the same separators for both layouts', () =>
       }
       const context = {
         window: {
+          ...stubQrDependencies(),
           jspdf: { jsPDF: JsPdf },
           CronoHolidays: { get14MonthsData: createMonths },
           CronoFonts: { registerPdfFont: () => 'helvetica' }
@@ -211,4 +222,74 @@ test('PDF and SVG reserve and paint the same separators for both layouts', () =>
       assert.ok(exportedBlob.content.endsWith('</g>\n</svg>'));
     }
   }
+});
+
+test('PDF encodes the shared URL as vector modules within the right buffer', () => {
+  let exportedDoc;
+  let encodedUrl;
+  let qr;
+  class JsPdf {
+    constructor(options) { this.options = options; this.rects = []; exportedDoc = this; }
+    rect(...args) { this.rects.push({ args, color: this.fillColor }); }
+    setFillColor(...color) { this.fillColor = color; }
+    getTextWidth(text) { return String(text).length; }
+    save() {} line() {} setLineWidth() {} setDrawColor() {}
+    setTextColor() {} setFont() {} setFontSize() {} text() {}
+  }
+  const context = {
+    TextEncoder, TextDecoder, URLSearchParams, btoa, atob,
+    window: {
+      jspdf: { jsPDF: JsPdf },
+      CronoHolidays: { get14MonthsData: createMonths },
+      CronoFonts: { registerPdfFont: () => 'helvetica' }
+    }
+  };
+  vm.createContext(context);
+  for (const file of ['geometry.js', 'shareConfig.js', 'qrcode.js', 'pdfExport.js']) {
+    vm.runInContext(fs.readFileSync(path.join(root, 'js', file), 'utf8'), context);
+  }
+  context.window.qrcode = (...args) => {
+    qr = context.qrcode(...args);
+    const addData = qr.addData;
+    qr.addData = data => { encodedUrl = data; addData(data); };
+    return qr;
+  };
+  const state = {
+    ...createState('double'),
+    bannerCustomTitle: 'Kalender 2027', country: 'DE', bundesland: 'NW',
+    guideLinesStyle: 'dashed', showMoon: true,
+    colorSaturdayText: '#0f172a', colorSundayText: '#e11d48',
+    colorWeekendBg: '#f1f5f9', colorWeekendText: '#e11d48',
+    monthSeparators: {
+      single: { enabled: false, widthMm: 0.5, colorMode: 'custom', color: '#cbd5e1', header: false },
+      double: { enabled: false, widthMm: 0.5, colorMode: 'custom', color: '#cbd5e1', header: false }
+    }
+  };
+  context.window.CronoPDF.exportPlotterPDF(state);
+  assert.equal(encodedUrl, context.window.CronoShare.createNextYearUrl(state));
+  assert.deepEqual(Array.from(exportedDoc.options.format), [2260, 320]);
+  const white = exportedDoc.rects.find(({ args, color }) =>
+    args[0] === 2135 && args[1] === 110 && args[2] === 100 &&
+    args[3] === 100 && JSON.stringify(color) === '[255,255,255]');
+  assert.ok(white);
+  const moduleSize = 100 / (qr.getModuleCount() + 8);
+  const black = exportedDoc.rects.filter(({ color, args }) =>
+    JSON.stringify(color) === '[0,0,0]' && args[4] === 'F');
+  const drawn = new Set();
+  for (const { args: [x, y, width, height] } of black) {
+    assert.ok(x >= 2135 + 4 * moduleSize && x + width <= 2235 - 4 * moduleSize + 1e-9);
+    assert.ok(y >= 110 + 4 * moduleSize && y + height <= 210 - 4 * moduleSize + 1e-9);
+    const row = Math.round((y - 110) / moduleSize) - 4;
+    const first = Math.round((x - 2135) / moduleSize) - 4;
+    for (let col = first; col < first + Math.round(width / moduleSize); col++) drawn.add(`${row},${col}`);
+  }
+  for (let row = 0; row < qr.getModuleCount(); row++) {
+    for (let col = 0; col < qr.getModuleCount(); col++) {
+      assert.equal(drawn.has(`${row},${col}`), qr.isDark(row, col));
+    }
+  }
+  state.pufferRight = 1;
+  assert.throws(() => context.window.CronoPDF.exportPlotterPDF(state), /puffer.*zu schmal/i);
+  state.pufferRight = 0;
+  assert.throws(() => context.window.CronoPDF.exportPlotterPDF(state), /puffer.*zu schmal/i);
 });

@@ -34,6 +34,23 @@ window.CronoPDF = (function() {
 
     const { jsPDF } = window.jspdf;
     const geo = window.CronoGeometry.calculate(state);
+    if (typeof window.qrcode !== 'function') {
+      throw new Error('Die QR-Code-Bibliothek ist nicht geladen.');
+    }
+    const url = window.CronoShare.createNextYearUrl(state);
+    const qr = window.qrcode(0, 'L');
+    qr.addData(url);
+    try {
+      qr.make();
+    } catch (error) {
+      throw new Error(`QR-Code konnte nicht erstellt werden: ${error.message || error}`);
+    }
+    const moduleCount = qr.getModuleCount();
+    const qrSizeMm = Math.min(state.pufferRight * 10 - 10, geo.hVisibleMm - 10, 100);
+    const moduleSizeMm = qrSizeMm / (moduleCount + 8);
+    if (moduleSizeMm < 0.25) {
+      throw new Error('Der rechte Montagepuffer ist für den QR-Code zu schmal. Bitte den Puffer vergrößern.');
+    }
     const monthsData = window.CronoHolidays.get14MonthsData(state.year, state.holidays, state);
 
     // PDF im exakten Rollenmaß (in mm)
@@ -232,10 +249,23 @@ window.CronoPDF = (function() {
     const leadOutStartMm = geo.lTotalMm - geo.pufferRightMm;
     doc.setFillColor(248, 250, 252);
     doc.rect(leadOutStartMm, 0, geo.pufferRightMm, geo.hVisibleMm, 'F');
-    doc.setTextColor(148, 163, 184);
-    doc.setFont(baseFont, 'normal');
-    doc.setFontSize(8);
-    doc.text('WICKEL-PUFFER (MONTAGE)', leadOutStartMm + (geo.pufferRightMm / 2), geo.hVisibleMm / 2, { align: 'center', angle: 90 });
+    const qrX = leadOutStartMm + (geo.pufferRightMm - qrSizeMm) / 2;
+    const qrY = (geo.hVisibleMm - qrSizeMm) / 2;
+    doc.setFillColor(255, 255, 255);
+    doc.rect(qrX, qrY, qrSizeMm, qrSizeMm, 'F');
+    doc.setFillColor(0, 0, 0);
+    for (let row = 0; row < moduleCount; row++) {
+      for (let col = 0; col < moduleCount;) {
+        if (!qr.isDark(row, col)) {
+          col++;
+          continue;
+        }
+        const start = col++;
+        while (col < moduleCount && qr.isDark(row, col)) col++;
+        doc.rect(qrX + (start + 4) * moduleSizeMm, qrY + (row + 4) * moduleSizeMm,
+          (col - start) * moduleSizeMm, moduleSizeMm, 'F');
+      }
+    }
 
     // --- 5. AUSSENRAHMEN ---
     doc.setLineWidth(state.lineBorder);
