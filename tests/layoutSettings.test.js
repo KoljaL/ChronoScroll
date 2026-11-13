@@ -4,7 +4,7 @@ const path = require('node:path');
 const test = require('node:test');
 const vm = require('node:vm');
 
-test('separator settings are independent, validated, and restored with old and new presets', () => {
+test('separator settings and next-year links update and restore before holidays load', async () => {
   class Element {
     constructor() {
       this.value = '';
@@ -50,7 +50,11 @@ test('separator settings are independent, validated, and restored with old and n
   const storage = { cronoscroll_v2_presets: JSON.stringify({ old: { monthLayout: 'single' } }) };
   let latestState;
   let start;
+  let copied;
+  const holidayCalls = [];
   const context = {
+    TextEncoder, TextDecoder, URLSearchParams, btoa, atob,
+    navigator: { clipboard: { async writeText(text) { copied = text; } } },
     document: {
       getElementById: get,
       createElement: () => new Element(),
@@ -62,13 +66,18 @@ test('separator settings are independent, validated, and restored with old and n
       setItem: (key, value) => { storage[key] = value; }
     },
     window: {
+      location: { search: '' },
       addEventListener(type, fn) { if (type === 'DOMContentLoaded') start = fn; },
-      CronoHolidays: { getDACHHolidays: () => [], getSchoolVacations: () => [] },
+      CronoHolidays: {
+        getDACHHolidays: (...args) => { holidayCalls.push(args); return []; },
+        getSchoolVacations: () => []
+      },
       CronoCanvas: { render(canvas, container, state) { latestState = structuredClone(state); } },
       CronoFonts: { hasCustomFont: () => false, loadStandardFonts: () => new Promise(() => {}) }
     }
   };
   vm.createContext(context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/shareConfig.js'), 'utf8'), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/app.js'), 'utf8'), context);
   start();
   const change = (id, value, type = 'change') => {
@@ -103,4 +112,20 @@ test('separator settings are independent, validated, and restored with old and n
   assert.equal(latestState.monthSeparators.single.widthMm, 5);
   assert.equal(latestState.monthSeparators.double.widthMm, 12);
   assert.equal(latestState.monthSeparators.double.header, true);
+
+  change('input-custom-title', 'Familie 2027', 'input');
+  const link = get('next-year-link').href;
+  assert.equal(get('next-year-link').textContent, link);
+  assert.equal(link, context.window.CronoShare.createNextYearUrl(latestState));
+  await get('btn-copy-next-year-link').listeners.click();
+  assert.equal(copied, link);
+  assert.equal(get('next-year-link-status').textContent, 'Link kopiert.');
+
+  context.window.location.search = new URL(link).search;
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/app.js'), 'utf8'), context);
+  start();
+  assert.equal(latestState.year, 2028);
+  assert.equal(latestState.bannerCustomTitle, 'Familie 2028');
+  assert.equal(latestState.monthSeparators.double.widthMm, 12);
+  assert.deepEqual(holidayCalls.at(-1), [2028, 'DE', 'NW']);
 });

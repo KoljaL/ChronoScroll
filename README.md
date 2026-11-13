@@ -131,6 +131,7 @@ Alle Abmessungen leiten sich dynamisch von der montierten Schreibplatte ab:
   * Individuelle Zeiträume (Urlaube, Geburtstage, Meilensteine) frei hinzufügbar und editierbar.
 * **Vorlagen-Verwaltung:**
   * Layout-Presets können mit Namen im Browser (`localStorage`) gespeichert, geladen oder gelöscht werden.
+  * Ein teilbarer Link öffnet die aktuellen Gestaltungseinstellungen für das Folgejahr. Individuelle und importierte Termine werden nicht übertragen; Feiertage und Ferien werden für das neue Jahr und die gewählte Region neu berechnet. Eigene Schriftdateien müssen erneut geladen werden.
 * **Vektor-PDF-Export für Endlosplotter auf Deutsch:**
   * Generiert über **jsPDF** eine millimetergenaue Vektor-PDF (`Rollkalender-[Jahr].pdf`) mit eingebetteten TrueType-Schriften, deutschen Monatsnamen (`Januar` bis `Dezember`), deutschen Tageskürzeln (`Mo` bis `So`) und Randbeschriftungen.
   * 100 % verlustfrei und gestochen scharf auf jedem Großformat-Plotter druckbar.

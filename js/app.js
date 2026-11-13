@@ -150,7 +150,26 @@
   }
 
   function renderPreview() {
+    updateNextYearLink();
     window.CronoCanvas.render(canvas, container, state);
+  }
+
+  function updateNextYearLink() {
+    const link = document.getElementById('next-year-link');
+    const button = document.getElementById('btn-copy-next-year-link');
+    const status = document.getElementById('next-year-link-status');
+    try {
+      const url = window.CronoShare.createNextYearUrl(state);
+      link.href = url;
+      link.textContent = url;
+      button.disabled = false;
+      status.textContent = '';
+    } catch (error) {
+      link.removeAttribute('href');
+      link.textContent = '';
+      button.disabled = true;
+      status.textContent = `Link nicht verfügbar: ${error.message}`;
+    }
   }
 
   // --- UI INPUTS SYNCHRONISIEREN ---
@@ -698,6 +717,15 @@
     });
 
     // 9. Vorlagen-Verwaltung
+    document.getElementById('btn-copy-next-year-link').addEventListener('click', async () => {
+      const status = document.getElementById('next-year-link-status');
+      try {
+        await navigator.clipboard.writeText(window.CronoShare.createNextYearUrl(state));
+        status.textContent = 'Link kopiert.';
+      } catch (error) {
+        status.textContent = `Link konnte nicht kopiert werden: ${error.message}`;
+      }
+    });
     document.getElementById('btn-save-preset').addEventListener('click', () => {
       const input = document.getElementById('input-preset-name');
       const name = input.value.trim();
@@ -874,6 +902,10 @@
 
   // Initialisierung beim Laden
   window.addEventListener('DOMContentLoaded', () => {
+    window.CronoShare.restore(window.location.search, state);
+    if (state.fontFamily === 'custom' && !window.CronoFonts.hasCustomFont()) {
+      setFontStatus('Der Link verwendet eine eigene Schrift. Bitte lade die TTF-Datei erneut hoch.', true);
+    }
     loadDefaultHolidays();
     syncInputsFromState();
     renderHolidaysList();
