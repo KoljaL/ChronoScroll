@@ -118,6 +118,7 @@ Alle Abmessungen leiten sich dynamisch von der montierten Schreibplatte ab:
   * Reagiert in Echtzeit auf jede Parameteränderung.
   * Stufenloser Zoom von 20 % bis 300 % und 100%-Reset.
   * Wahlweise eine oder zwei Tageslisten pro Monat; im zweispaltigen Layout bleiben Sichtfenster und Baugröße unverändert.
+  * Optionaler Trennstreifen zwischen Monaten, für beide Tageslistenlayouts getrennt einstellbar: 0,1–20 mm breit, in eigener Farbe oder automatisch in Papierfarbe, wahlweise bis in die Monatskopfzeile. Der Streifen verkleinert die Tagesfelder, nicht aber Sichtfenster oder Rollenlänge; er erscheint auch in PDF, SVG und PNG.
 * **Typografie & Stil:**
   * Wählbare, in der PDF eingebettete Schriftarten (*Lato*, *PT Serif*, *Cousine*) und skalierbare Schriftgrößen für Kopf- und Tageszeilen.
   * Eigene TTF-Schriften können lokal geladen werden. Die gewählte Schrift erscheint in der Vorschau und wird in die Plotter-PDF eingebettet.

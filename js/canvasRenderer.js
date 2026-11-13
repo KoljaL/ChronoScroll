@@ -131,15 +131,22 @@ window.CronoCanvas = (function() {
   }
 
   // Zeichnet eine einzelne Monatsspalte
-  function drawMonthColumn(ctx, month, monthLeftPx, monthWidthPx, dayHeightPx, baseFont, state, geo) {
-    const dayColumnWidthPx = monthWidthPx / geo.dayColumns;
+  function drawMonthColumn(ctx, month, monthIndex, monthLeftPx, monthWidthPx, dayHeightPx, baseFont, state, geo) {
+    const metrics = geo.getMonthMetrics(monthIndex);
+    const pxPerCm = 20 * state.zoom;
+    const contentLeftPx = monthLeftPx + metrics.leftInset * pxPerCm;
+    const dayColumnWidthPx = metrics.dayColumnWidth * pxPerCm;
+    const separator = state.monthSeparators && state.monthSeparators[geo.monthLayout];
+    const insetHeader = geo.separatorWidth > 0 && separator.header;
+    const headerLeftPx = insetHeader ? contentLeftPx : monthLeftPx;
+    const headerWidthPx = insetHeader ? metrics.contentWidth * pxPerCm : monthWidthPx;
 
     // --- 1. KOPFZEILE (HEADER) ---
     ctx.fillStyle = state.colorHeaderBg || '#f1f5f9';
-    ctx.fillRect(monthLeftPx, 0, monthWidthPx, dayHeightPx);
+    ctx.fillRect(headerLeftPx, 0, headerWidthPx, dayHeightPx);
     ctx.strokeStyle = state.colorGrid;
     ctx.lineWidth = Math.max(1, state.lineGrid * state.zoom * 1.5);
-    ctx.strokeRect(monthLeftPx, 0, monthWidthPx, dayHeightPx);
+    ctx.strokeRect(headerLeftPx, 0, headerWidthPx, dayHeightPx);
 
     ctx.fillStyle = state.colorHeaderText || state.colorText;
     ctx.font = `bold ${11 * state.fontHeaderScale * state.zoom}px ${baseFont}`;
@@ -153,13 +160,14 @@ window.CronoCanvas = (function() {
       headerTitle = `${month.monthNumber} · ${month.monthName.toUpperCase()} ${month.year}`;
     }
 
-    const headerTextX = (state.headerAlign === 'left') ? (monthLeftPx + 10 * state.zoom) : (monthLeftPx + monthWidthPx / 2);
-    ctx.fillText(headerTitle, headerTextX, dayHeightPx / 2);
+    const headerTextX = (state.headerAlign === 'left') ? (headerLeftPx + 10 * state.zoom) : (headerLeftPx + headerWidthPx / 2);
+    if (insetHeader) ctx.fillText(headerTitle, headerTextX, dayHeightPx / 2, Math.max(1, headerWidthPx - 20 * state.zoom));
+    else ctx.fillText(headerTitle, headerTextX, dayHeightPx / 2);
 
     // --- 2. TAGESZEILEN (1 BIS 31) ---
     month.days.forEach((day, dIdx) => {
       const position = geo.getDayPosition(dIdx + 1);
-      const cellLeftPx = monthLeftPx + (position.column * dayColumnWidthPx);
+      const cellLeftPx = contentLeftPx + (position.column * dayColumnWidthPx);
       const rowTopPx = (position.row + 1) * dayHeightPx;
 
       if (!day.isValid) {
@@ -291,10 +299,26 @@ window.CronoCanvas = (function() {
     if (geo.dayColumns === 2) {
       const emptyRowTopPx = geo.daysPerColumn * dayHeightPx;
       ctx.fillStyle = state.colorEmptyDay || '#fafafa';
-      ctx.fillRect(monthLeftPx, emptyRowTopPx, dayColumnWidthPx, dayHeightPx);
+      ctx.fillRect(contentLeftPx, emptyRowTopPx, dayColumnWidthPx, dayHeightPx);
       ctx.strokeStyle = state.colorGrid;
       ctx.lineWidth = Math.max(0.5, state.lineGrid * state.zoom);
-      ctx.strokeRect(monthLeftPx, emptyRowTopPx, dayColumnWidthPx, dayHeightPx);
+      ctx.strokeRect(contentLeftPx, emptyRowTopPx, dayColumnWidthPx, dayHeightPx);
+    }
+  }
+
+  function drawMonthSeparators(ctx, geo, state, firstMonth, count, startPx, monthWidthPx, dayHeightPx, heightPx) {
+    if (!geo.separatorWidth) return;
+    const separator = state.monthSeparators[geo.monthLayout];
+    const widthPx = geo.separatorWidth * 20 * state.zoom;
+    const topPx = separator.header ? 0 : dayHeightPx;
+    ctx.fillStyle = separator.colorMode === 'paper' ? state.paperColor : separator.color;
+    for (let i = 0; i <= count; i++) {
+      const boundary = firstMonth + i;
+      if (boundary <= 0 || boundary >= 14) continue;
+      const center = startPx + i * monthWidthPx;
+      const left = Math.max(startPx, center - widthPx / 2);
+      const right = Math.min(startPx + count * monthWidthPx, center + widthPx / 2);
+      ctx.fillRect(left, topPx, right - left, heightPx - topPx);
     }
   }
 
@@ -342,9 +366,10 @@ window.CronoCanvas = (function() {
         const mIdx = state.currentMonthIndex + i;
         const month = monthsData[mIdx];
         if (month) {
-          drawMonthColumn(ctx, month, i * monthWidthPx, monthWidthPx, dayHeightPx, baseFont, state, geo);
+          drawMonthColumn(ctx, month, mIdx, i * monthWidthPx, monthWidthPx, dayHeightPx, baseFont, state, geo);
         }
       }
+      drawMonthSeparators(ctx, geo, state, state.currentMonthIndex, 3, 0, monthWidthPx, dayHeightPx, targetHeightPx);
 
       // Außenrahmen
       ctx.strokeStyle = state.colorBorder || '#0f172a';
@@ -419,8 +444,9 @@ window.CronoCanvas = (function() {
       // --- 14 MONATE ZEICHNEN ---
       monthsData.forEach((month, mIdx) => {
         const monthLeftPx = leadInPx + (mIdx * monthWidthPx);
-        drawMonthColumn(ctx, month, monthLeftPx, monthWidthPx, dayHeightPx, baseFont, state, geo);
+        drawMonthColumn(ctx, month, mIdx, monthLeftPx, monthWidthPx, dayHeightPx, baseFont, state, geo);
       });
+      drawMonthSeparators(ctx, geo, state, 0, 14, leadInPx, monthWidthPx, dayHeightPx, targetHeightPx);
 
       // --- NACHLAUF (WICKEL-PUFFER RECHTS) ---
       const leadOutStartPx = targetWidthPx - leadOutPx;
@@ -532,8 +558,12 @@ window.CronoCanvas = (function() {
 
     if (targetMonthIdx >= 0 && targetMonthIdx < monthsData.length) {
       const month = monthsData[targetMonthIdx];
-      const dayColumnWidthPx = monthWidthPx / geo.dayColumns;
-      const dayColumn = Math.floor(xInMonth / dayColumnWidthPx);
+      const metrics = geo.getMonthMetrics(targetMonthIdx);
+      const xInContent = xInMonth - metrics.leftInset * pxPerCm;
+      const contentWidthPx = metrics.contentWidth * pxPerCm;
+      if (xInContent < 0 || xInContent >= contentWidthPx) return null;
+      const dayColumnWidthPx = metrics.dayColumnWidth * pxPerCm;
+      const dayColumn = Math.floor(xInContent / dayColumnWidthPx);
       const row = Math.floor(yCss / dayHeightPx) - 1;
       if (dayColumn >= 0 && dayColumn < geo.dayColumns && row >= 0 && row < geo.daysPerColumn) {
         if (geo.dayColumns === 2 && dayColumn === 0 && row >= 15) return null;

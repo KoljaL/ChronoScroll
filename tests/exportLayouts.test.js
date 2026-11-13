@@ -152,3 +152,63 @@ test('SVG export uses the same split-column coordinates as the PDF geometry', ()
     `x="360" y="${14 * geo.hDayMm}" width="70" height="${geo.hDayMm}" fill="#fafafa"`
   ));
 });
+
+test('PDF and SVG reserve and paint the same separators for both layouts', () => {
+  for (const monthLayout of ['single', 'double']) {
+    for (const header of [false, true]) {
+      let exportedDoc;
+      let exportedBlob;
+      class JsPdf {
+        constructor() { this.rects = []; exportedDoc = this; }
+        rect(...args) { this.rects.push({ args, color: this.fillColor }); }
+        setFillColor(...color) { this.fillColor = color; }
+        getTextWidth(text) { return String(text).length; }
+        save() {} line() {} setLineWidth() {} setDrawColor() {}
+        setTextColor() {} setFont() {} setFontSize() {} text() {}
+      }
+      const context = {
+        window: {
+          jspdf: { jsPDF: JsPdf },
+          CronoHolidays: { get14MonthsData: createMonths },
+          CronoFonts: { registerPdfFont: () => 'helvetica' }
+        },
+        Blob: class { constructor(parts) { this.content = parts.join(''); } },
+        URL: {
+          createObjectURL(blob) { exportedBlob = blob; return 'blob:calendar'; },
+          revokeObjectURL() {}
+        },
+        document: { body: { appendChild() {}, removeChild() {} }, createElement: () => ({ click() {} }) }
+      };
+      vm.createContext(context);
+      for (const file of ['geometry.js', 'pdfExport.js', 'svgExport.js']) {
+        vm.runInContext(fs.readFileSync(path.join(root, 'js', file), 'utf8'), context);
+      }
+      const state = createState(monthLayout);
+      state.paperColor = '#abcdef';
+      state.monthSeparators = {
+        [monthLayout]: { enabled: true, widthMm: 20, colorMode: header ? 'paper' : 'custom', color: '#123456', header }
+      };
+      const geo = context.window.CronoGeometry.calculate(state);
+      context.window.CronoPDF.exportPlotterPDF(state);
+      context.window.CronoVector.exportSVG(state);
+      const top = header ? 0 : geo.hDayMm;
+      const color = header ? '#abcdef' : '#123456';
+      const rgb = header ? [171, 205, 239] : [18, 52, 86];
+      const separators = exportedDoc.rects.filter(({ args, color }) =>
+        args[2] === 20 && args[1] === top && args[3] === 320 - top &&
+        args[4] === 'F' && JSON.stringify(color) === JSON.stringify(rgb));
+      assert.equal(separators.length, 13);
+      assert.equal(separators[0].args[0], 280);
+      assert.ok(exportedBlob.content.includes(
+        `<rect x="280" y="${top}" width="20" height="${320 - top}" fill="${color}"/>`
+      ));
+      const width = monthLayout === 'double' ? 60 : 120;
+      assert.ok(exportedDoc.rects.some(({ args }) =>
+        args[0] === 300 && args[1] === geo.hDayMm && args[2] === width && args[4] === 'D'));
+      assert.ok(exportedBlob.content.includes(
+        `x="300" y="${geo.hDayMm}" width="${width}" height="${geo.hDayMm}" fill="none"`
+      ));
+      assert.ok(exportedBlob.content.endsWith('</g>\n</svg>'));
+    }
+  }
+});

@@ -50,6 +50,7 @@ Diese Einstellungen beeinflussen die Darstellung der Tageszeilen und Monatsköpf
 | Noch benötigt? | Funktion | README | Webseite | Details / Einschränkungen |
 |---|---|---|---|---|
 | [ ] | Tageslisten pro Monat ein- oder zweispaltig anordnen | Ja | Ja | Zweispaltig: Tage 1–15 links, 16–31 rechts; der Monatskopf spannt beide Listen. Sichtfenster, Monatsbreite und Bannerlänge bleiben unverändert. |
+| [ ] | Monate optisch trennen | Ja | Ja | Für beide Tageslistenlayouts unabhängig: optional 0,1–20 mm breiter farbiger Streifen oder Streifen in Papierfarbe, auf Wunsch einschließlich Kopfzeile. Tagesfelder werden schmaler; Vorschau und PDF-, SVG- und PNG-Export übernehmen die Trennung. |
 | [ ] | Tageszeilen in Personen-Spalten aufteilen | Nein | Ja | Eine bis vier Spalten; in Vorschau, PDF und SVG vorhanden, mit unterschiedlichen Linienstilen. |
 | [ ] | Schreiblinien pro Tag einstellen | Nein | Ja | Keine bis drei Hilfslinien; auch in PDF und SVG. |
 | [ ] | Stil der Schreiblinien wählen | Nein | Teilw. | Gestrichelt, gepunktet oder durchgezogen in der Vorschau; PDF zeichnet durchgezogene, SVG gestrichelte Linien unabhängig von der Auswahl. |

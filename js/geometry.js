@@ -34,6 +34,27 @@ window.CronoGeometry = (function() {
     const subColumns = Math.max(1, Math.min(6, parseInt(state.subColumns) || 1));
     const dayColumnWidth = bMonth / dayColumns;
     const subColumnWidth = dayColumnWidth / subColumns;
+
+    const separator = state.monthSeparators && state.monthSeparators[monthLayout];
+    const separatorWidthMm = separator && separator.enabled && Number.isFinite(separator.widthMm)
+      ? Math.min(20, Math.max(0, separator.widthMm)) : 0;
+    const separatorWidth = separatorWidthMm / 10;
+
+    function getMonthMetrics(monthIndex) {
+      const leftInset = monthIndex > 0 ? separatorWidth / 2 : 0;
+      const rightInset = monthIndex < 13 ? separatorWidth / 2 : 0;
+      const contentWidth = bMonth - leftInset - rightInset;
+      return {
+        leftInset,
+        rightInset,
+        contentWidth,
+        dayColumnWidth: contentWidth / dayColumns,
+        leftInsetMm: leftInset * 10,
+        rightInsetMm: rightInset * 10,
+        contentWidthMm: contentWidth * 10,
+        dayColumnWidthMm: contentWidth * 10 / dayColumns
+      };
+    }
     
     // Millimeter-Werte (für Vektor-PDF und Schnittpläne)
     const bVisibleMm = bVisible * 10;
@@ -72,6 +93,9 @@ window.CronoGeometry = (function() {
       dayColumnWidth,
       subColumns,
       subColumnWidth,
+      separatorWidth,
+      separatorWidthMm,
+      getMonthMetrics,
       // mm
       bVisibleMm,
       hVisibleMm,

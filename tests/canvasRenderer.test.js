@@ -157,3 +157,51 @@ test('canvas preview draws day 16 in the second half of its month', () => {
   assert.ok(day16);
   assert.equal(day16[1], 146);
 });
+
+test('separator hit testing excludes the gap in both views and keeps split dates correct', () => {
+  for (const monthLayout of ['single', 'double']) {
+    for (const viewMode of ['plate', 'banner']) {
+      const state = {
+        bVisible: 42, hVisible: 32, pufferLeft: 15, pufferRight: 15,
+        monthLayout, viewMode, currentMonthIndex: 1, zoom: 1, year: 2027,
+        monthSeparators: { [monthLayout]: { enabled: true, widthMm: 20 } }
+      };
+      const geo = geometryContext.window.CronoGeometry.calculate(state);
+      const canvas = { getBoundingClientRect: () => ({ left: 0, top: 0 }) };
+      const monthStart = viewMode === 'plate' ? 0 : (15 + 14) * 20;
+      const y = 1.5 * geo.hDay * 20;
+      const hit = x => context.window.CronoCanvas.getDateAtCanvasPoint(monthStart + x, y, canvas, state);
+      assert.equal(hit(10), null);
+      assert.equal(hit(270), null);
+      assert.equal(hit(21).dayNum, 1);
+      assert.equal(hit(259).dayNum, monthLayout === 'double' ? 16 : 1);
+    }
+  }
+});
+
+test('canvas draws separators at visible boundaries using the selected color and header setting', () => {
+  for (const header of [false, true]) {
+    const fills = [];
+    const ctx = {
+      save() {}, restore() {}, scale() {}, strokeRect() {}, setLineDash() {},
+      beginPath() {}, moveTo() {}, lineTo() {}, stroke() {}, fillText() {},
+      measureText(text) { return { width: String(text).length * 6 }; },
+      fillRect(...rect) { fills.push({ color: this.fillStyle, rect }); }
+    };
+    const state = {
+      bVisible: 42, hVisible: 32, pufferLeft: 15, pufferRight: 15,
+      monthLayout: 'double', subColumns: 1, guideLinesCount: 0,
+      monthSeparators: { double: { enabled: true, widthMm: 20, colorMode: 'paper', color: '#123456', header } },
+      viewMode: 'plate', currentMonthIndex: 1, year: 2027, holidays: [], zoom: 1,
+      lineGrid: 0.2, lineBorder: 0.6, paperColor: '#abcdef',
+      colorGrid: '#cbd5e1', colorText: '#000000', fontFamily: 'sans',
+      fontHeaderScale: 1, fontDayScale: 1, headerAlign: 'center', showCropMarks: false
+    };
+    const geo = geometryContext.window.CronoGeometry.calculate(state);
+    context.window.CronoCanvas.render({ style: {}, getContext: () => ctx }, { style: {} }, state);
+    const y = header ? 0 : geo.hDay * 20;
+    const separators = fills.filter(({ color, rect }) =>
+      color === '#abcdef' && rect[1] === y && rect[2] <= 40 && Math.abs(rect[3] - (640 - y)) < 1e-9);
+    assert.deepEqual(separators.map(({ rect }) => [rect[0], rect[2]]), [[0, 20], [260, 40], [540, 40], [820, 20]]);
+  }
+});

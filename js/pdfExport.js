@@ -79,14 +79,20 @@ window.CronoPDF = (function() {
     // --- 3. 14 MONATE ZEICHNEN ---
     monthsData.forEach((month, mIdx) => {
       const monthLeftMm = leadInMm + (mIdx * geo.bMonthMm);
-      const dayColumnWidthMm = geo.dayColumnWidthMm;
+      const metrics = geo.getMonthMetrics(mIdx);
+      const contentLeftMm = monthLeftMm + metrics.leftInsetMm;
+      const dayColumnWidthMm = metrics.dayColumnWidthMm;
+      const separator = state.monthSeparators && state.monthSeparators[geo.monthLayout];
+      const insetHeader = geo.separatorWidthMm > 0 && separator.header;
+      const headerLeftMm = insetHeader ? contentLeftMm : monthLeftMm;
+      const headerWidthMm = insetHeader ? metrics.contentWidthMm : geo.bMonthMm;
 
       // Monatskopf (Header)
       const headerBgRgb = hexToRgb(state.colorHeaderBg || '#f1f5f9');
       doc.setFillColor(headerBgRgb[0], headerBgRgb[1], headerBgRgb[2]);
       doc.setLineWidth(state.lineGrid);
       doc.setDrawColor(gridRgb[0], gridRgb[1], gridRgb[2]);
-      doc.rect(monthLeftMm, 0, geo.bMonthMm, geo.hDayMm, 'FD');
+      doc.rect(headerLeftMm, 0, headerWidthMm, geo.hDayMm, 'FD');
 
       let headerTitle = month.label.toUpperCase();
       if (state.headerStyle === 'titlecase') headerTitle = month.label;
@@ -96,14 +102,19 @@ window.CronoPDF = (function() {
       doc.setFont(baseFont, 'bold');
       doc.setFontSize(10 * state.fontHeaderScale);
 
-      const headerTextXMm = (state.headerAlign === 'left') ? (monthLeftMm + 3) : (monthLeftMm + (geo.bMonthMm / 2));
+      if (insetHeader) {
+        while (headerTitle.length > 1 && doc.getTextWidth(headerTitle) > headerWidthMm - 6) {
+          headerTitle = headerTitle.slice(0, -1);
+        }
+      }
+      const headerTextXMm = (state.headerAlign === 'left') ? (headerLeftMm + 3) : (headerLeftMm + (headerWidthMm / 2));
       const headerAlign = (state.headerAlign === 'left') ? 'left' : 'center';
       doc.text(headerTitle, headerTextXMm, (geo.hDayMm / 2) + 1.4, { align: headerAlign });
 
       // Tageszeilen (1..31)
       month.days.forEach((day, dIdx) => {
         const position = geo.getDayPosition(dIdx + 1);
-        const cellLeftMm = monthLeftMm + (position.column * dayColumnWidthMm);
+        const cellLeftMm = contentLeftMm + (position.column * dayColumnWidthMm);
         const rowTopMm = (position.row + 1) * geo.hDayMm;
 
         // Zellhintergrund
@@ -134,7 +145,7 @@ window.CronoPDF = (function() {
           if (geo.subColumns > 1) {
             doc.setLineWidth(state.lineGrid * 0.6);
             for (let sc = 1; sc < geo.subColumns; sc++) {
-              const scX = cellLeftMm + (sc * geo.subColumnWidthMm);
+              const scX = cellLeftMm + (sc * dayColumnWidthMm / geo.subColumns);
               doc.line(scX, rowTopMm, scX, rowTopMm + geo.hDayMm);
             }
           }
@@ -199,12 +210,23 @@ window.CronoPDF = (function() {
       if (geo.dayColumns === 2) {
         const emptyRowTopMm = geo.daysPerColumn * geo.hDayMm;
         doc.setFillColor(250, 250, 250);
-        doc.rect(monthLeftMm, emptyRowTopMm, dayColumnWidthMm, geo.hDayMm, 'F');
+        doc.rect(contentLeftMm, emptyRowTopMm, dayColumnWidthMm, geo.hDayMm, 'F');
         doc.setLineWidth(state.lineGrid);
         doc.setDrawColor(gridRgb[0], gridRgb[1], gridRgb[2]);
-        doc.rect(monthLeftMm, emptyRowTopMm, dayColumnWidthMm, geo.hDayMm, 'D');
+        doc.rect(contentLeftMm, emptyRowTopMm, dayColumnWidthMm, geo.hDayMm, 'D');
       }
     });
+
+    if (geo.separatorWidthMm > 0) {
+      const separator = state.monthSeparators[geo.monthLayout];
+      const color = hexToRgb(separator.colorMode === 'paper' ? state.paperColor : separator.color);
+      const topMm = separator.header ? 0 : geo.hDayMm;
+      doc.setFillColor(color[0], color[1], color[2]);
+      for (let i = 1; i < 14; i++) {
+        doc.rect(leadInMm + i * geo.bMonthMm - geo.separatorWidthMm / 2,
+          topMm, geo.separatorWidthMm, geo.hVisibleMm - topMm, 'F');
+      }
+    }
 
     // --- 4. NACHLAUF (WICKEL-PUFFER RECHTS) ---
     const leadOutStartMm = geo.lTotalMm - geo.pufferRightMm;

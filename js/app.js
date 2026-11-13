@@ -62,6 +62,13 @@
     }
   };
 
+  function defaultMonthSeparators() {
+    return {
+      single: { enabled: false, widthMm: 0.5, colorMode: 'custom', color: '#cbd5e1', header: false },
+      double: { enabled: false, widthMm: 0.5, colorMode: 'custom', color: '#cbd5e1', header: false }
+    };
+  }
+
   // Zentraler App State
   const state = {
     year: 2027,
@@ -74,6 +81,7 @@
     bannerCustomTitle: 'CRONOSCROLL 2027',
 
     monthLayout: 'single', // 'single' oder 'double' Tageslisten pro Monat
+    monthSeparators: defaultMonthSeparators(),
     subColumns: 1,        // 1 bis 4 Personen-Spalten pro Tag
     guideLinesCount: 0,   // 0, 1, 2, 3 Schreiblinien
     guideLinesStyle: 'dashed', // 'dashed', 'dotted', 'solid'
@@ -162,6 +170,14 @@
 
     // Layout
     setVal('select-month-layout', state.monthLayout);
+    const separator = state.monthSeparators[state.monthLayout === 'double' ? 'double' : 'single'];
+    setChecked('checkbox-month-separator', separator.enabled);
+    setVal('input-month-separator-width', separator.widthMm);
+    setVal('select-month-separator-color', separator.colorMode);
+    setVal('color-month-separator', separator.color);
+    setChecked('checkbox-month-separator-header', separator.header);
+    document.getElementById('month-separator-width-error').classList.add('hidden');
+    document.getElementById('input-month-separator-width').removeAttribute('aria-invalid');
     setVal('select-sub-columns', state.subColumns);
     setVal('select-guidelines-count', state.guideLinesCount);
     setVal('select-guidelines-style', state.guideLinesStyle);
@@ -385,6 +401,11 @@
             setFontStatus('Diese Vorlage verwendet eine eigene Schrift. Bitte lade die TTF-Datei erneut hoch.', true);
           }
           Object.assign(state, preset);
+          const defaults = defaultMonthSeparators();
+          state.monthSeparators = {
+            single: { ...defaults.single, ...(preset.monthSeparators && preset.monthSeparators.single) },
+            double: { ...defaults.double, ...(preset.monthSeparators && preset.monthSeparators.double) }
+          };
           syncInputsFromState();
           renderHolidaysList();
           renderPreview();
@@ -444,6 +465,36 @@
     });
     document.getElementById('select-month-layout').addEventListener('change', (e) => {
       state.monthLayout = e.target.value;
+      syncInputsFromState();
+      renderPreview();
+    });
+    const currentSeparator = () => state.monthSeparators[state.monthLayout === 'double' ? 'double' : 'single'];
+    document.getElementById('checkbox-month-separator').addEventListener('change', (e) => {
+      currentSeparator().enabled = e.target.checked;
+      renderPreview();
+    });
+    document.getElementById('input-month-separator-width').addEventListener('input', (e) => {
+      const width = e.target.valueAsNumber;
+      const valid = Number.isFinite(width) && width >= 0.1 && width <= 20;
+      document.getElementById('month-separator-width-error').classList.toggle('hidden', valid);
+      if (!valid) {
+        e.target.setAttribute('aria-invalid', 'true');
+        return;
+      }
+      e.target.removeAttribute('aria-invalid');
+      currentSeparator().widthMm = width;
+      renderPreview();
+    });
+    document.getElementById('select-month-separator-color').addEventListener('change', (e) => {
+      currentSeparator().colorMode = e.target.value;
+      renderPreview();
+    });
+    document.getElementById('color-month-separator').addEventListener('input', (e) => {
+      currentSeparator().color = e.target.value;
+      renderPreview();
+    });
+    document.getElementById('checkbox-month-separator-header').addEventListener('change', (e) => {
+      currentSeparator().header = e.target.checked;
       renderPreview();
     });
     document.getElementById('select-sub-columns').addEventListener('change', (e) => {

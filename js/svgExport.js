@@ -40,17 +40,25 @@ window.CronoVector = (function() {
     // 14 Monate
     monthsData.forEach((month, mIdx) => {
       const monthLeftMm = leadInMm + (mIdx * geo.bMonthMm);
-      const dayColumnWidthMm = geo.dayColumnWidthMm;
+      const metrics = geo.getMonthMetrics(mIdx);
+      const contentLeftMm = monthLeftMm + metrics.leftInsetMm;
+      const dayColumnWidthMm = metrics.dayColumnWidthMm;
+      const separator = state.monthSeparators && state.monthSeparators[geo.monthLayout];
+      const insetHeader = geo.separatorWidthMm > 0 && separator.header;
+      const headerLeftMm = insetHeader ? contentLeftMm : monthLeftMm;
+      const headerWidthMm = insetHeader ? metrics.contentWidthMm : geo.bMonthMm;
 
       // Header Zelle
-      svg.push(`  <rect x="${monthLeftMm}" y="0" width="${geo.bMonthMm}" height="${geo.hDayMm}" fill="${state.colorHeaderBg || '#f1f5f9'}" stroke="${state.colorGrid}" stroke-width="${state.lineGrid}"/>`);
+      svg.push(`  <rect x="${headerLeftMm}" y="0" width="${headerWidthMm}" height="${geo.hDayMm}" fill="${state.colorHeaderBg || '#f1f5f9'}" stroke="${state.colorGrid}" stroke-width="${state.lineGrid}"/>`);
       const hAlign = (state.headerAlign === 'left') ? 'start' : 'middle';
-      const hX = (state.headerAlign === 'left') ? (monthLeftMm + 2.5) : (monthLeftMm + geo.bMonthMm / 2);
-      svg.push(`  <text x="${hX}" y="${geo.hDayMm / 2 + 1.1}" text-anchor="${hAlign}" class="header-text">${month.label.toUpperCase()}</text>`);
+      const hX = (state.headerAlign === 'left') ? (headerLeftMm + 2.5) : (headerLeftMm + headerWidthMm / 2);
+      if (insetHeader) svg.push(`  <clipPath id="month-header-${mIdx}"><rect x="${headerLeftMm}" y="0" width="${headerWidthMm}" height="${geo.hDayMm}"/></clipPath>`);
+      const headerClip = insetHeader ? ` clip-path="url(#month-header-${mIdx})"` : '';
+      svg.push(`  <text x="${hX}" y="${geo.hDayMm / 2 + 1.1}" text-anchor="${hAlign}" class="header-text"${headerClip}>${month.label.toUpperCase()}</text>`);
 
       month.days.forEach((day, dIdx) => {
         const position = geo.getDayPosition(dIdx + 1);
-        const cellLeftMm = monthLeftMm + (position.column * dayColumnWidthMm);
+        const cellLeftMm = contentLeftMm + (position.column * dayColumnWidthMm);
         const rowTopMm = (position.row + 1) * geo.hDayMm;
 
         let bg = 'none';
@@ -79,7 +87,7 @@ window.CronoVector = (function() {
           // Sub-Columns
           if (geo.subColumns > 1) {
             for (let sc = 1; sc < geo.subColumns; sc++) {
-              const scX = cellLeftMm + (sc * geo.subColumnWidthMm);
+              const scX = cellLeftMm + (sc * dayColumnWidthMm / geo.subColumns);
               svg.push(`  <line x1="${scX}" y1="${rowTopMm}" x2="${scX}" y2="${rowTopMm + geo.hDayMm}" stroke="${state.colorGrid}" stroke-width="0.2" stroke-dasharray="1,1"/>`);
             }
           }
@@ -101,9 +109,18 @@ window.CronoVector = (function() {
 
       if (geo.dayColumns === 2) {
         const emptyRowTopMm = geo.daysPerColumn * geo.hDayMm;
-        svg.push(`  <rect x="${monthLeftMm}" y="${emptyRowTopMm}" width="${dayColumnWidthMm}" height="${geo.hDayMm}" fill="#fafafa" stroke="${state.colorGrid}" stroke-width="${state.lineGrid}"/>`);
+        svg.push(`  <rect x="${contentLeftMm}" y="${emptyRowTopMm}" width="${dayColumnWidthMm}" height="${geo.hDayMm}" fill="#fafafa" stroke="${state.colorGrid}" stroke-width="${state.lineGrid}"/>`);
       }
     });
+
+    if (geo.separatorWidthMm > 0) {
+      const separator = state.monthSeparators[geo.monthLayout];
+      const color = separator.colorMode === 'paper' ? state.paperColor : separator.color;
+      const topMm = separator.header ? 0 : geo.hDayMm;
+      for (let i = 1; i < 14; i++) {
+        svg.push(`  <rect x="${leadInMm + i * geo.bMonthMm - geo.separatorWidthMm / 2}" y="${topMm}" width="${geo.separatorWidthMm}" height="${hMm - topMm}" fill="${color}"/>`);
+      }
+    }
 
     // Puffer Beschriftungen
     svg.push(`  <text x="${leadInMm / 2}" y="${hMm / 2}" transform="rotate(-90 ${leadInMm / 2} ${hMm / 2})" text-anchor="middle" fill="#94a3b8" font-size="3mm">WICKEL-PUFFER (MONTAGE)</text>`);
@@ -111,6 +128,7 @@ window.CronoVector = (function() {
 
     // Rahmen
     svg.push(`  <rect x="0" y="0" width="${wMm}" height="${hMm}" class="border-line"/>`);
+    svg.push(`</g>`);
     svg.push(`</svg>`);
 
     const blob = new Blob([svg.join('\n')], { type: 'image/svg+xml;charset=utf-8' });
