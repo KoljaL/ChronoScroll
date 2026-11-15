@@ -130,23 +130,114 @@
 
   const canvas = document.getElementById('preview-canvas');
   const container = document.getElementById('canvas-container');
+  let coverageAdviceStateKey = null;
+
+  function getCoverageAdviceStateKey() {
+    const adviceState = {
+      ...state,
+      viewMode: 'banner',
+      currentMonthIndex: 0,
+      zoom: 0.25
+    };
+    for (const key of ['isDraggingViewport', 'dragStartX', 'isPanning',
+      'panStartX', 'panStartY', 'scrollStartX', 'scrollStartY']) {
+      delete adviceState[key];
+    }
+    return JSON.stringify({
+      state: adviceState,
+      fontFamily: window.CronoFonts.getCanvasFamily(state.fontFamily)
+    });
+  }
+
+  function formatCoveragePercent(value, fractionDigits = 1) {
+    return value.toLocaleString('de-DE', {
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits
+    });
+  }
 
   function updateCoverageStatus() {
     const status = document.getElementById('status-coverage');
     if (!status) return;
     try {
       const coverage = window.CronoCanvas.calculateCoverage(state);
-      const formatPercent = value => value.toLocaleString('de-DE', {
-        minimumFractionDigits: 1,
-        maximumFractionDigits: 1
-      });
-      status.textContent = `≈ K ${formatPercent(coverage.blackPercent)} % · CMY ${formatPercent(coverage.colorPercent)} %`;
+      status.textContent = `≈ K ${formatCoveragePercent(coverage.blackPercent)} % · CMY ${formatCoveragePercent(coverage.colorPercent)} %`;
       status.title = 'Geschätzter mittlerer Farbauftrag über die gesamte Rolle: Schwarz (K) und summierte Farbkanäle (C+M+Y; bis 300 % möglich). Aus einer verkleinerten RGB-Renderung, ohne Drucker-Farbprofil; tatsächlicher Verbrauch und Druckpreis können abweichen.';
-      status.setAttribute('aria-label', `Geschätzter Farbauftrag der ganzen Rolle: Schwarz K ${formatPercent(coverage.blackPercent)} Prozent, Farbe C M Y ${formatPercent(coverage.colorPercent)} Prozent.`);
+      status.setAttribute('aria-label', `Geschätzter Farbauftrag der ganzen Rolle: Schwarz K ${formatCoveragePercent(coverage.blackPercent)} Prozent, Farbe C M Y ${formatCoveragePercent(coverage.colorPercent)} Prozent.`);
     } catch (error) {
       status.textContent = 'Druckdeckung nicht verfügbar';
       status.title = `Schätzung fehlgeschlagen: ${error.message}`;
       status.setAttribute('aria-label', status.title);
+    }
+  }
+
+  function renderCoverageAdvice(recommendations) {
+    const list = document.getElementById('coverage-recommendations');
+    if (!list) return;
+    if (!recommendations.length) {
+      list.innerHTML = '<p class="text-[11px] text-slate-400">Die geprüften Farbänderungen senken die geschätzte Farbdeckung aktuell nicht merklich.</p>';
+      return;
+    }
+
+    const formatSignedPoints = value => {
+      const sign = value > 0 ? '+' : (value < 0 ? '−' : '');
+      return `${sign}${formatCoveragePercent(Math.abs(value), 2)}`;
+    };
+    list.innerHTML = recommendations.map(recommendation => `
+      <article class="rounded-lg border border-slate-800 bg-slate-950/70 p-2.5 space-y-1.5">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <h4 class="text-[11px] font-semibold text-slate-200">${recommendation.title}</h4>
+            <p class="text-[10px] text-slate-400">${recommendation.description}</p>
+            <p class="text-[10px] text-slate-300">C+M+Y: −${formatCoveragePercent(recommendation.colorReduction, 2)} Prozentpunkte · K: ${formatSignedPoints(recommendation.blackChange)} Prozentpunkte</p>
+          </div>
+          <button type="button" data-coverage-action="${recommendation.id}" class="shrink-0 rounded bg-amber-500 px-2 py-1 text-[10px] font-semibold text-slate-950 hover:bg-amber-400 transition cursor-pointer">Anwenden</button>
+        </div>
+      </article>
+    `).join('');
+  }
+
+  function refreshCoverageAdvice() {
+    const list = document.getElementById('coverage-recommendations');
+    if (!list) return;
+    try {
+      const recommendations = window.CronoCoverageAdvisor.analyze(
+        state,
+        window.CronoCanvas.calculateCoverage
+      );
+      coverageAdviceStateKey = getCoverageAdviceStateKey();
+      renderCoverageAdvice(recommendations);
+    } catch (error) {
+      coverageAdviceStateKey = null;
+      list.textContent = `Tipps konnten nicht berechnet werden: ${error.message}`;
+    }
+  }
+
+  function invalidateStaleCoverageAdvice() {
+    if (!coverageAdviceStateKey || coverageAdviceStateKey === getCoverageAdviceStateKey()) return;
+    coverageAdviceStateKey = null;
+    const list = document.getElementById('coverage-recommendations');
+    if (list) list.textContent = 'Der Entwurf wurde geändert. Bitte berechne die Tipps erneut.';
+  }
+
+  function applyCoverageAdvice(recommendationId) {
+    const list = document.getElementById('coverage-recommendations');
+    try {
+      if (coverageAdviceStateKey !== getCoverageAdviceStateKey()) {
+        invalidateStaleCoverageAdvice();
+        return;
+      }
+      const changed = window.CronoCoverageAdvisor.apply(state, recommendationId);
+      if (!changed) {
+        refreshCoverageAdvice();
+        return;
+      }
+      syncInputsFromState();
+      if (recommendationId === 'holiday-colors-grayscale') renderHolidaysList();
+      renderPreview();
+      refreshCoverageAdvice();
+    } catch (error) {
+      if (list) list.textContent = `Empfehlung konnte nicht angewendet werden: ${error.message}`;
     }
   }
 
@@ -172,6 +263,7 @@
     updateNextYearLink();
     window.CronoCanvas.render(canvas, container, state);
     updateCoverageStatus();
+    invalidateStaleCoverageAdvice();
   }
 
   function updateNextYearLink() {
@@ -918,6 +1010,12 @@
         setTimeout(renderPreview, 260);
       });
     }
+
+    document.getElementById('btn-analyze-coverage').addEventListener('click', refreshCoverageAdvice);
+    document.getElementById('coverage-recommendations').addEventListener('click', (event) => {
+      const button = event.target.closest && event.target.closest('[data-coverage-action]');
+      if (button) applyCoverageAdvice(button.getAttribute('data-coverage-action'));
+    });
   }
 
   // Initialisierung beim Laden

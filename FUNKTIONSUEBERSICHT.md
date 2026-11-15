@@ -117,7 +117,7 @@ Die Exporte werden aus dem aktuellen Stand erzeugt. Vorschau, PDF, SVG und PNG v
 | Noch benötigt? | Funktion | README | Webseite | Details / Einschränkungen |
 |---|---|---|---|---|
 | [ ] | Rollen-PDF für Plotter herunterladen | Ja | Ja | Vektor-PDF `Rollkalender-[Jahr].pdf` mit deutschem Kalendarium und eingebetteter Schrift; benötigt jsPDF. |
-| [ ] | Geschätzten Schwarz- und Farbauftrag der ganzen Rolle anzeigen | Nein | Ja | Statusleiste: K und summiertes C+M+Y aus einer verkleinerten RGB-Renderung; ohne Druckerprofil und daher keine verbindliche Verbrauchs- oder Preisangabe. |
+| [ ] | Geschätzten Schwarz- und Farbauftrag der ganzen Rolle anzeigen und Farbdeckung reduzieren | Nein | Ja | Statusleiste: K und summiertes C+M+Y aus einer verkleinerten RGB-Renderung; im Stil-Reiter lassen sich Änderungsvorschläge vergleichen und einzeln anwenden. Ohne Druckerprofil keine verbindliche Verbrauchs- oder Preisangabe. |
 | [ ] | Rollen-SVG herunterladen | Nein | Ja | `Rollkalender-[Jahr].svg`; verwendet einen eigenen Renderer und übernimmt nicht alle Vorschau-Einstellungen. |
 | [ ] | Rollen-PNG herunterladen | Nein | Teilw. | Als „300 DPI“ angeboten und aus der Rollenansicht gerendert. Das rote Sichtfenster wird mitgezeichnet; die tatsächliche Pixelgröße hängt auch vom Geräte-Pixelverhältnis ab. |
 | [ ] | Dynamische Material- und Zuschnittliste anzeigen | Teilw. | Ja | Zeigt Maße für zwei Tragleisten, zwei Rundstäbe, eine Schreibplatte, die Papierbahn und Tageszeilenhöhe. Die README gibt Bauempfehlungen, beschreibt aber keinen interaktiven Dialog. |
