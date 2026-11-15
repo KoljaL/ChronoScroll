@@ -103,6 +103,10 @@ html, body {
   text-overflow: ellipsis;
 }
 
+#status-coverage {
+  flex-shrink: 0;
+}
+
 .status-brand {
   display: flex;
   align-items: center;

@@ -323,14 +323,17 @@ window.CronoCanvas = (function() {
   }
 
   // Haupt-Rendermethode
-  function render(canvas, container, state) {
+  function render(canvas, container, state, renderOptions = {}) {
     if (!canvas || !container) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', renderOptions.contextAttributes);
+    if (!ctx) throw new Error('Canvas-Kontext konnte nicht erstellt werden.');
     const geo = window.CronoGeometry.calculate(state);
     const monthsData = window.CronoHolidays.get14MonthsData(state.year, state.holidays, state);
+    const updateUi = renderOptions.updateUi !== false;
+    const showViewportOverlay = renderOptions.showViewportOverlay !== false;
 
     // HiDPI / Retina Device Pixel Ratio
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = renderOptions.pixelRatio ?? window.devicePixelRatio ?? 1;
     state.dpr = dpr;
 
     const pxPerCm = 20 * state.zoom;
@@ -391,14 +394,16 @@ window.CronoCanvas = (function() {
       ctx.restore();
 
       // UI-Labels aktualisieren
-      const firstM = monthsData[state.currentMonthIndex];
-      const thirdM = monthsData[state.currentMonthIndex + 2];
-      if (firstM && thirdM) {
-        const labelText = `${firstM.monthName.substring(0, 3)} ${firstM.year} – ${thirdM.monthName.substring(0, 3)} ${thirdM.year}`;
-        const elLabel = document.getElementById('plate-month-label');
-        if (elLabel) elLabel.textContent = labelText;
-        const elDim = document.getElementById('status-dimensions');
-        if (elDim) elDim.textContent = `Sichtfenster: ${geo.bVisible.toFixed(1)} cm × ${state.hVisible.toFixed(1)} cm (${firstM.label} bis ${thirdM.label})`;
+      if (updateUi) {
+        const firstM = monthsData[state.currentMonthIndex];
+        const thirdM = monthsData[state.currentMonthIndex + 2];
+        if (firstM && thirdM) {
+          const labelText = `${firstM.monthName.substring(0, 3)} ${firstM.year} – ${thirdM.monthName.substring(0, 3)} ${thirdM.year}`;
+          const elLabel = document.getElementById('plate-month-label');
+          if (elLabel) elLabel.textContent = labelText;
+          const elDim = document.getElementById('status-dimensions');
+          if (elDim) elDim.textContent = `Sichtfenster: ${geo.bVisible.toFixed(1)} cm × ${state.hVisible.toFixed(1)} cm (${firstM.label} bis ${thirdM.label})`;
+        }
       }
 
     } else {
@@ -485,42 +490,162 @@ window.CronoCanvas = (function() {
         }
       }
 
-      // Rotes 3-Monats-Sichtfenster
-      const viewportWidthPx = geo.bVisible * pxPerCm;
-      const viewportXPx = leadInPx + (state.currentMonthIndex * monthWidthPx);
+      if (showViewportOverlay) {
+        // Rotes 3-Monats-Sichtfenster
+        const viewportWidthPx = geo.bVisible * pxPerCm;
+        const viewportXPx = leadInPx + (state.currentMonthIndex * monthWidthPx);
 
-      ctx.save();
-      ctx.strokeStyle = '#ef4444';
-      ctx.lineWidth = 3;
-      ctx.setLineDash([6, 4]);
-      ctx.strokeRect(viewportXPx, 0, viewportWidthPx, targetHeightPx);
+        ctx.save();
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([6, 4]);
+        ctx.strokeRect(viewportXPx, 0, viewportWidthPx, targetHeightPx);
 
-      ctx.fillStyle = '#ef4444';
-      ctx.setLineDash([]);
-      ctx.fillRect(viewportXPx, 0, 180 * state.zoom, 22 * state.zoom);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = `bold ${10 * state.zoom}px sans-serif`;
-      ctx.textAlign = 'left';
-      ctx.fillText(`3-MONATS-FENSTER (${state.bVisible}cm)`, viewportXPx + 8 * state.zoom, 14 * state.zoom);
+        ctx.fillStyle = '#ef4444';
+        ctx.setLineDash([]);
+        ctx.fillRect(viewportXPx, 0, 180 * state.zoom, 22 * state.zoom);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${10 * state.zoom}px sans-serif`;
+        ctx.textAlign = 'left';
+        ctx.fillText(`3-MONATS-FENSTER (${state.bVisible}cm)`, viewportXPx + 8 * state.zoom, 14 * state.zoom);
+        ctx.restore();
+      }
+
       ctx.restore();
 
-      ctx.restore();
-
-      const elDim = document.getElementById('status-dimensions');
-      if (elDim) elDim.textContent = `Druckbanner: ${geo.lTotal.toFixed(1)} cm × ${state.hVisible.toFixed(1)} cm (14 Monate)`;
+      if (updateUi) {
+        const elDim = document.getElementById('status-dimensions');
+        if (elDim) elDim.textContent = `Druckbanner: ${geo.lTotal.toFixed(1)} cm × ${state.hVisible.toFixed(1)} cm (14 Monate)`;
+      }
     }
 
-    // Mathematische Geometrie im UI aktualisieren
-    const elBMonth = document.getElementById('calc-b-month');
-    if (elBMonth) elBMonth.textContent = `${geo.bMonth.toFixed(2)} cm`;
-    const elHDay = document.getElementById('calc-h-day');
-    if (elHDay) elHDay.textContent = `${geo.hDay.toFixed(3)} cm`;
-    const elLTotal = document.getElementById('calc-l-total');
-    if (elLTotal) elLTotal.textContent = `${geo.lTotal.toFixed(2)} cm (${(geo.lTotal/100).toFixed(2)} m)`;
-    const elYearRange = document.getElementById('year-range-display');
-    if (elYearRange) elYearRange.textContent = `${state.year - 1} – ${state.year + 1}`;
-    const elZoomInd = document.getElementById('preview-scale-indicator');
-    if (elZoomInd) elZoomInd.textContent = `${Math.round(state.zoom * 100)}%`;
+    if (updateUi) {
+      // Mathematische Geometrie im UI aktualisieren
+      const elBMonth = document.getElementById('calc-b-month');
+      if (elBMonth) elBMonth.textContent = `${geo.bMonth.toFixed(2)} cm`;
+      const elHDay = document.getElementById('calc-h-day');
+      if (elHDay) elHDay.textContent = `${geo.hDay.toFixed(3)} cm`;
+      const elLTotal = document.getElementById('calc-l-total');
+      if (elLTotal) elLTotal.textContent = `${geo.lTotal.toFixed(2)} cm (${(geo.lTotal/100).toFixed(2)} m)`;
+      const elYearRange = document.getElementById('year-range-display');
+      if (elYearRange) elYearRange.textContent = `${state.year - 1} – ${state.year + 1}`;
+      const elZoomInd = document.getElementById('preview-scale-indicator');
+      if (elZoomInd) elZoomInd.textContent = `${Math.round(state.zoom * 100)}%`;
+    }
+  }
+
+  function estimateInkCoverage(imageData) {
+    const pixels = imageData.data.length / 4;
+    if (!pixels) throw new Error('Gerenderte Bannerdaten sind leer.');
+
+    let blackTotal = 0;
+    let colorTotal = 0;
+    for (let i = 0; i < imageData.data.length; i += 4) {
+      const alpha = imageData.data[i + 3] / 255;
+      const red = (imageData.data[i] * alpha + 255 * (1 - alpha)) / 255;
+      const green = (imageData.data[i + 1] * alpha + 255 * (1 - alpha)) / 255;
+      const blue = (imageData.data[i + 2] * alpha + 255 * (1 - alpha)) / 255;
+      const black = 1 - Math.max(red, green, blue);
+      blackTotal += black;
+
+      if (black < 1) {
+        colorTotal += (
+          (1 - red - black) +
+          (1 - green - black) +
+          (1 - blue - black)
+        ) / (1 - black);
+      }
+    }
+
+    return {
+      blackPercent: blackTotal / pixels * 100,
+      colorPercent: colorTotal / pixels * 100
+    };
+  }
+
+  function drawCoverageQr(ctx, state, geo, pixelsPerMm) {
+    if (typeof window.qrcode !== 'function') {
+      throw new Error('Die QR-Code-Bibliothek ist nicht geladen.');
+    }
+    if (!window.CronoShare || typeof window.CronoShare.createNextYearUrl !== 'function') {
+      throw new Error('Der QR-Code-Link kann nicht erstellt werden.');
+    }
+
+    const qr = window.qrcode(0, 'L');
+    qr.addData(window.CronoShare.createNextYearUrl(state));
+    try {
+      qr.make();
+    } catch (error) {
+      throw new Error(`QR-Code konnte nicht erstellt werden: ${error.message || error}`);
+    }
+
+    const moduleCount = qr.getModuleCount();
+    const qrSizeMm = Math.min(state.pufferRight * 10 - 10, geo.hVisibleMm - 10, 100);
+    const moduleSizeMm = qrSizeMm / (moduleCount + 8);
+    if (moduleSizeMm < 0.25) {
+      throw new Error('Der rechte Montagepuffer ist für den QR-Code zu schmal.');
+    }
+
+    const qrSize = qrSizeMm * pixelsPerMm;
+    const moduleSize = moduleSizeMm * pixelsPerMm;
+    const qrX = (geo.lTotalMm - geo.pufferRightMm +
+      (geo.pufferRightMm - qrSizeMm) / 2) * pixelsPerMm;
+    const qrY = (geo.hVisibleMm - qrSizeMm) / 2 * pixelsPerMm;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(qrX, qrY, qrSize, qrSize);
+    ctx.fillStyle = '#000000';
+    for (let row = 0; row < moduleCount; row++) {
+      for (let col = 0; col < moduleCount;) {
+        if (!qr.isDark(row, col)) {
+          col++;
+          continue;
+        }
+        const start = col++;
+        while (col < moduleCount && qr.isDark(row, col)) col++;
+        ctx.fillRect(qrX + (start + 4) * moduleSize, qrY + (row + 4) * moduleSize,
+          (col - start) * moduleSize, moduleSize);
+      }
+    }
+  }
+
+  let cachedCoverageKey = null;
+  let cachedCoverage = null;
+  function calculateCoverage(state) {
+    const coverageState = {
+      ...state,
+      viewMode: 'banner',
+      currentMonthIndex: 0,
+      zoom: 0.25
+    };
+    for (const key of ['isDraggingViewport', 'dragStartX', 'isPanning',
+      'panStartX', 'panStartY', 'scrollStartX', 'scrollStartY']) {
+      delete coverageState[key];
+    }
+    const cacheKey = JSON.stringify({
+      state: coverageState,
+      fontFamily: getBaseFontFamily(coverageState.fontFamily)
+    });
+    if (cacheKey === cachedCoverageKey) return { ...cachedCoverage };
+
+    const canvas = document.createElement('canvas');
+    const container = { style: {} };
+    render(canvas, container, coverageState, {
+      contextAttributes: { willReadFrequently: true },
+      pixelRatio: 1,
+      showViewportOverlay: false,
+      updateUi: false
+    });
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas-Kontext für die Druckschätzung fehlt.');
+    const geo = window.CronoGeometry.calculate(coverageState);
+    drawCoverageQr(ctx, coverageState, geo, 2 * coverageState.zoom);
+    const coverage = estimateInkCoverage(ctx.getImageData(0, 0, canvas.width, canvas.height));
+
+    cachedCoverageKey = cacheKey;
+    cachedCoverage = coverage;
+    return { ...coverage };
   }
 
   // Klickkoordinaten auf konkretes Kalenderdatum auflösen
@@ -585,6 +710,8 @@ window.CronoCanvas = (function() {
 
   return {
     render,
+    estimateInkCoverage,
+    calculateCoverage,
     getDateAtCanvasPoint
   };
 })();

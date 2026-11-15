@@ -205,3 +205,88 @@ test('canvas draws separators at visible boundaries using the selected color and
     assert.deepEqual(separators.map(({ rect }) => [rect[0], rect[2]]), [[0, 20], [260, 40], [540, 40], [820, 20]]);
   }
 });
+
+test('ink coverage estimates black and summed color-channel density', () => {
+  const imageData = {
+    data: new Uint8ClampedArray([
+      255, 255, 255, 255,
+      0, 0, 0, 255,
+      255, 0, 0, 255
+    ])
+  };
+  const coverage = context.window.CronoCanvas.estimateInkCoverage(imageData);
+
+  assert.ok(Math.abs(coverage.blackPercent - 100 / 3) < 1e-9);
+  assert.ok(Math.abs(coverage.colorPercent - 200 / 3) < 1e-9);
+});
+
+test('coverage renders the full banner without the viewport overlay and reuses it across views', () => {
+  let canvasCount = 0;
+  let canvasWidth = 0;
+  let canvasHeight = 0;
+  let redFills = 0;
+  const drawContext = {
+    save() {}, restore() {}, scale() {}, strokeRect() {}, setLineDash() {},
+    beginPath() {}, moveTo() {}, lineTo() {}, stroke() {}, fillText() {},
+    measureText(text) { return { width: String(text).length * 6 }; },
+    fillRect() { if (this.fillStyle === '#ef4444') redFills++; },
+    getImageData(_x, _y, width, height) {
+      return { data: new Uint8ClampedArray(width * height * 4).fill(255) };
+    }
+  };
+  const coverageContext = {
+    window: {
+      CronoGeometry: geometryContext.window.CronoGeometry,
+      CronoHolidays: { get14MonthsData: () => months },
+      CronoShare: { createNextYearUrl: () => 'https://example.com/' },
+      qrcode: () => ({
+        addData() {}, make() {}, getModuleCount: () => 1, isDark: () => true
+      }),
+      devicePixelRatio: 3
+    },
+    document: {
+      createElement: () => {
+        canvasCount++;
+        return {
+          style: {},
+          getContext: () => drawContext,
+          get width() { return canvasWidth; },
+          set width(value) { canvasWidth = value; },
+          get height() { return canvasHeight; },
+          set height(value) { canvasHeight = value; }
+        };
+      },
+      getElementById() {
+        assert.fail('Offscreen coverage rendering must not update preview UI.');
+      }
+    }
+  };
+  vm.createContext(coverageContext);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/canvasRenderer.js'), 'utf8'), coverageContext);
+
+  const state = {
+    bVisible: 42, hVisible: 32, pufferLeft: 15, pufferRight: 15,
+    monthLayout: 'single', subColumns: 1, guideLinesCount: 0,
+    viewMode: 'plate', currentMonthIndex: 7, year: 2027, holidays: [], zoom: 2,
+    lineGrid: 0.2, lineBorder: 0.6, paperColor: '#ffffff',
+    colorHeaderBg: '#f1f5f9', colorText: '#0f172a', colorGrid: '#cbd5e1',
+    fontFamily: 'sans', fontHeaderScale: 1, fontDayScale: 1,
+    headerAlign: 'center', headerStyle: 'uppercase',
+    showKW: false, showMoon: false, showCropMarks: false
+  };
+
+  const first = coverageContext.window.CronoCanvas.calculateCoverage(state);
+  state.viewMode = 'banner';
+  state.currentMonthIndex = 0;
+  state.zoom = 1;
+  const second = coverageContext.window.CronoCanvas.calculateCoverage(state);
+
+  assert.equal(first.blackPercent, 0);
+  assert.equal(first.colorPercent, 0);
+  assert.equal(second.blackPercent, first.blackPercent);
+  assert.equal(second.colorPercent, first.colorPercent);
+  assert.equal(canvasCount, 1);
+  assert.equal(canvasWidth, 1130);
+  assert.equal(canvasHeight, 160);
+  assert.equal(redFills, 0);
+});

@@ -131,6 +131,25 @@
   const canvas = document.getElementById('preview-canvas');
   const container = document.getElementById('canvas-container');
 
+  function updateCoverageStatus() {
+    const status = document.getElementById('status-coverage');
+    if (!status) return;
+    try {
+      const coverage = window.CronoCanvas.calculateCoverage(state);
+      const formatPercent = value => value.toLocaleString('de-DE', {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
+      });
+      status.textContent = `≈ K ${formatPercent(coverage.blackPercent)} % · CMY ${formatPercent(coverage.colorPercent)} %`;
+      status.title = 'Geschätzter mittlerer Farbauftrag über die gesamte Rolle: Schwarz (K) und summierte Farbkanäle (C+M+Y; bis 300 % möglich). Aus einer verkleinerten RGB-Renderung, ohne Drucker-Farbprofil; tatsächlicher Verbrauch und Druckpreis können abweichen.';
+      status.setAttribute('aria-label', `Geschätzter Farbauftrag der ganzen Rolle: Schwarz K ${formatPercent(coverage.blackPercent)} Prozent, Farbe C M Y ${formatPercent(coverage.colorPercent)} Prozent.`);
+    } catch (error) {
+      status.textContent = 'Druckdeckung nicht verfügbar';
+      status.title = `Schätzung fehlgeschlagen: ${error.message}`;
+      status.setAttribute('aria-label', status.title);
+    }
+  }
+
   function setFontStatus(message, isError = false, isSuccess = false, isWarning = false) {
     const status = document.getElementById('font-file-status');
     if (!status) return;
@@ -152,6 +171,7 @@
   function renderPreview() {
     updateNextYearLink();
     window.CronoCanvas.render(canvas, container, state);
+    updateCoverageStatus();
   }
 
   function updateNextYearLink() {
