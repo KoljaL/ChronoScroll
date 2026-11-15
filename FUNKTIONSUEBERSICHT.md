@@ -17,7 +17,7 @@ Diese Funktionen steuern den Arbeitsbereich und die Ansicht, nicht die tatsächl
 |---|---|---|---|---|
 | [ ] | Anwendung im Browser öffnen | Ja | Ja | Lokal über `index.html` oder über GitHub Pages; für das Laden externer Bibliotheken und Styles können Netzwerkzugriff und deren Verfügbarkeit erforderlich sein. |
 | [ ] | Seitenleiste ein- und ausklappen | Nein | Ja | Schafft mehr Platz für die Vorschau. |
-| [ ] | Zwischen den Einstellungsreitern wechseln | Nein | Ja | Maße, Layout, Stil, Termine und Vorlagen. |
+| [ ] | Zwischen den Einstellungstabs wechseln | Nein | Ja | Maße, Struktur, Erscheinung, Termine und Vorlagen & Teilen; Tab-Tasten und Pfeiltasten unterstützen die Tastaturbedienung. |
 | [ ] | Drei-Monats-Schreibplatte anzeigen | Ja | Ja | Zeigt drei aufeinanderfolgende Monats­spalten mit Datumsbereich. |
 | [ ] | Drei-Monats-Fenster monatlich zurück- und vorwärtsbewegen | Ja | Ja | Über Schaltflächen oder Pfeiltasten; die Startposition ist auf die möglichen Drei-Monats-Ausschnitte innerhalb der 14 Monate begrenzt. |
 | [ ] | Ganze 14-monatige Druckrolle anzeigen | Ja | Ja | Einschließlich Vor- und Nachlauf; das aktuelle Drei-Monats-Fenster ist rot markiert. |
@@ -43,7 +43,7 @@ Die Maße bestimmen die Kalendergeometrie und die Basis der Zuschnittliste. Die 
 | [ ] | Eigenen Titel für den Vorlauf eingeben | Nein | Teilw. | In Vorschau und PDF bei Auswahl „Großer Kalendertitel“; nicht im SVG. |
 | [ ] | Inhalt des rechten Nachlaufs auswählen | Nein | Teilw. | Vorschau: Montagebereich oder Jahresrückblick mit Notizlinien; PDF und SVG zeigen stattdessen Montagebeschriftung. |
 
-## 3. Kalenderlayout
+## 3. Kalenderstruktur
 
 Diese Einstellungen beeinflussen die Darstellung der Tageszeilen und Monatsköpfe. Nicht alle Exportformate übernehmen sie gleichermaßen.
 
@@ -60,13 +60,14 @@ Diese Einstellungen beeinflussen die Darstellung der Tageszeilen und Monatsköpf
 | [ ] | Textstil der Monatsköpfe wählen | Nein | Teilw. | Großbuchstaben, gemischt oder nummeriert in Vorschau und PDF; SVG verwendet immer Großbuchstaben. |
 | [ ] | Monatsköpfe ausrichten | Nein | Ja | Zentriert oder linksbündig; auch in PDF und SVG. |
 
-## 4. Stil und Typografie
+## 4. Erscheinungsbild und Typografie
 
-Farben und Schrift bestimmen das Erscheinungsbild. Design-Welten ändern mehrere Stilwerte zugleich; einzelne Werte lassen sich anschließend separat einstellen. Sie sind unabhängig vom Kalenderdesign und wirken auch auf alle fünf Spezialdesigns.
+Farben und Schrift bestimmen das Erscheinungsbild. Farbwelten ändern mehrere Stilwerte zugleich; einzelne Werte lassen sich anschließend separat einstellen. Sie sind unabhängig von der Kalenderdarstellung und wirken auch auf alle fünf Spezialdarstellungen.
 
 | Noch benötigt? | Funktion | README | Webseite | Details / Einschränkungen |
 |---|---|---|---|---|
-| [ ] | Eine Design-Welt auswählen | Nein | Ja | Minimalist, Holz & Sepia, Blueprint oder Wald & Salbei; setzt Farben und Schriftfamilie, bleibt bearbeitbar und kann mit jedem Kalenderdesign kombiniert werden. |
+| [ ] | Kalenderdarstellung wählen | Nein | Ja | Klassisch oder eine von fünf Spezialdarstellungen; Auswahlkarten zeigen eine Kurzbeschreibung und den ausgewählten Zustand. Unabhängig von der Farbwelt. |
+| [ ] | Farbwelt auswählen | Nein | Ja | Minimalist, Holz & Sepia, Blueprint oder Wald & Salbei; setzt Palette und Schriftfamilie, bleibt bearbeitbar und kann mit jeder Kalenderdarstellung kombiniert werden. |
 | [ ] | Mitgelieferte Schrift auswählen | Ja | Teilw. | Lato, PT Serif und Cousine sowie eine weitere Lato-Auswahl; Vorschau und PDF verwenden eingebettete Schriften, SVG eine fest vorgegebene Systemschrift. |
 | [ ] | Eigene TTF-Schrift lokal laden | Ja | Teilw. | Für Vorschau und PDF; eine Datei für normale, fette und kursive Stellen. Nach Neuladen erneut auswählen; SVG übernimmt sie nicht. Erkennbare übergroße Kerning-Untertabellen lösen eine Warnung aus. |
 | [ ] | Schriftgröße der Monatsköpfe skalieren | Ja | Teilw. | In Vorschau und PDF; SVG verwendet eine feste Größe. |
@@ -78,6 +79,7 @@ Farben und Schrift bestimmen das Erscheinungsbild. Design-Welten ändern mehrere
 | [ ] | Standard-Textfarbe für Werktage wählen | Ja | Ja | Die Monatskopf- und Terminfarben können davon abweichen. |
 | [ ] | Samstags-Hintergrund und -Schrift getrennt wählen | Teilw. | Teilw. | Vorschau und PDF verwenden beide Werte; SVG verwendet für die Samstagsschrift die Sonntagsschriftfarbe. |
 | [ ] | Sonntags-Hintergrund und -Schrift getrennt wählen | Teilw. | Ja | Die README nennt Wochenendfarben allgemein. |
+| [ ] | Farben für Feiertage, Ferien und eigene Termine festlegen | Nein | Ja | Eine Kategorie-Farbänderung aktualisiert alle bestehenden Einträge dieser Kategorie. Einzelne Farben bleiben im Tab „Termine“ änderbar; ein späterer Kategorienwechsel überschreibt diese Einzelfarbe erneut. |
 
 ## 5. Feiertage, Ferien und eigene Termine
 
@@ -90,7 +92,7 @@ Termine erscheinen in der Liste und auf passenden Kalendertagen. Die Werte sollt
 | [ ] | Feiertage automatisch für den 14-Monats-Zeitraum berechnen | Ja | Teilw. | Bewegliche Feiertage werden über Ostern berechnet, Übergangsmonate berücksichtigt. Die hinterlegten Regeln sind vereinfacht; die README-Zusage „alle gesetzlichen Feiertage“ ist damit nicht garantiert. |
 | [ ] | Schulferien laden | Ja | Teilw. | Oster-, Sommer-, Herbst- und Weihnachtsferien, für BW/BY zusätzlich Pfingstferien. Es sind modellierte Zeiträume, keine verifizierten amtlichen Ferientermine. |
 | [ ] | Feiertage und Ferien neu berechnen | Ja | Ja | Schaltfläche ersetzt die gesamte Terminliste, einschließlich eigener und importierter Termine. Auch Jahr-, Länder- und Regionswechsel tun dies. |
-| [ ] | Terminliste nach Kategorien filtern | Nein | Teilw. | Alle, Feiertage und Ferien funktionieren als Kategorien; „Eigene“ zeigt aufgrund der Filterbedingung derzeit auch andere Kategorien. |
+| [ ] | Terminliste nach Kategorien filtern | Nein | Ja | Alle, Feiertage, Ferien oder eigene Termine; importierte `.ics`-Einträge zählen zu eigenen Terminen. |
 | [ ] | Termine suchen | Nein | Ja | Suche nach Titel oder Beginn-Datum in der Terminliste. |
 | [ ] | Eigenen Termin oder Zeitraum über „Neu“ anlegen | Ja | Ja | Bezeichnung, Beginn, inklusive Ende und Farbe; Vorgabe ist der 1. Juni des Zieljahres. |
 | [ ] | Per Klick auf einen Kalendertag einen Termin anlegen | Nein | Ja | In beiden Ansichten für gültige Tageszellen; der angeklickte Tag wird als Beginn und Ende vorbelegt. |
@@ -100,14 +102,14 @@ Termine erscheinen in der Liste und auf passenden Kalendertagen. Die Werte sollt
 | [ ] | Termine aus einer `.ics`-Datei importieren | Nein | Teilw. | Fügt erkannte Ereignisse hinzu; verarbeitet im Wesentlichen Titel und Datum, keine Wiederholungsregeln oder Uhrzeiten. Das exklusive iCal-Enddatum wird beim Import nicht in ein inklusives umgerechnet. |
 | [ ] | Terminliste als `.ics` exportieren | Nein | Teilw. | Exportiert alle aktuellen Einträge als Ganztagstermine, unabhängig vom Listenfilter; keine Uhrzeiten oder Wiederholungsregeln. |
 
-## 6. Vorlagen und Speicherung
+## 6. Vorlagen und Teilen
 
 Vorlagen liegen im lokalen Browserspeicher und sind an den jeweiligen Browser bzw. dessen Daten gebunden.
 
 | Noch benötigt? | Funktion | README | Webseite | Details / Einschränkungen |
 |---|---|---|---|---|
 | [ ] | Aktuellen Stand unter einem Namen speichern | Ja | Ja | Speichert den Anwendungszustand einschließlich Terminliste; ein bestehender Name wird überschrieben. |
-| [ ] | Gespeicherte Vorlage laden | Ja | Ja | Stellt gespeicherte Einstellungen und Termine wieder her. Eigene TTF-Dateien selbst werden nicht mitgespeichert und müssen nach Neuladen erneut gewählt werden. |
+| [ ] | Gespeicherte Vorlage laden | Ja | Ja | Stellt gespeicherte Einstellungen einschließlich Ereignisfarben und Termine wieder her. Eigene TTF-Dateien selbst werden nicht mitgespeichert und müssen nach Neuladen erneut gewählt werden. |
 | [ ] | Gespeicherte Vorlage löschen | Ja | Ja | Entfernt die betreffende Vorlage aus dem lokalen Browserspeicher. |
 
 ## 7. Druckdaten und Bauunterlagen
@@ -117,7 +119,7 @@ Die Exporte werden aus dem aktuellen Stand erzeugt. Vorschau, PDF, SVG und PNG v
 | Noch benötigt? | Funktion | README | Webseite | Details / Einschränkungen |
 |---|---|---|---|---|
 | [ ] | Rollen-PDF für Plotter herunterladen | Ja | Ja | Vektor-PDF `Rollkalender-[Jahr].pdf` mit deutschem Kalendarium und eingebetteter Schrift; benötigt jsPDF. |
-| [ ] | Geschätzten Schwarz- und Farbauftrag der ganzen Rolle anzeigen und Farbdeckung reduzieren | Nein | Ja | Statusleiste: K und summiertes C+M+Y aus einer verkleinerten RGB-Renderung; im Stil-Reiter lassen sich Änderungsvorschläge vergleichen und einzeln anwenden. Ohne Druckerprofil keine verbindliche Verbrauchs- oder Preisangabe. |
+| [ ] | Geschätzten Schwarz- und Farbauftrag der ganzen Rolle anzeigen und Farbdeckung reduzieren | Nein | Ja | Statusleiste: K und summiertes C+M+Y aus einer verkleinerten RGB-Renderung; im Tab „Erscheinung“ lassen sich Änderungsvorschläge vergleichen und einzeln anwenden. Ohne Druckerprofil keine verbindliche Verbrauchs- oder Preisangabe. |
 | [ ] | Rollen-SVG herunterladen | Nein | Ja | `Rollkalender-[Jahr].svg`; verwendet einen eigenen Renderer und übernimmt nicht alle Vorschau-Einstellungen. |
 | [ ] | Rollen-PNG herunterladen | Nein | Teilw. | Als „300 DPI“ angeboten und aus der Rollenansicht gerendert. Das rote Sichtfenster wird mitgezeichnet; die tatsächliche Pixelgröße hängt auch vom Geräte-Pixelverhältnis ab. |
 | [ ] | Dynamische Material- und Zuschnittliste anzeigen | Teilw. | Ja | Zeigt Maße für zwei Tragleisten, zwei Rundstäbe, eine Schreibplatte, die Papierbahn und Tageszeilenhöhe. Die README gibt Bauempfehlungen, beschreibt aber keinen interaktiven Dialog. |

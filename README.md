@@ -119,27 +119,29 @@ Alle Abmessungen leiten sich dynamisch von der montierten Schreibplatte ab:
   * Stufenloser Zoom von 20 % bis 300 % und 100%-Reset.
   * Wahlweise eine oder zwei Tageslisten pro Monat; im zweispaltigen Layout bleiben Sichtfenster und Baugröße unverändert.
   * Optionaler Trennstreifen zwischen Monaten, für beide Tageslistenlayouts getrennt einstellbar: 0,1–20 mm breit, in eigener Farbe oder automatisch in Papierfarbe, wahlweise bis in die Monatskopfzeile. Der Streifen verkleinert die Tagesfelder, nicht aber Sichtfenster oder Rollenlänge; er erscheint auch in PDF, SVG und PNG.
-* **Typografie & Stil:**
+* **Erscheinungsbild:**
+  * **Kalenderdarstellung** und **Farbwelt** sind getrennte, gleichartig bedienbare Auswahlkarten: Die Darstellung legt Struktur und Zeichenformen fest; die Farbwelt setzt Palette und Schrift. Beide Auswahlen sind unabhängig kombinierbar.
+  * Wochenend-, Feiertags-, Ferien- und eigene Terminfarben sind nach Aufgabe gruppiert. Eine Änderung der Kategorie-Farbe aktualisiert alle vorhandenen Einträge dieser Kategorie; einzelne Terminfarben lassen sich in der Terminverwaltung weiterhin bearbeiten.
   * Wählbare, in der PDF eingebettete Schriftarten (*Lato*, *PT Serif*, *Cousine*) und skalierbare Schriftgrößen für Kopf- und Tageszeilen.
   * Eigene TTF-Schriften können lokal geladen werden. Die gewählte Schrift erscheint in der Vorschau und wird in die Plotter-PDF eingebettet.
   * Einstellbare Linienstärken für Gitter und Umrandungen in Millimetern.
   * Farbwähler für Text, Gitterlinien und Wochenenden.
-  * Fünf Kalenderdesigns: **Mid-Century**, **Bauhaus**, **Gantt**, **Zen** und **Kursbuch**. Sie sind unter „Stil → Kalenderdesign“ wählbar, werden lokal gespeichert und in Vorschau, PNG, PDF und SVG dargestellt. Die Zeichnung verwendet dieselben 14 Monatsspalten und Tagespositionen wie das klassische Design, auch bei zwei Tageslisten.
-  * Kalenderdesign und Design-Welt sind unabhängig kombinierbar. Die vier Design-Welten setzen eine bearbeitbare Farbpalette und Schriftfamilie, die auch für alle fünf Spezialdesigns und Exporte gilt. Ohne gewählte Design-Welt behalten Spezialdesigns ihre bisherigen stilabhängigen Schrift-Defaults. Schreiblinien und Personen-Spaltenteilungen werden von den Spezialdesigns weiterhin nicht übernommen; Termine erscheinen als Text, Kalenderwochen und Mondphasen gemäß den zugehörigen Schaltern. Schnittmarken und Monatstrennstreifen bleiben optional.
+  * Fünf Kalenderdarstellungen: **Mid-Century**, **Bauhaus**, **Gantt**, **Zen** und **Kursbuch** (zusätzlich „Klassisch“). Sie sind im Tab „Erscheinung“ wählbar, werden lokal gespeichert und in Vorschau, PNG, PDF und SVG dargestellt. Die Zeichnung verwendet dieselben 14 Monatsspalten und Tagespositionen wie das klassische Design, auch bei zwei Tageslisten.
+  * Kalenderdarstellung und Farbwelt sind unabhängig kombinierbar. Die vier Farbwelten setzen eine bearbeitbare Farbpalette und Schriftfamilie, die auch für alle fünf Spezialdesigns und Exporte gilt. Ohne gewählte Farbwelt behalten Spezialdesigns ihre bisherigen stilabhängigen Schrift-Defaults. Schreiblinien und Personen-Spaltenteilungen werden von den Spezialdesigns weiterhin nicht übernommen; Termine erscheinen als Text, Kalenderwochen und Mondphasen gemäß den zugehörigen Schaltern. Schnittmarken und Monatstrennstreifen bleiben optional.
   * Zen nutzt den vorhandenen Monatskopf als Weißraum statt eines zusätzlichen 30-mm-Abstands. Gantt zeichnet Wochenmarken aufgrund der Leserichtung horizontal und Themen-Spalten vertikal. Kursbuch zählt die Tage jedes Kalenderjahres einschließlich des 366. Tages im Schaltjahr; die Übergangsmonate verwenden ihr eigenes Jahr.
 * **Deutsche Feiertage & Schulferien (nach Bundesland):**
   * Automatische Berechnung aller gesetzlichen Feiertage über die Gaußsche Osterformel für alle 16 Bundesländer (**Standard: Nordrhein-Westfalen / NRW**).
   * Berücksichtigt auch die Feiertage der Übergangsmonate (Dezember des Vorjahres und Januar des Folgejahres).
   * Vordefinierte Schulferien (Osterferien, Sommerferien, Herbstferien, Weihnachtsferien) mit einem Klick ladbar.
   * Individuelle Zeiträume (Urlaube, Geburtstage, Meilensteine) frei hinzufügbar und editierbar.
-* **Vorlagen-Verwaltung:**
+* **Vorlagen und Teilen:**
   * Layout-Presets können mit Namen im Browser (`localStorage`) gespeichert, geladen oder gelöscht werden.
-  * Ein teilbarer Link öffnet die aktuellen Gestaltungseinstellungen für das Folgejahr. Individuelle und importierte Termine werden nicht übertragen; Feiertage und Ferien werden für das neue Jahr und die gewählte Region neu berechnet. Eigene Schriftdateien müssen erneut geladen werden.
+  * Ein teilbarer Link öffnet die aktuellen Gestaltungseinstellungen einschließlich Kalenderdarstellung, Farbwelt und Kategorie-Farben für das Folgejahr. Individuelle und importierte Termine werden nicht übertragen; Feiertage und Ferien werden für das neue Jahr und die gewählte Region neu berechnet. Eigene Schriftdateien müssen erneut geladen werden.
 * **Vektor-PDF-Export für Endlosplotter auf Deutsch:**
   * Generiert über **jsPDF** eine millimetergenaue Vektor-PDF (`Rollkalender-[Jahr].pdf`) mit eingebetteten TrueType-Schriften, deutschen Monatsnamen (`Januar` bis `Dezember`), deutschen Tageskürzeln (`Mo` bis `So`) und Randbeschriftungen.
-  * Im rechten Montagepuffer steht ein QR-Code mit demselben Folgejahres-Link wie im Reiter „Vorlagen“. Die Rollenmaße ändern sich nicht; bei zu schmalem Puffer meldet der Export einen Fehler.
+  * Im rechten Montagepuffer steht ein QR-Code mit demselben Folgejahres-Link wie im Tab „Vorlagen & Teilen“. Die Rollenmaße ändern sich nicht; bei zu schmalem Puffer meldet der Export einen Fehler.
   * 100 % verlustfrei und gestochen scharf auf jedem Großformat-Plotter druckbar.
-* **Druckflächen-Schätzung und Spartipps:** Die Statusleiste zeigt für die gesamte 14-Monats-Rolle den geschätzten mittleren Schwarzauftrag (K) und den summierten Farbauftrag (C+M+Y). Im Stil-Reiter lassen sich passende Änderungsvorschläge vergleichen und einzeln anwenden, zum Beispiel Papier- oder Wochenendhintergründe auf Weiß/Papierfarbe setzen oder Terminfarben entsättigen. Die Werte werden aus einer verkleinerten RGB-Renderung abgeleitet, nicht aus einer druckerspezifischen CMYK-Separation; sie sind daher weder eine Verbrauchs- noch eine Preiszusage. Der summierte Farbwert kann bis zu 300 % betragen.
+* **Druckflächen-Schätzung und Spartipps:** Die Statusleiste zeigt für die gesamte 14-Monats-Rolle den geschätzten mittleren Schwarzauftrag (K) und den summierten Farbauftrag (C+M+Y). Im Tab „Erscheinung“ lassen sich passende Änderungsvorschläge vergleichen und einzeln anwenden, zum Beispiel Papier- oder Wochenendhintergründe auf Weiß/Papierfarbe setzen oder Terminfarben entsättigen. Die Werte werden aus einer verkleinerten RGB-Renderung abgeleitet, nicht aus einer druckerspezifischen CMYK-Separation; sie sind daher weder eine Verbrauchs- noch eine Preiszusage. Der summierte Farbwert kann bis zu 300 % betragen.
 
 ---
 
@@ -168,7 +170,7 @@ Die Versionsangabe in der unteren Statusleiste wird in `index.html` manuell gepf
 
 Maße deiner Schreibplatte eintragen, Design anpassen und auf **„Plotter-PDF exportieren“** klicken. Die fertige PDF-Datei kannst du an einen Rollenplotter oder Druckdienstleister senden.
 
-Für eine eigene Schrift im Bereich **Stil → Typografie** eine TTF-Datei auswählen. Sie wird nur im Browser verarbeitet und nicht hochgeladen; eine einzelne TTF-Datei wird für normale, fette und kursive Textstellen verwendet. Eigene Schriften müssen nach einem Neuladen erneut ausgewählt werden. Die mitgelieferten Schriften Lato, PT Serif und Cousine stehen unter der SIL Open Font License 1.1; die Lizenztexte liegen in [`fonts/`](./fonts/).
+Für eine eigene Schrift im Bereich **Erscheinung → Typografie** eine TTF-Datei auswählen. Sie wird nur im Browser verarbeitet und nicht hochgeladen; eine einzelne TTF-Datei wird für normale, fette und kursive Textstellen verwendet. Eigene Schriften müssen nach einem Neuladen erneut ausgewählt werden. Die mitgelieferten Schriften Lato, PT Serif und Cousine stehen unter der SIL Open Font License 1.1; die Lizenztexte liegen in [`fonts/`](./fonts/).
 
 Der QR-Code wird lokal mit [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) ([MIT-Lizenz](./js/qrcode.LICENSE.txt), Copyright Kazuhiko Arase) erzeugt; die Konfiguration wird nicht an einen QR-Dienst gesendet. Der Folgejahres-Link öffnet die öffentliche Anwendung und überträgt keine individuellen oder importierten Termine. Ein zum Kalenderjahr passender Jahresbestandteil im individuellen Titel wird auf das Folgejahr gesetzt. Die Jahresauswahl reicht bis 2100; für 2100 ist deshalb kein Folgejahres-Link verfügbar.
 

@@ -13,6 +13,8 @@ window.CronoShare = (function() {
   const choice = (...values) => value => values.includes(value);
   const color = value => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
   const boolean = value => typeof value === 'boolean';
+  const categoryColors = value => value && typeof value === 'object' &&
+    ['public', 'vacation', 'custom'].every(key => color(value[key]));
   const fields = [
     ['year', number(1900, 2100, true)],
     ['hVisible', number(10, 150)], ['bVisible', number(15, 200)],
@@ -35,7 +37,8 @@ window.CronoShare = (function() {
     ['colorWeekendBg', color], ['colorWeekendText', color],
     ['designStyle', choice('classic', 'midcentury', 'bauhaus', 'gantt', 'zen', 'kursbuch')],
     ['themeKey', value => value === null || value === '' ||
-      !!(window.CronoThemes && window.CronoThemes.isValidKey(value))]
+      !!(window.CronoThemes && window.CronoThemes.isValidKey(value))],
+    ['categoryColors', categoryColors]
   ];
   const separatorFields = [
     ['enabled', boolean], ['widthMm', number(0.1, 20)],
@@ -69,6 +72,9 @@ window.CronoShare = (function() {
       let value = state[name];
       if (name === 'designStyle' && value === undefined) value = 'classic';
       if (name === 'themeKey' && value === undefined) value = null;
+      if (name === 'categoryColors' && value === undefined) {
+        value = { public: '#fef08a', vacation: '#bfdbfe', custom: '#bfdbfe' };
+      }
       if (name === 'year') value++;
       if (name === 'bannerCustomTitle' && typeof value === 'string') {
         value = value.replace(new RegExp(`(^|[^0-9])${state.year}(?=[^0-9]|$)`, 'g'), `$1${state.year + 1}`);

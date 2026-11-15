@@ -74,7 +74,7 @@ test('links created before themes keep their design and default to no selected t
   const original = state();
   const url = new URL(share.createNextYearUrl(original));
   const data = JSON.parse(Buffer.from(url.searchParams.get('config'), 'base64url').toString('utf8'));
-  data[1].pop();
+  data[1].splice(-2);
   const restored = state();
   share.restore(`?config=${Buffer.from(JSON.stringify(data)).toString('base64url')}`, restored);
   assert.equal(restored.designStyle, 'gantt');
@@ -85,7 +85,7 @@ test('links created before design styles restore the classic design', () => {
   const original = state();
   const url = new URL(share.createNextYearUrl(original));
   const data = JSON.parse(Buffer.from(url.searchParams.get('config'), 'base64url').toString('utf8'));
-  data[1].splice(-2);
+  data[1].splice(-3);
   const restored = state();
   share.restore(`?config=${Buffer.from(JSON.stringify(data)).toString('base64url')}`, restored);
   assert.equal(restored.designStyle, 'classic');

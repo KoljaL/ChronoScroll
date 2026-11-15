@@ -68,21 +68,21 @@
       <!-- 2. LINKE SIDEBAR: TABS & EINSTELLUNGEN -->
       <aside id="app-sidebar" class="bg-slate-900 border-r border-slate-800 flex flex-col">
         <!-- REITER-NAVIGATION -->
-        <div class="flex border-b border-slate-800 bg-slate-950/70 text-xs font-medium shrink-0 overflow-x-auto">
-          <button data-tab="tab-geometry" class="tab-btn flex-1 py-3 px-2 text-center text-amber-400 border-b-2 border-amber-400 font-semibold transition whitespace-nowrap"><i class="fa-solid fa-ruler-combined mr-1"></i> Maße</button>
-          <button data-tab="tab-layout" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-table-columns mr-1"></i> Layout</button>
-          <button data-tab="tab-style" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-palette mr-1"></i> Stil</button>
-          <button data-tab="tab-holidays" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-calendar-check mr-1"></i> Termine</button>
-          <button data-tab="tab-presets" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-bookmark mr-1"></i> Vorlagen</button>
+        <div role="tablist" aria-label="Kalendereinstellungen" class="flex border-b border-slate-800 bg-slate-950/70 text-xs font-medium shrink-0 overflow-x-auto">
+          <button type="button" role="tab" id="tab-button-geometry" aria-controls="tab-geometry" aria-selected="true" tabindex="0" data-tab="tab-geometry" class="tab-btn flex-1 py-3 px-2 text-center text-amber-400 border-b-2 border-amber-400 font-semibold transition whitespace-nowrap"><i class="fa-solid fa-ruler-combined mr-1"></i> Maße / Format</button>
+          <button type="button" role="tab" id="tab-button-layout" aria-controls="tab-layout" aria-selected="false" tabindex="-1" data-tab="tab-layout" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-table-columns mr-1"></i> Kalenderstruktur</button>
+          <button type="button" role="tab" id="tab-button-style" aria-controls="tab-style" aria-selected="false" tabindex="-1" data-tab="tab-style" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-palette mr-1"></i> Erscheinungsbild</button>
+          <button type="button" role="tab" id="tab-button-holidays" aria-controls="tab-holidays" aria-selected="false" tabindex="-1" data-tab="tab-holidays" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-calendar-check mr-1"></i> Termine</button>
+          <button type="button" role="tab" id="tab-button-presets" aria-controls="tab-presets" aria-selected="false" tabindex="-1" data-tab="tab-presets" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-bookmark mr-1"></i> Vorlagen &amp; Teilen</button>
         </div>
 
         <!-- INHALT DER REITER -->
         <div class="flex-1 overflow-y-auto p-4 space-y-5">
           <!-- TAB 1: MAßE & GEOMETRIE -->
-          <div id="tab-geometry" class="tab-content space-y-4">
+          <div id="tab-geometry" role="tabpanel" aria-labelledby="tab-button-geometry" tabindex="0" class="tab-content space-y-4">
             <!-- Kalender-Zieljahr -->
             <div class="space-y-1.5">
-              <label class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex justify-between">
+              <label for="input-year" class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex justify-between">
                 Ziel-Kalenderjahr
                 <span class="text-amber-400 font-mono" id="year-range-display">2026 – 2028</span>
               </label>
@@ -92,18 +92,18 @@
 
             <!-- Physische Maße der Schreibplatte -->
             <div class="border-t border-slate-800 pt-3 space-y-3">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Schreibplatte & Sichtfenster</h3>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Sichtfenster</h3>
 
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="text-xs text-slate-300 block mb-1">Sichthöhe</label>
+                  <label for="input-h-visible" class="text-xs text-slate-300 block mb-1">Höhe der Schreibplatte</label>
                   <div class="relative">
                     <input type="number" id="input-h-visible" value="32.0" step="0.1" min="10" max="150" class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-3 pr-8 py-1.5 text-sm font-mono text-slate-100 focus:outline-none focus:border-amber-500" />
                     <span class="absolute right-3 top-1.5 text-xs text-slate-500 font-mono">cm</span>
                   </div>
                 </div>
                 <div>
-                  <label class="text-xs text-slate-300 block mb-1">3-Monats-Breite</label>
+                  <label for="input-b-visible" class="text-xs text-slate-300 block mb-1">Breite für drei Monate</label>
                   <div class="relative">
                     <input type="number" id="input-b-visible" value="42.0" step="0.1" min="15" max="200" class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-3 pr-8 py-1.5 text-sm font-mono text-slate-100 focus:outline-none focus:border-amber-500" />
                     <span class="absolute right-3 top-1.5 text-xs text-slate-500 font-mono">cm</span>
@@ -114,18 +114,18 @@
 
             <!-- Wickel-Puffer & Inhalte -->
             <div class="border-t border-slate-800 pt-3 space-y-3">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Vor- & Nachlauf (Puffer)</h3>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Rollenpuffer und Beschriftung</h3>
 
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="text-xs text-slate-300 block mb-1">Vorlauf Links</label>
+                  <label for="input-puffer-left" class="text-xs text-slate-300 block mb-1">Linker Vorlauf</label>
                   <div class="relative">
                     <input type="number" id="input-puffer-left" value="15.0" step="0.5" min="0" max="100" class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-3 pr-8 py-1.5 text-sm font-mono text-slate-100" />
                     <span class="absolute right-3 top-1.5 text-xs text-slate-500 font-mono">cm</span>
                   </div>
                 </div>
                 <div>
-                  <label class="text-xs text-slate-300 block mb-1">Nachlauf Rechts</label>
+                  <label for="input-puffer-right" class="text-xs text-slate-300 block mb-1">Rechter Nachlauf</label>
                   <div class="relative">
                     <input type="number" id="input-puffer-right" value="15.0" step="0.5" min="0" max="100" class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-3 pr-8 py-1.5 text-sm font-mono text-slate-100" />
                     <span class="absolute right-3 top-1.5 text-xs text-slate-500 font-mono">cm</span>
@@ -134,7 +134,7 @@
               </div>
 
               <div>
-                <label class="text-xs text-slate-300 block mb-1">Gestaltung Vorlauf (Links)</label>
+                <label for="select-puffer-left-content" class="text-xs text-slate-300 block mb-1">Inhalt des linken Vorlaufs</label>
                 <select id="select-puffer-left-content" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-100">
                   <option value="blank">Montage-Leerraum (Klassisch)</option>
                   <option value="title">Großer Kalendertitel & Widmung</option>
@@ -144,12 +144,12 @@
               </div>
 
               <div>
-                <label class="text-xs text-slate-300 block mb-1">Individueller Titeltext</label>
+                <label for="input-custom-title" class="text-xs text-slate-300 block mb-1">Titeltext</label>
                 <input type="text" id="input-custom-title" value="CRONOSCROLL 2027" placeholder="z.B. Familie Mustermann" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100" />
               </div>
 
               <div>
-                <label class="text-xs text-slate-300 block mb-1">Gestaltung Nachlauf (Rechts)</label>
+                <label for="select-puffer-right-content" class="text-xs text-slate-300 block mb-1">Inhalt des rechten Nachlaufs</label>
                 <select id="select-puffer-right-content" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-100">
                   <option value="blank">Montage-Leerraum (Klassisch)</option>
                   <option value="notes">Jahres-Rückblick & Notizen</option>
@@ -181,24 +181,24 @@
           </div>
 
           <!-- TAB 2: LAYOUT & ZEILEN -->
-          <div id="tab-layout" class="tab-content hidden space-y-4">
+          <div id="tab-layout" role="tabpanel" aria-labelledby="tab-button-layout" tabindex="0" class="tab-content hidden space-y-4">
             <div class="space-y-3">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Zeilenaufteilung & Schreiblinien</h3>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Tagesfelder und Schreibfläche</h3>
 
               <!-- Tageslisten pro Monat -->
               <div>
-                <label class="text-xs text-slate-300 block mb-1">Tageslisten pro Monat</label>
+                <label for="select-month-layout" class="text-xs text-slate-300 block mb-1">Tage je Monat anordnen</label>
                 <select id="select-month-layout" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-100">
                   <option value="single">1 Spalte (klassisch)</option>
                   <option value="double">2 Spalten (1–15 / 16–31)</option>
                 </select>
-                <p class="text-[11px] text-slate-400 mt-1">Die Sichthöhe und Breite bleiben gleich; im 2-Spalten-Layout werden die Tagesfelder höher.</p>
+                <p class="text-[11px] text-slate-400 mt-1">Einspaltig zeigt alle Tage untereinander; zweispaltig verteilt Tage 1–15 und 16–31. Die Maße des Sichtfensters bleiben gleich.</p>
               </div>
 
               <div class="border-t border-slate-800 pt-3 space-y-2">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Monate trennen</h3>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Monatsabstände</h3>
                 <p class="text-[11px] text-slate-400">Einstellungen gelten getrennt für das gewählte Tageslisten-Layout. Ein breiter Streifen in Papierfarbe wirkt wie eine Leerspalte.</p>
-                <label class="flex items-center space-x-2 text-xs text-slate-200">
+                <label for="checkbox-month-separator" class="flex items-center space-x-2 text-xs text-slate-200">
                   <input type="checkbox" id="checkbox-month-separator" class="rounded border-slate-700 bg-slate-950 text-amber-500" />
                   <span>Trennung zwischen Monaten aktivieren</span>
                 </label>
@@ -217,7 +217,7 @@
                     <input type="color" id="color-month-separator" value="#cbd5e1" aria-label="Farbe des Trennstreifens" class="w-7 h-7 rounded bg-transparent cursor-pointer" />
                   </div>
                 </div>
-                <label class="flex items-center space-x-2 text-xs text-slate-200">
+                <label for="checkbox-month-separator-header" class="flex items-center space-x-2 text-xs text-slate-200">
                   <input type="checkbox" id="checkbox-month-separator-header" class="rounded border-slate-700 bg-slate-950 text-amber-500" />
                   <span>Trennung in der Monatskopfzeile fortsetzen</span>
                 </label>
@@ -225,7 +225,7 @@
 
               <!-- Spaltenteilung pro Tag -->
               <div>
-                <label class="text-xs text-slate-300 block mb-1">Mehrpersonen-Spalten pro Tag</label>
+                <label for="select-sub-columns" class="text-xs text-slate-300 block mb-1">Personenspalten je Tag</label>
                 <select id="select-sub-columns" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-100">
                   <option value="1">1 Spalte (Klassischer Kalender)</option>
                   <option value="2">2 Spalten (Paare / 2 Personen)</option>
@@ -235,10 +235,10 @@
                 <p class="text-[11px] text-slate-400 mt-1">Unterteilt jede Tageszeile mit dezenten senkrechten Linien.</p>
               </div>
 
-              <!-- Schreiblinien -->
+              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400 pt-2">Hilfslinien zum Schreiben</h3>
               <div class="grid grid-cols-2 gap-3 pt-1">
                 <div>
-                  <label class="text-xs text-slate-300 block mb-1">Schreiblinien pro Tag</label>
+                  <label for="select-guidelines-count" class="text-xs text-slate-300 block mb-1">Anzahl je Tag</label>
                   <select id="select-guidelines-count" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-100">
                     <option value="0">Keine Linien</option>
                     <option value="1">1 Hilfslinie</option>
@@ -247,7 +247,7 @@
                   </select>
                 </div>
                 <div>
-                  <label class="text-xs text-slate-300 block mb-1">Linienstil</label>
+                  <label for="select-guidelines-style" class="text-xs text-slate-300 block mb-1">Linienart</label>
                   <select id="select-guidelines-style" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-100">
                     <option value="dashed">Gestrichelt</option>
                     <option value="dotted">Gepunktet</option>
@@ -259,7 +259,7 @@
 
             <!-- Kalender-Elemente -->
             <div class="border-t border-slate-800 pt-3 space-y-3">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Zusatzinformationen</h3>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Kalenderinformationen</h3>
 
               <div class="space-y-2">
                 <label class="flex items-center space-x-2 cursor-pointer text-xs text-slate-200">
@@ -281,11 +281,11 @@
 
             <!-- Monatskopf Gestaltung -->
             <div class="border-t border-slate-800 pt-3 space-y-3">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Monats-Kopfzeile</h3>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Monatskopf</h3>
 
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="text-xs text-slate-300 block mb-1">Text-Stil</label>
+                  <label for="select-header-style" class="text-xs text-slate-300 block mb-1">Beschriftung</label>
                   <select id="select-header-style" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-100">
                     <option value="uppercase">GROSSBUCHSTABEN</option>
                     <option value="titlecase">Gemischt (Januar 2027)</option>
@@ -293,7 +293,7 @@
                   </select>
                 </div>
                 <div>
-                  <label class="text-xs text-slate-300 block mb-1">Ausrichtung</label>
+                  <label for="select-header-align" class="text-xs text-slate-300 block mb-1">Ausrichtung</label>
                   <select id="select-header-align" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-100">
                     <option value="center">Zentriert</option>
                     <option value="left">Linksbündig</option>
@@ -303,11 +303,14 @@
             </div>
           </div>
 
-          <!-- TAB 3: STIL & FARBEN -->
-          <div id="tab-style" class="tab-content hidden space-y-4">
-            <div class="space-y-1">
-              <label for="select-design-style" class="text-xs font-bold uppercase tracking-wider text-amber-400">Kalenderdesign</label>
-              <select id="select-design-style" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100">
+          <!-- TAB 3: ERSCHEINUNGSBILD -->
+          <div id="tab-style" role="tabpanel" aria-labelledby="tab-button-style" tabindex="0" class="tab-content hidden space-y-4">
+            <section class="choice-section space-y-2" aria-labelledby="design-style-heading">
+              <div>
+                <h3 id="design-style-heading" class="text-xs font-bold uppercase tracking-wider text-amber-400">Kalenderdarstellung</h3>
+                <p class="text-[11px] text-slate-400">Legt Struktur und Zeichenformen fest. Die Farbwelt wird unabhängig davon gewählt.</p>
+              </div>
+              <select id="select-design-style" aria-label="Kalenderdarstellung" tabindex="-1" hidden>
                 <option value="classic">Klassisch (frei gestaltbar)</option>
                 <option value="midcentury">Mid-Century – Labor &amp; Messinstrument</option>
                 <option value="bauhaus">Bauhaus / Schweizer Typografie</option>
@@ -315,20 +318,21 @@
                 <option value="zen">Zen – minimalistischer Streifen</option>
                 <option value="kursbuch">Kursbuch – Fahrplan</option>
               </select>
-              <p class="text-[11px] text-slate-400">Das Kalenderdesign bestimmt Aufbau und Zeichenformen. Farben und Schrift der Design-Welt gelten unabhängig davon für alle Designs.</p>
-            </div>
-            <!-- 1-Klick Design-Themes -->
-            <div class="space-y-2">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">1-Klick Design-Welten</h3>
-              <p class="text-[11px] text-slate-400">Setzt eine bearbeitbare Farbpalette und Schrift. Die Auswahl ändert das Kalenderdesign nicht.</p>
-              <div id="theme-options" class="grid grid-cols-2 gap-2"></div>
-            </div>
+              <div id="design-options" class="choice-grid" role="group" aria-labelledby="design-style-heading"></div>
+            </section>
+            <section class="choice-section space-y-2" aria-labelledby="theme-heading">
+              <div>
+                <h3 id="theme-heading" class="text-xs font-bold uppercase tracking-wider text-amber-400">Farbwelt</h3>
+                <p class="text-[11px] text-slate-400">Setzt eine bearbeitbare Palette und Schrift. Die Kalenderdarstellung bleibt unverändert.</p>
+              </div>
+              <div id="theme-options" class="choice-grid" role="group" aria-labelledby="theme-heading"></div>
+            </section>
 
             <!-- Typografie -->
             <div class="border-t border-slate-800 pt-3 space-y-3">
               <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Typografie</h3>
               <div>
-                <label class="text-xs text-slate-300 block mb-1">Schriftart</label>
+                <label for="select-font-family" class="text-xs text-slate-300 block mb-1">Schriftfamilie</label>
                 <select id="select-font-family" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100">
                   <option value="sans">Modern Sans (Lato)</option>
                   <option value="serif">Klassisch Serif (PT Serif)</option>
@@ -338,45 +342,45 @@
                 </select>
               </div>
               <div>
-                <label for="input-font-file" class="text-xs text-slate-300 block mb-1">Eigene TrueType-Schrift (.ttf)</label>
+                <label for="input-font-file" class="text-xs text-slate-300 block mb-1">Eigene Schriftdatei (.ttf)</label>
                 <input id="input-font-file" type="file" accept=".ttf,font/ttf,application/x-font-ttf" class="w-full text-xs text-slate-300 file:mr-2 file:rounded file:border-0 file:bg-slate-800 file:px-2 file:py-1 file:text-slate-200 hover:file:bg-slate-700" />
                 <p id="font-file-status" class="mt-1 text-[10px] text-slate-500" role="status" aria-live="polite">Die Schrift wird nur lokal verarbeitet und in die Plotter-PDF eingebettet. Eine TTF-Datei wird für alle Schriftschnitte verwendet.</p>
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="text-xs text-slate-300 block mb-1">Skalierung Kopf</label>
+                  <label for="input-font-header-scale" class="text-xs text-slate-300 block mb-1">Monatskopf (Faktor)</label>
                   <input type="number" id="input-font-header-scale" value="1.0" step="0.1" min="0.5" max="3.0" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono text-slate-100" />
                 </div>
                 <div>
-                  <label class="text-xs text-slate-300 block mb-1">Skalierung Tage</label>
+                  <label for="input-font-day-scale" class="text-xs text-slate-300 block mb-1">Tageszeilen (Faktor)</label>
                   <input type="number" id="input-font-day-scale" value="1.0" step="0.1" min="0.5" max="3.0" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono text-slate-100" />
                 </div>
               </div>
             </div>
 
-            <!-- Linienstärken & Papier -->
+            <!-- Papier und Linien -->
             <div class="border-t border-slate-800 pt-3 space-y-3">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Papier & Linienstärken</h3>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Papier und Linien</h3>
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="text-xs text-slate-300 block mb-1">Papierfarbe</label>
+                  <label for="color-paper" class="text-xs text-slate-300 block mb-1">Papierfarbe</label>
                   <div class="flex items-center space-x-2">
                     <input type="color" id="color-paper" value="#ffffff" class="w-7 h-7 rounded bg-transparent cursor-pointer" />
                     <span class="text-xs text-slate-400 font-mono">Nuance</span>
                   </div>
                 </div>
                 <div>
-                  <label class="text-xs text-slate-300 block mb-1">Rasterlinie (mm)</label>
+                  <label for="input-line-grid" class="text-xs text-slate-300 block mb-1">Rasterlinienbreite (mm)</label>
                   <input type="number" id="input-line-grid" value="0.2" step="0.05" min="0.05" max="2.0" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono text-slate-100" />
                 </div>
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="text-xs text-slate-300 block mb-1">Rahmenlinie (mm)</label>
+                  <label for="input-line-border" class="text-xs text-slate-300 block mb-1">Rahmenlinienbreite (mm)</label>
                   <input type="number" id="input-line-border" value="0.6" step="0.1" min="0.1" max="5.0" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono text-slate-100" />
                 </div>
                 <div>
-                  <label class="text-xs text-slate-300 block mb-1">Rasterfarbe</label>
+                  <label for="color-grid" class="text-xs text-slate-300 block mb-1">Rasterfarbe</label>
                   <div class="flex items-center space-x-2">
                     <input type="color" id="color-grid" value="#cbd5e1" class="w-7 h-7 rounded bg-transparent cursor-pointer" />
                     <span class="text-xs text-slate-400 font-mono">Linien</span>
@@ -385,44 +389,62 @@
               </div>
             </div>
 
-            <!-- Differenzierte Wochenendfarben -->
+            <!-- Tages- und Ereignisfarben -->
             <div class="border-t border-slate-800 pt-3 space-y-3">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Wochenenden (Getrennt Sa / So)</h3>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Tages- und Ereignisfarben</h3>
+              <p class="text-[11px] text-slate-400">Wochenenden, Werktage und Termine werden unabhängig eingefärbt. Kategorie-Farben übernehmen alle vorhandenen Einträge dieser Kategorie.</p>
 
+              <h4 class="text-[11px] font-semibold text-slate-300">Wochenenden</h4>
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label class="text-[11px] text-slate-400 block mb-1">Samstag Hintergrund</label>
+                  <label for="color-saturday-bg" class="text-[11px] text-slate-400 block mb-1">Samstag · Hintergrund</label>
                   <input type="color" id="color-saturday-bg" value="#f8fafc" class="w-7 h-7 rounded bg-transparent cursor-pointer" />
                 </div>
                 <div>
-                  <label class="text-[11px] text-slate-400 block mb-1">Samstag Schrift</label>
+                  <label for="color-saturday-text" class="text-[11px] text-slate-400 block mb-1">Samstag · Schrift</label>
                   <input type="color" id="color-saturday-text" value="#0f172a" class="w-7 h-7 rounded bg-transparent cursor-pointer" />
                 </div>
               </div>
 
               <div class="grid grid-cols-2 gap-3 pt-1">
                 <div>
-                  <label class="text-[11px] text-slate-400 block mb-1">Sonntag Hintergrund</label>
+                  <label for="color-sunday-bg" class="text-[11px] text-slate-400 block mb-1">Sonntag · Hintergrund</label>
                   <input type="color" id="color-sunday-bg" value="#f1f5f9" class="w-7 h-7 rounded bg-transparent cursor-pointer" />
                 </div>
                 <div>
-                  <label class="text-[11px] text-slate-400 block mb-1">Sonntag Schrift</label>
+                  <label for="color-sunday-text" class="text-[11px] text-slate-400 block mb-1">Sonntag · Schrift</label>
                   <input type="color" id="color-sunday-text" value="#e11d48" class="w-7 h-7 rounded bg-transparent cursor-pointer" />
                 </div>
               </div>
 
               <div class="pt-1">
-                <label class="text-[11px] text-slate-400 block mb-1">Standard Textfarbe (Werktage)</label>
+                <label for="color-text" class="text-[11px] text-slate-400 block mb-1">Werktage · Schrift</label>
                 <div class="flex items-center space-x-2">
                   <input type="color" id="color-text" value="#0f172a" class="w-7 h-7 rounded bg-transparent cursor-pointer" />
                   <span class="text-xs text-slate-300">Fließtext</span>
                 </div>
               </div>
+
+              <h4 class="text-[11px] font-semibold text-slate-300 pt-2">Ereigniskategorien</h4>
+              <div class="category-color-list">
+                <label class="category-color-row" for="color-category-public">
+                  <span><span class="category-color-title">Feiertage</span><span class="category-color-help">Gesetzliche und regionale Feiertage</span></span>
+                  <input type="color" id="color-category-public" value="#fef08a" aria-label="Farbe für Feiertage" />
+                </label>
+                <label class="category-color-row" for="color-category-vacation">
+                  <span><span class="category-color-title">Ferien</span><span class="category-color-help">Schulferien und Ferienzeiträume</span></span>
+                  <input type="color" id="color-category-vacation" value="#bfdbfe" aria-label="Farbe für Ferien" />
+                </label>
+                <label class="category-color-row" for="color-category-custom">
+                  <span><span class="category-color-title">Eigene Termine</span><span class="category-color-help">Manuelle Einträge und .ics-Importe</span></span>
+                  <input type="color" id="color-category-custom" value="#bfdbfe" aria-label="Farbe für eigene Termine" />
+                </label>
+              </div>
             </div>
 
             <div class="border-t border-slate-800 pt-3 space-y-2">
               <div class="flex items-center justify-between gap-2">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Farbdeckung reduzieren</h3>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Druckfarbe sparen</h3>
                 <button id="btn-analyze-coverage" type="button" class="shrink-0 text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded border border-slate-700 transition cursor-pointer">Tipps berechnen</button>
               </div>
               <p class="text-[11px] text-slate-400">Vergleicht mögliche Farbänderungen für die ganze Rolle. Es wird nichts ohne Klick geändert; Empfehlungen sind Näherungen ohne Druckerprofil.</p>
@@ -433,17 +455,17 @@
           </div>
 
           <!-- TAB 4: FEIERTAGS- & TERMIN-ENGINE -->
-          <div id="tab-holidays" class="tab-content hidden space-y-4">
+          <div id="tab-holidays" role="tabpanel" aria-labelledby="tab-button-holidays" tabindex="0" class="tab-content hidden space-y-4">
             <div class="space-y-1">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">DACH-Feiertage & Termine</h3>
-              <p class="text-[11px] text-slate-400">Gesetzliche Feiertage, Schulferien & eigene Kalender-Importe.</p>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Termine verwalten</h3>
+              <p class="text-[11px] text-slate-400">Regionale Feiertage und Ferien laden, eigene Termine pflegen oder einen .ics-Kalender importieren. Farben werden im Tab „Erscheinung“ festgelegt.</p>
             </div>
 
             <!-- Länder & Bundesländer Auswahl -->
             <div class="space-y-2 bg-slate-950/70 p-3 rounded-lg border border-slate-800">
               <div class="grid grid-cols-2 gap-2">
                 <div>
-                  <label class="text-[11px] text-slate-400 block mb-1">Land</label>
+                  <label for="select-country" class="text-[11px] text-slate-400 block mb-1">Land</label>
                   <select id="select-country" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-100">
                     <option value="DE">Deutschland (DE)</option>
                     <option value="AT">Österreich (AT)</option>
@@ -451,7 +473,7 @@
                   </select>
                 </div>
                 <div>
-                  <label class="text-[11px] text-slate-400 block mb-1">Region / Bundesland</label>
+                  <label for="select-bundesland" class="text-[11px] text-slate-400 block mb-1">Region / Bundesland</label>
                   <select id="select-bundesland" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-100">
                     <!-- Dynamisch befüllt -->
                   </select>
@@ -467,7 +489,7 @@
             <!-- iCal / .ICS Import & Export -->
             <div class="bg-slate-950/70 p-3 rounded-lg border border-slate-800 space-y-2">
               <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold text-slate-300">iCal (.ics) Kalenderdaten</span>
+                <span class="text-xs font-semibold text-slate-300">Kalenderdatei (.ics)</span>
                 <input type="file" id="input-ics-file" accept=".ics" class="hidden" />
               </div>
               <div class="grid grid-cols-2 gap-2">
@@ -485,15 +507,15 @@
             <!-- Filter & Suche -->
             <div class="space-y-2 pt-1">
               <div class="flex items-center space-x-1 text-[11px]">
-                <button data-filter="all" class="btn-filter-holiday flex-1 py-1 rounded bg-amber-500 text-slate-950 font-bold transition">Alle</button>
-                <button data-filter="public" class="btn-filter-holiday flex-1 py-1 rounded bg-slate-800 text-slate-300 transition">Feiertage</button>
-                <button data-filter="vacation" class="btn-filter-holiday flex-1 py-1 rounded bg-slate-800 text-slate-300 transition">Ferien</button>
-                <button data-filter="custom" class="btn-filter-holiday flex-1 py-1 rounded bg-slate-800 text-slate-300 transition">Eigene</button>
+                <button data-filter="all" aria-pressed="true" class="btn-filter-holiday flex-1 py-1 rounded bg-amber-500 text-slate-950 font-bold transition">Alle</button>
+                <button data-filter="public" aria-pressed="false" class="btn-filter-holiday flex-1 py-1 rounded bg-slate-800 text-slate-300 transition">Feiertage</button>
+                <button data-filter="vacation" aria-pressed="false" class="btn-filter-holiday flex-1 py-1 rounded bg-slate-800 text-slate-300 transition">Ferien</button>
+                <button data-filter="custom" aria-pressed="false" class="btn-filter-holiday flex-1 py-1 rounded bg-slate-800 text-slate-300 transition">Eigene Termine</button>
               </div>
 
               <div class="flex items-center space-x-2">
                 <div class="relative flex-1">
-                  <input type="text" id="input-holiday-search" placeholder="Termin suchen..." class="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-xs text-slate-200 pl-7" />
+                  <input type="text" id="input-holiday-search" aria-label="Termine suchen" placeholder="Name oder Datum suchen …" class="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-xs text-slate-200 pl-7" />
                   <i class="fa-solid fa-search absolute left-2.5 top-2 text-[10px] text-slate-500"></i>
                 </div>
                 <button id="btn-add-holiday" class="text-xs bg-amber-500 text-slate-950 font-bold px-2.5 py-1 rounded shadow transition flex items-center space-x-1 cursor-pointer shrink-0">
@@ -510,19 +532,19 @@
           </div>
 
           <!-- TAB 5: VORLAGEN -->
-          <div id="tab-presets" class="tab-content hidden space-y-4">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Vorlagen-Verwaltung</h3>
+          <div id="tab-presets" role="tabpanel" aria-labelledby="tab-button-presets" tabindex="0" class="tab-content hidden space-y-4">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Vorlagen und Teilen</h3>
 
             <div class="space-y-2">
-              <h4 class="text-xs font-semibold text-slate-300">Link für das Folgejahr</h4>
+              <h4 class="text-xs font-semibold text-slate-300">Einstellungen fürs Folgejahr teilen</h4>
               <a id="next-year-link" class="block text-xs text-amber-400 break-all" target="_blank" rel="noopener noreferrer"></a>
               <button id="btn-copy-next-year-link" type="button" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs">Link kopieren</button>
               <p id="next-year-link-status" class="text-xs text-slate-400" role="status" aria-live="polite"></p>
-              <p class="text-[11px] text-slate-400">Ohne eigene oder importierte Termine; eigene Schriften müssen erneut geladen werden.</p>
+              <p class="text-[11px] text-slate-400">Der Link überträgt Einstellungen, aber keine eigenen oder importierten Termine. Eigene Schriften müssen erneut geladen werden.</p>
             </div>
 
             <div class="space-y-2">
-              <label class="text-xs text-slate-300 block">Aktuelle Einstellungen als Vorlage speichern</label>
+              <label for="input-preset-name" class="text-xs text-slate-300 block">Aktuelle Einstellungen als Vorlage speichern</label>
               <div class="flex space-x-2">
                 <input type="text" id="input-preset-name" placeholder="Name (z.B. NRW 32x42 cm 2-Spalten)" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-amber-500" />
                 <button id="btn-save-preset" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs transition cursor-pointer">Speichern</button>
@@ -530,7 +552,7 @@
             </div>
 
             <div class="border-t border-slate-800 pt-3 space-y-2">
-              <label class="text-xs text-slate-300 block">Gespeicherte Vorlagen</label>
+              <h4 class="text-xs font-semibold text-slate-300">Gespeicherte Vorlagen</h4>
               <div id="presets-list" class="space-y-2">
                 <!-- Preset items list -->
               </div>
@@ -599,7 +621,7 @@
         </div>
         <div class="status-brand">
           <span class="build-label">Build: </span>
-          <span id="build-date"><!-- BUILD_DATE -->15.11.2026 22:12<!-- /BUILD_DATE --></span>
+          <span id="build-date"><!-- BUILD_DATE -->15.11.2026 22:48<!-- /BUILD_DATE --></span>
           <a class="status-logo-link" href="https://github.com/KoljaL/ChronoScroll" target="_blank" rel="noopener noreferrer" aria-label="ChronoScroll auf GitHub (öffnet einen neuen Tab)">
             <span class="sr-only">Code: </span>
             <img src="./img/logo.svg" alt="" width="18" height="18" />
@@ -623,23 +645,23 @@
 
         <div class="space-y-3 text-xs">
           <div>
-            <label class="text-slate-300 block mb-1">Bezeichnung / Anlass</label>
+            <label for="modal-event-title" class="text-slate-300 block mb-1">Bezeichnung / Anlass</label>
             <input type="text" id="modal-event-title" placeholder="z.B. Sommerurlaub, Geburtstag Lisa, Deadline Projekt" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500 text-sm" />
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="text-slate-300 block mb-1">Beginn</label>
+              <label for="modal-event-date-start" class="text-slate-300 block mb-1">Beginn</label>
               <input type="date" id="modal-event-date-start" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-100 font-mono" />
             </div>
             <div>
-              <label class="text-slate-300 block mb-1">Ende (inklusive)</label>
+              <label for="modal-event-date-end" class="text-slate-300 block mb-1">Ende (inklusive)</label>
               <input type="date" id="modal-event-date-end" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-100 font-mono" />
             </div>
           </div>
 
           <div>
-            <label class="text-slate-300 block mb-1">Farbe im Kalender</label>
+            <label for="modal-event-color" class="text-slate-300 block mb-1">Farbe im Kalender</label>
             <div class="flex items-center space-x-3">
               <input type="color" id="modal-event-color" value="#bfdbfe" class="w-8 h-8 rounded bg-transparent cursor-pointer" />
               <span class="text-slate-400">Wähle eine dezente Pastellfarbe</span>

@@ -13,6 +13,10 @@
     };
   }
 
+  function defaultCategoryColors() {
+    return { public: '#fef08a', vacation: '#bfdbfe', custom: '#bfdbfe' };
+  }
+
   // Zentraler App State
   const state = {
     year: 2027,
@@ -54,6 +58,7 @@
     colorSundayText: '#e11d48',
     colorWeekendBg: '#f1f5f9',
     colorWeekendText: '#e11d48',
+    categoryColors: defaultCategoryColors(),
 
     country: 'DE',        // 'DE', 'AT', 'CH'
     bundesland: 'NW',
@@ -202,7 +207,62 @@
   function loadDefaultHolidays() {
     const pub = window.CronoHolidays.getDACHHolidays(state.year, state.country, state.bundesland);
     const vac = window.CronoHolidays.getSchoolVacations(state.year, state.country, state.bundesland);
-    state.holidays = [...pub, ...vac];
+    state.holidays = [...pub, ...vac].map(event => ({
+      ...event,
+      color: state.categoryColors[event.type] || event.color
+    }));
+  }
+
+  function categoryForEvent(event) {
+    return event.type === 'public' || event.type === 'vacation' ? event.type : 'custom';
+  }
+
+  function applyCategoryColor(category, color) {
+    state.categoryColors[category] = color;
+    state.holidays.forEach(event => {
+      if (categoryForEvent(event) === category) event.color = color;
+    });
+    renderHolidaysList();
+    renderPreview();
+  }
+
+  function renderDesignOptions() {
+    const container = document.getElementById('design-options');
+    const select = document.getElementById('select-design-style');
+    if (!container || !select) return;
+    const descriptions = {
+      classic: 'Freie Gestaltung mit Kalenderkopf und Tagesraster',
+      midcentury: 'Markante Typografie im Instrumenten-Look',
+      bauhaus: 'Geometrische Akzente und klare Formen',
+      gantt: 'Wochenraster für Projekt- und Zeitplanung',
+      zen: 'Reduzierte Darstellung mit viel Weißraum',
+      kursbuch: 'Fortlaufende Tagesnummern wie im Fahrplan'
+    };
+    container.innerHTML = '';
+    Array.from(select.options).forEach(option => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'choice-card design-card';
+      button.setAttribute('data-design-style', option.value);
+      button.setAttribute('aria-pressed', 'false');
+      const label = document.createElement('span');
+      label.className = 'choice-card-title';
+      label.textContent = option.textContent.split(' – ')[0].split(' / ')[0];
+      const description = document.createElement('span');
+      description.className = 'choice-card-description';
+      description.textContent = descriptions[option.value];
+      button.appendChild(label);
+      button.appendChild(description);
+      container.appendChild(button);
+    });
+  }
+
+  function syncChoiceCards() {
+    document.querySelectorAll('.design-card').forEach(button => {
+      const selected = button.getAttribute('data-design-style') === state.designStyle;
+      button.classList.toggle('active', selected);
+      button.setAttribute('aria-pressed', String(selected));
+    });
   }
 
   function renderPreview() {
@@ -229,8 +289,17 @@
       const description = document.createElement('span');
       description.className = 'text-[10px] text-slate-400';
       description.textContent = theme.description;
+      const swatches = document.createElement('span');
+      swatches.className = 'theme-swatches';
+      [theme.paperColor, theme.colorHeaderBg, theme.colorSaturdayBg, theme.colorSundayBg].forEach(color => {
+        const swatch = document.createElement('span');
+        swatch.className = 'theme-swatch';
+        swatch.style.backgroundColor = color;
+        swatches.appendChild(swatch);
+      });
       button.appendChild(label);
       button.appendChild(description);
+      button.appendChild(swatches);
       container.appendChild(button);
     });
   }
@@ -289,6 +358,7 @@
 
     // Stil
     setVal('select-design-style', state.designStyle);
+    syncChoiceCards();
     document.querySelectorAll('.theme-pill').forEach(pill => {
       const selected = pill.getAttribute('data-theme') === state.themeKey;
       pill.classList.toggle('active', selected);
@@ -315,6 +385,9 @@
     setVal('color-saturday-text', state.colorSaturdayText);
     setVal('color-sunday-bg', state.colorSundayBg);
     setVal('color-sunday-text', state.colorSundayText);
+    setVal('color-category-public', state.categoryColors.public);
+    setVal('color-category-vacation', state.categoryColors.vacation);
+    setVal('color-category-custom', state.categoryColors.custom);
 
     // Land & Region
     setVal('select-country', state.country);
@@ -364,7 +437,7 @@
     const filtered = state.holidays.filter(h => {
       if (state.holidayFilter === 'public' && h.type !== 'public') return false;
       if (state.holidayFilter === 'vacation' && h.type !== 'vacation') return false;
-      if (state.holidayFilter === 'custom' && h.type === 'public' && h.type === 'vacation') return false;
+      if (state.holidayFilter === 'custom' && (h.type === 'public' || h.type === 'vacation')) return false;
       if (q && !h.title.toLowerCase().includes(q) && !h.start.includes(q)) return false;
       return true;
     });
@@ -381,7 +454,7 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-2 w-2/3">
             <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${h.color}"></span>
-            <input type="text" value="${h.title}" data-id="${h.id}" data-field="title" class="holiday-input bg-transparent font-semibold text-slate-200 focus:outline-none focus:border-b border-amber-500 w-full truncate">
+            <input type="text" value="${h.title}" data-id="${h.id}" data-field="title" aria-label="Terminbezeichnung" class="holiday-input bg-transparent font-semibold text-slate-200 focus:outline-none focus:border-b border-amber-500 w-full truncate">
           </div>
           <button data-id="${h.id}" title="Löschen" class="btn-delete-holiday text-slate-500 hover:text-rose-400 p-1 cursor-pointer">
             <i class="fa-solid fa-trash-can"></i>
@@ -390,17 +463,17 @@
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="text-[10px] text-slate-400">Beginn</label>
-            <input type="date" value="${h.start}" data-id="${h.id}" data-field="start" class="holiday-input bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-slate-200 w-full font-mono text-[11px]">
+            <input type="date" value="${h.start}" data-id="${h.id}" data-field="start" aria-label="Beginn" class="holiday-input bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-slate-200 w-full font-mono text-[11px]">
           </div>
           <div>
             <label class="text-[10px] text-slate-400">Ende</label>
-            <input type="date" value="${h.end}" data-id="${h.id}" data-field="end" class="holiday-input bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-slate-200 w-full font-mono text-[11px]">
+            <input type="date" value="${h.end}" data-id="${h.id}" data-field="end" aria-label="Ende" class="holiday-input bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-slate-200 w-full font-mono text-[11px]">
           </div>
         </div>
         <div class="flex items-center space-x-2 pt-0.5">
-          <input type="color" value="${h.color}" data-id="${h.id}" data-field="color" class="holiday-input w-5 h-5 rounded cursor-pointer bg-transparent">
+          <input type="color" value="${h.color}" data-id="${h.id}" data-field="color" aria-label="Farbe dieses Termins" class="holiday-input w-5 h-5 rounded cursor-pointer bg-transparent">
           <span class="text-[10px] text-slate-400">Farbe im Kalender</span>
-          <span class="text-[9px] px-1.5 py-0.5 rounded ml-auto uppercase font-mono ${h.type === 'public' ? 'bg-amber-500/20 text-amber-400' : (h.type === 'vacation' ? 'bg-sky-500/20 text-sky-400' : 'bg-slate-800 text-slate-300')}">${h.type || 'termin'}</span>
+          <span class="text-[9px] px-1.5 py-0.5 rounded ml-auto font-mono ${h.type === 'public' ? 'bg-amber-500/20 text-amber-400' : (h.type === 'vacation' ? 'bg-sky-500/20 text-sky-400' : 'bg-slate-800 text-slate-300')}">${h.type === 'public' ? 'Feiertag' : (h.type === 'vacation' ? 'Ferien' : 'Eigener Termin')}</span>
         </div>
       `;
       listEl.appendChild(item);
@@ -435,6 +508,7 @@
     document.getElementById('modal-event-date-start').value = dateStr;
     document.getElementById('modal-event-date-end').value = dateStr;
     document.getElementById('modal-event-title').value = title;
+    document.getElementById('modal-event-color').value = state.categoryColors.custom;
     document.getElementById('modal-event-title').focus();
     modal.classList.remove('hidden');
   }
@@ -506,7 +580,12 @@
           if (preset !== data) {
             setFontStatus('Diese Vorlage verwendet eine eigene Schrift. Bitte lade die TTF-Datei erneut hoch.', true);
           }
-          Object.assign(state, { designStyle: 'classic', themeKey: null }, preset);
+          Object.assign(state, {
+            designStyle: 'classic',
+            themeKey: null,
+            categoryColors: defaultCategoryColors()
+          }, preset);
+          state.categoryColors = { ...defaultCategoryColors(), ...preset.categoryColors };
           localStorage.setItem('cronoscroll_design_style', state.designStyle);
           localStorage.setItem('cronoscroll_theme', state.themeKey || '');
           const defaults = defaultMonthSeparators();
@@ -644,7 +723,17 @@
     document.getElementById('select-design-style').addEventListener('change', (e) => {
       state.designStyle = e.target.value;
       localStorage.setItem('cronoscroll_design_style', state.designStyle);
+      syncChoiceCards();
       renderPreview();
+    });
+    document.querySelectorAll('.design-card').forEach(button => {
+      button.addEventListener('click', () => {
+        state.designStyle = button.getAttribute('data-design-style');
+        document.getElementById('select-design-style').value = state.designStyle;
+        localStorage.setItem('cronoscroll_design_style', state.designStyle);
+        syncChoiceCards();
+        renderPreview();
+      });
     });
     document.getElementById('input-font-file').addEventListener('change', async (e) => {
       const input = e.currentTarget;
@@ -688,6 +777,15 @@
     bindColor('color-saturday-text', 'colorSaturdayText');
     bindColor('color-sunday-bg', 'colorSundayBg');
     bindColor('color-sunday-text', 'colorSundayText');
+    [
+      ['color-category-public', 'public'],
+      ['color-category-vacation', 'vacation'],
+      ['color-category-custom', 'custom']
+    ].forEach(([id, category]) => {
+      document.getElementById(id).addEventListener('input', event => {
+        applyCategoryColor(category, event.target.value);
+      });
+    });
 
     // 3. 1-Klick Theme Buttons
     document.querySelectorAll('.theme-pill').forEach(pill => {
@@ -729,6 +827,7 @@
       btn.addEventListener('click', () => {
         state.holidayFilter = btn.getAttribute('data-filter');
         document.querySelectorAll('.btn-filter-holiday').forEach(b => {
+          b.setAttribute('aria-pressed', String(b === btn));
           b.classList.remove('bg-amber-500', 'text-slate-950', 'font-bold');
           b.classList.add('bg-slate-800', 'text-slate-300');
         });
@@ -756,7 +855,10 @@
       reader.onload = (re) => {
         const events = window.CronoICS.parseICS(re.target.result);
         if (events.length > 0) {
-          state.holidays = [...state.holidays, ...events];
+          state.holidays = [...state.holidays, ...events.map(event => ({
+            ...event,
+            color: state.categoryColors.custom
+          }))];
           renderHolidaysList();
           renderPreview();
           alert(`${events.length} Termine erfolgreich aus iCal importiert!`);
@@ -858,18 +960,33 @@
     });
 
     // 12. Reiter-Umschaltung
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+    const activateTab = (btn, focus = false) => {
         const tabId = btn.getAttribute('data-tab');
         document.querySelectorAll('.tab-btn').forEach(b => {
+          const selected = b === btn;
           b.classList.remove('text-amber-400', 'border-b-2', 'border-amber-400', 'font-semibold');
           b.classList.add('text-slate-400');
+          b.setAttribute('aria-selected', String(selected));
+          b.tabIndex = selected ? 0 : -1;
         });
         btn.classList.add('text-amber-400', 'border-b-2', 'border-amber-400', 'font-semibold');
         btn.classList.remove('text-slate-400');
 
         document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
         document.getElementById(tabId).classList.remove('hidden');
+        if (focus && btn.focus) btn.focus();
+    };
+    document.querySelectorAll('.tab-btn').forEach((btn, index, buttons) => {
+      btn.addEventListener('click', () => activateTab(btn));
+      btn.addEventListener('keydown', event => {
+        const lastIndex = buttons.length - 1;
+        const nextIndex = event.key === 'ArrowRight' ? (index + 1) % buttons.length
+          : event.key === 'ArrowLeft' ? (index + lastIndex) % buttons.length
+            : event.key === 'Home' ? 0
+              : event.key === 'End' ? lastIndex : -1;
+        if (nextIndex < 0) return;
+        event.preventDefault();
+        activateTab(buttons[nextIndex], true);
       });
     });
 
@@ -1006,12 +1123,14 @@
     const savedTheme = localStorage.getItem('cronoscroll_theme');
     if (window.CronoThemes.isValidKey(savedTheme)) window.CronoThemes.apply(state, savedTheme);
     window.CronoShare.restore(window.location.search, state);
+    state.categoryColors = { ...defaultCategoryColors(), ...state.categoryColors };
     localStorage.setItem('cronoscroll_design_style', state.designStyle);
     localStorage.setItem('cronoscroll_theme', state.themeKey || '');
     if (state.fontFamily === 'custom' && !window.CronoFonts.hasCustomFont()) {
       setFontStatus('Der Link verwendet eine eigene Schrift. Bitte lade die TTF-Datei erneut hoch.', true);
     }
     loadDefaultHolidays();
+    renderDesignOptions();
     renderThemeOptions();
     syncInputsFromState();
     renderHolidaysList();

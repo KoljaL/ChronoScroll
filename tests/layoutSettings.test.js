@@ -12,6 +12,8 @@ test('separator settings and next-year links update and restore before holidays 
       this.children = [];
       this.listeners = {};
       this.attributes = {};
+      this.options = [];
+      this.style = {};
       this.classList = {
         classes: new Set(),
         add(...names) { names.forEach(name => this.classes.add(name)); },
@@ -30,7 +32,12 @@ test('separator settings and next-year links update and restore before holidays 
     removeAttribute(name) { delete this.attributes[name]; }
     getAttribute(name) { return this.attributes[name]; }
     get valueAsNumber() { return this.value === '' ? NaN : Number(this.value); }
-    dispatch(type) { this.listeners[type]({ target: this, currentTarget: this }); }
+    dispatch(type, extra = {}) {
+      if (this.listeners[type]) this.listeners[type]({
+        target: this, currentTarget: this, preventDefault() {}, ...extra
+      });
+    }
+    focus() {}
     querySelectorAll(selector) {
       if (selector !== '.btn-load-preset' && selector !== '.btn-delete-preset') return [];
       if (this.queries[selector]) return this.queries[selector];
@@ -47,6 +54,28 @@ test('separator settings and next-year links update and restore before holidays 
     if (!elements.has(id)) elements.set(id, new Element());
     return elements.get(id);
   };
+  get('select-design-style').options = [
+    ['classic', 'Klassisch (frei gestaltbar)'],
+    ['midcentury', 'Mid-Century – Labor & Messinstrument'],
+    ['bauhaus', 'Bauhaus / Schweizer Typografie'],
+    ['gantt', 'Gantt – Projekt-Timeline'],
+    ['zen', 'Zen – minimalistischer Streifen'],
+    ['kursbuch', 'Kursbuch – Fahrplan']
+  ].map(([value, textContent]) => ({ value, textContent }));
+  const tabNames = ['geometry', 'layout', 'style', 'holidays', 'presets'];
+  const tabs = tabNames.map((name, index) => {
+    const tab = get(`tab-button-${name}`);
+    tab.setAttribute('data-tab', `tab-${name}`);
+    tab.setAttribute('aria-selected', String(index === 0));
+    return tab;
+  });
+  const panels = tabNames.map(name => get(`tab-${name}`));
+  const filters = ['all', 'public', 'vacation', 'custom'].map((filter, index) => {
+    const button = get(`filter-${filter}`);
+    button.setAttribute('data-filter', filter);
+    button.setAttribute('aria-pressed', String(index === 0));
+    return button;
+  });
   const storage = {
     cronoscroll_v2_presets: JSON.stringify({ old: { monthLayout: 'single' } }),
     cronoscroll_theme: 'sage'
@@ -61,7 +90,14 @@ test('separator settings and next-year links update and restore before holidays 
     document: {
       getElementById: get,
       createElement: () => new Element(),
-      querySelectorAll: selector => selector === '.theme-pill' ? get('theme-options').children : []
+      querySelectorAll: selector => {
+        if (selector === '.theme-pill') return get('theme-options').children;
+        if (selector === '.design-card') return get('design-options').children;
+        if (selector === '.tab-btn') return tabs;
+        if (selector === '.tab-content') return panels;
+        if (selector === '.btn-filter-holiday') return filters;
+        return [];
+      }
     },
     Option: class {},
     localStorage: {
@@ -72,8 +108,14 @@ test('separator settings and next-year links update and restore before holidays 
       location: { search: '' },
       addEventListener(type, fn) { if (type === 'DOMContentLoaded') start = fn; },
       CronoHolidays: {
-        getDACHHolidays: (...args) => { holidayCalls.push(args); return []; },
-        getSchoolVacations: () => []
+        getDACHHolidays: (...args) => {
+          holidayCalls.push(args);
+          const year = args[0];
+          return [{ id: `public-${year}`, title: 'Feiertag', start: `${year}-01-01`, end: `${year}-01-01`, color: '#000000', type: 'public' }];
+        },
+        getSchoolVacations: year => [
+          { id: `vacation-${year}`, title: 'Ferien', start: `${year}-07-01`, end: `${year}-07-07`, color: '#000000', type: 'vacation' }
+        ]
       },
       CronoCanvas: { render(canvas, container, state) { latestState = structuredClone(state); } },
       CronoFonts: { hasCustomFont: () => false, loadStandardFonts: () => new Promise(() => {}) }
@@ -86,6 +128,8 @@ test('separator settings and next-year links update and restore before holidays 
   start();
   assert.equal(latestState.themeKey, 'sage');
   assert.equal(latestState.paperColor, '#fcfdfa');
+  assert.equal(latestState.holidays.find(event => event.type === 'public').color, '#fef08a');
+  assert.equal(latestState.holidays.find(event => event.type === 'vacation').color, '#bfdbfe');
   const change = (id, value, type = 'change') => {
     const element = get(id);
     if (typeof value === 'boolean') element.checked = value;
@@ -108,11 +152,37 @@ test('separator settings and next-year links update and restore before holidays 
   assert.equal(get('select-month-separator-color').value, 'paper');
   change('select-design-style', 'zen');
   assert.equal(storage.cronoscroll_design_style, 'zen');
+  const zenCard = get('design-options').children.find(button => button.getAttribute('data-design-style') === 'zen');
+  assert.equal(zenCard.getAttribute('aria-pressed'), 'true');
+  zenCard.dispatch('click');
+  assert.equal(latestState.designStyle, 'zen');
   get('theme-options').children.find(button => button.getAttribute('data-theme') === 'wood').dispatch('click');
   assert.equal(latestState.designStyle, 'zen');
   assert.equal(latestState.themeKey, 'wood');
   assert.equal(latestState.paperColor, '#fdfbf7');
   assert.equal(storage.cronoscroll_theme, 'wood');
+  change('color-category-public', '#abcdef', 'input');
+  assert.equal(latestState.categoryColors.public, '#abcdef');
+  assert.equal(latestState.holidays.find(event => event.type === 'public').color, '#abcdef');
+  assert.equal(latestState.holidays.find(event => event.type === 'vacation').color, '#bfdbfe');
+  change('color-category-vacation', '#fedcba', 'input');
+  assert.equal(latestState.holidays.find(event => event.type === 'vacation').color, '#fedcba');
+  assert.equal(latestState.holidays.find(event => event.type === 'public').color, '#abcdef');
+  get('btn-add-holiday').dispatch('click');
+  get('modal-event-title').value = 'Eigener Termin';
+  get('modal-event-date-start').value = '2027-06-01';
+  get('btn-modal-event-save').dispatch('click');
+  assert.equal(latestState.holidays.find(event => event.type === 'custom').color, '#bfdbfe');
+  change('color-category-custom', '#123456', 'input');
+  assert.equal(latestState.holidays.find(event => event.type === 'custom').color, '#123456');
+  filters.find(button => button.getAttribute('data-filter') === 'custom').dispatch('click');
+  assert.equal(get('holiday-list').children.length, 1);
+  assert.equal(filters.find(button => button.getAttribute('data-filter') === 'custom').getAttribute('aria-pressed'), 'true');
+  filters[0].dispatch('click');
+  tabs[0].dispatch('keydown', { key: 'ArrowRight' });
+  assert.equal(tabs[1].getAttribute('aria-selected'), 'true');
+  assert.equal(tabs[1].tabIndex, 0);
+  assert.equal(tabs[0].tabIndex, -1);
   get('input-preset-name').value = 'new';
   get('btn-save-preset').dispatch('click');
   const list = get('presets-list');
@@ -129,6 +199,9 @@ test('separator settings and next-year links update and restore before holidays 
   assert.equal(latestState.monthSeparators.single.widthMm, 5);
   assert.equal(latestState.monthSeparators.double.widthMm, 12);
   assert.equal(latestState.monthSeparators.double.header, true);
+  assert.equal(latestState.categoryColors.public, '#abcdef');
+  assert.equal(latestState.categoryColors.vacation, '#fedcba');
+  assert.equal(latestState.categoryColors.custom, '#123456');
 
   change('input-custom-title', 'Familie 2027', 'input');
   const link = get('next-year-link').href;
