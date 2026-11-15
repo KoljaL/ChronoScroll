@@ -81,6 +81,7 @@
     bannerCustomTitle: 'CRONOSCROLL 2027',
 
     monthLayout: 'single', // 'single' oder 'double' Tageslisten pro Monat
+    designStyle: 'classic',
     monthSeparators: defaultMonthSeparators(),
     subColumns: 1,        // 1 bis 4 Personen-Spalten pro Tag
     guideLinesCount: 0,   // 0, 1, 2, 3 Schreiblinien
@@ -319,6 +320,7 @@
     setVal('select-header-align', state.headerAlign);
 
     // Stil
+    setVal('select-design-style', state.designStyle);
     const customFontOption = document.getElementById('option-custom-font');
     if (customFontOption) {
       const hasCustomFont = window.CronoFonts.hasCustomFont();
@@ -531,7 +533,8 @@
           if (preset !== data) {
             setFontStatus('Diese Vorlage verwendet eine eigene Schrift. Bitte lade die TTF-Datei erneut hoch.', true);
           }
-          Object.assign(state, preset);
+          Object.assign(state, { designStyle: 'classic' }, preset);
+          localStorage.setItem('cronoscroll_design_style', state.designStyle);
           const defaults = defaultMonthSeparators();
           state.monthSeparators = {
             single: { ...defaults.single, ...(preset.monthSeparators && preset.monthSeparators.single) },
@@ -664,6 +667,11 @@
       state.fontFamily = e.target.value;
       renderPreview();
     });
+    document.getElementById('select-design-style').addEventListener('change', (e) => {
+      state.designStyle = e.target.value;
+      localStorage.setItem('cronoscroll_design_style', state.designStyle);
+      renderPreview();
+    });
     document.getElementById('input-font-file').addEventListener('change', async (e) => {
       const input = e.currentTarget;
       const file = input.files && input.files[0];
@@ -714,6 +722,8 @@
         const th = THEMES[key];
         if (th) {
           Object.assign(state, th);
+          state.designStyle = 'classic';
+          localStorage.setItem('cronoscroll_design_style', state.designStyle);
           syncInputsFromState();
           document.querySelectorAll('.theme-pill').forEach(p => p.classList.remove('active'));
           pill.classList.add('active');
@@ -1020,7 +1030,12 @@
 
   // Initialisierung beim Laden
   window.addEventListener('DOMContentLoaded', () => {
+    const savedDesign = localStorage.getItem('cronoscroll_design_style');
+    if (['classic', 'midcentury', 'bauhaus', 'gantt', 'zen', 'kursbuch'].includes(savedDesign)) {
+      state.designStyle = savedDesign;
+    }
     window.CronoShare.restore(window.location.search, state);
+    localStorage.setItem('cronoscroll_design_style', state.designStyle);
     if (state.fontFamily === 'custom' && !window.CronoFonts.hasCustomFont()) {
       setFontStatus('Der Link verwendet eine eigene Schrift. Bitte lade die TTF-Datei erneut hoch.', true);
     }

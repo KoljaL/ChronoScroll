@@ -15,9 +15,9 @@ window.CronoPDF = (function() {
     return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
   }
 
-  function drawPdfCropMark(doc, xMm, yMm, lenMm = 4, offMm = 1.5) {
+  function drawPdfCropMark(doc, xMm, yMm, lenMm = 4, offMm = 1.5, monochrome = false) {
     doc.setLineWidth(0.2);
-    doc.setDrawColor(15, 23, 42);
+    doc.setDrawColor(...(monochrome ? [0, 0, 0] : [15, 23, 42]));
     // Horizontale Marke
     doc.line(xMm - lenMm - offMm, yMm, xMm - offMm, yMm);
     doc.line(xMm + offMm, yMm, xMm + lenMm + offMm, yMm);
@@ -34,6 +34,7 @@ window.CronoPDF = (function() {
 
     const { jsPDF } = window.jspdf;
     const geo = window.CronoGeometry.calculate(state);
+    const design = window.CronoDesigns && window.CronoDesigns.active(state);
     if (typeof window.qrcode !== 'function') {
       throw new Error('Die QR-Code-Bibliothek ist nicht geladen.');
     }
@@ -61,12 +62,12 @@ window.CronoPDF = (function() {
       compress: true
     });
 
-    const baseFont = window.CronoFonts.registerPdfFont(doc, state.fontFamily);
+    const baseFont = window.CronoFonts.registerPdfFont(doc, design ? window.CronoDesigns.fontKey(state) : state.fontFamily);
 
     const gridRgb = hexToRgb(state.colorGrid);
-    const textRgb = hexToRgb(state.colorText);
-    const borderRgb = hexToRgb(state.colorBorder || '#0f172a');
-    const paperRgb = hexToRgb(state.paperColor || '#ffffff');
+    const textRgb = hexToRgb(design ? '#000000' : state.colorText);
+    const borderRgb = hexToRgb(design ? '#000000' : state.colorBorder || '#0f172a');
+    const paperRgb = hexToRgb(design ? '#ffffff' : state.paperColor || '#ffffff');
 
     // 1. Hintergrund für gesamtes Banner
     doc.setFillColor(paperRgb[0], paperRgb[1], paperRgb[2]);
@@ -74,7 +75,7 @@ window.CronoPDF = (function() {
 
     // --- 2. VORLAUF (WICKEL-PUFFER LINKS) ---
     const leadInMm = geo.pufferLeftMm;
-    doc.setFillColor(248, 250, 252);
+    doc.setFillColor(...(design ? [255, 255, 255] : [248, 250, 252]));
     doc.rect(0, 0, leadInMm, geo.hVisibleMm, 'F');
 
     if (state.pufferLeftContent === 'title') {
@@ -84,10 +85,10 @@ window.CronoPDF = (function() {
       doc.text(state.bannerCustomTitle || `CRONOSCROLL ${state.year}`, leadInMm / 2, geo.hVisibleMm / 2 - 4, { align: 'center' });
       doc.setFont(baseFont, 'normal');
       doc.setFontSize(9);
-      doc.setTextColor(100, 116, 139);
+      doc.setTextColor(...(design ? [0, 0, 0] : [100, 116, 139]));
       doc.text('14-Monate-Endlosbanner für Holz-Rollkalender', leadInMm / 2, geo.hVisibleMm / 2 + 4, { align: 'center' });
     } else {
-      doc.setTextColor(148, 163, 184);
+      doc.setTextColor(...(design ? [0, 0, 0] : [148, 163, 184]));
       doc.setFont(baseFont, 'normal');
       doc.setFontSize(8);
       doc.text('WICKEL-PUFFER (MONTAGE)', leadInMm / 2, geo.hVisibleMm / 2, { align: 'center', angle: 90 });
@@ -96,6 +97,10 @@ window.CronoPDF = (function() {
     // --- 3. 14 MONATE ZEICHNEN ---
     monthsData.forEach((month, mIdx) => {
       const monthLeftMm = leadInMm + (mIdx * geo.bMonthMm);
+      if (design) {
+        window.CronoDesigns.drawPdf(doc, window.CronoDesigns.monthCommands(state, geo, month, mIdx, monthLeftMm), baseFont);
+        return;
+      }
       const metrics = geo.getMonthMetrics(mIdx);
       const contentLeftMm = monthLeftMm + metrics.leftInsetMm;
       const dayColumnWidthMm = metrics.dayColumnWidthMm;
@@ -236,7 +241,7 @@ window.CronoPDF = (function() {
 
     if (geo.separatorWidthMm > 0) {
       const separator = state.monthSeparators[geo.monthLayout];
-      const color = hexToRgb(separator.colorMode === 'paper' ? state.paperColor : separator.color);
+      const color = hexToRgb(design ? '#ffffff' : separator.colorMode === 'paper' ? state.paperColor : separator.color);
       const topMm = separator.header ? 0 : geo.hDayMm;
       doc.setFillColor(color[0], color[1], color[2]);
       for (let i = 1; i < 14; i++) {
@@ -247,7 +252,7 @@ window.CronoPDF = (function() {
 
     // --- 4. NACHLAUF (WICKEL-PUFFER RECHTS) ---
     const leadOutStartMm = geo.lTotalMm - geo.pufferRightMm;
-    doc.setFillColor(248, 250, 252);
+    doc.setFillColor(...(design ? [255, 255, 255] : [248, 250, 252]));
     doc.rect(leadOutStartMm, 0, geo.pufferRightMm, geo.hVisibleMm, 'F');
     const qrX = leadOutStartMm + (geo.pufferRightMm - qrSizeMm) / 2;
     const qrY = (geo.hVisibleMm - qrSizeMm) / 2;
@@ -270,22 +275,22 @@ window.CronoPDF = (function() {
     // --- 5. AUSSENRAHMEN ---
     doc.setLineWidth(state.lineBorder);
     doc.setDrawColor(borderRgb[0], borderRgb[1], borderRgb[2]);
-    doc.rect(0, 0, geo.lTotalMm, geo.hVisibleMm, 'D');
+    if (state.designStyle !== 'zen') doc.rect(0, 0, geo.lTotalMm, geo.hVisibleMm, 'D');
 
     // --- 6. SCHNEIDEMARKEN ---
     if (state.showCropMarks) {
-      drawPdfCropMark(doc, 0, 0);
-      drawPdfCropMark(doc, geo.lTotalMm, 0);
-      drawPdfCropMark(doc, 0, geo.hVisibleMm);
-      drawPdfCropMark(doc, geo.lTotalMm, geo.hVisibleMm);
-      drawPdfCropMark(doc, leadInMm, 0);
-      drawPdfCropMark(doc, leadInMm, geo.hVisibleMm);
-      drawPdfCropMark(doc, leadOutStartMm, 0);
-      drawPdfCropMark(doc, leadOutStartMm, geo.hVisibleMm);
+      drawPdfCropMark(doc, 0, 0, 4, 1.5, design);
+      drawPdfCropMark(doc, geo.lTotalMm, 0, 4, 1.5, design);
+      drawPdfCropMark(doc, 0, geo.hVisibleMm, 4, 1.5, design);
+      drawPdfCropMark(doc, geo.lTotalMm, geo.hVisibleMm, 4, 1.5, design);
+      drawPdfCropMark(doc, leadInMm, 0, 4, 1.5, design);
+      drawPdfCropMark(doc, leadInMm, geo.hVisibleMm, 4, 1.5, design);
+      drawPdfCropMark(doc, leadOutStartMm, 0, 4, 1.5, design);
+      drawPdfCropMark(doc, leadOutStartMm, geo.hVisibleMm, 4, 1.5, design);
       for (let i = 1; i < 14; i++) {
         const xMark = leadInMm + (i * geo.bMonthMm);
-        drawPdfCropMark(doc, xMark, 0);
-        drawPdfCropMark(doc, xMark, geo.hVisibleMm);
+        drawPdfCropMark(doc, xMark, 0, 4, 1.5, design);
+        drawPdfCropMark(doc, xMark, geo.hVisibleMm, 4, 1.5, design);
       }
     }
 

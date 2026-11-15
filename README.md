@@ -124,6 +124,9 @@ Alle Abmessungen leiten sich dynamisch von der montierten Schreibplatte ab:
   * Eigene TTF-Schriften können lokal geladen werden. Die gewählte Schrift erscheint in der Vorschau und wird in die Plotter-PDF eingebettet.
   * Einstellbare Linienstärken für Gitter und Umrandungen in Millimetern.
   * Farbwähler für Text, Gitterlinien und Wochenenden.
+  * Fünf monochrome Kalenderdesigns: **Mid-Century**, **Bauhaus**, **Gantt**, **Zen** und **Kursbuch**. Sie sind unter „Stil → Kalenderdesign“ wählbar, werden lokal gespeichert und in Vorschau, PNG, PDF und SVG dargestellt. Die Zeichnung verwendet dieselben 14 Monatsspalten und Tagespositionen wie das klassische Design, auch bei zwei Tageslisten.
+  * Die Designs verwenden Lato bzw. für Gantt und Kursbuch Cousine; die SVG-Datei enthält die verwendeten Schriftschnitte. Sie ersetzen die frei gewählten Farben, Schriftfamilien, Schreiblinien und Personen-Spaltenteilungen durch ihre eigene monochrome Gestaltung. Termine erscheinen als Text, Kalenderwochen und Mondphasen gemäß den zugehörigen Schaltern. Schnittmarken und Monatstrennstreifen bleiben optional.
+  * Zen nutzt den vorhandenen Monatskopf als Weißraum statt eines zusätzlichen 30-mm-Abstands. Gantt zeichnet Wochenmarken aufgrund der Leserichtung horizontal und Themen-Spalten vertikal. Kursbuch zählt die Tage jedes Kalenderjahres einschließlich des 366. Tages im Schaltjahr; die Übergangsmonate verwenden ihr eigenes Jahr.
 * **Deutsche Feiertage & Schulferien (nach Bundesland):**
   * Automatische Berechnung aller gesetzlichen Feiertage über die Gaußsche Osterformel für alle 16 Bundesländer (**Standard: Nordrhein-Westfalen / NRW**).
   * Berücksichtigt auch die Feiertage der Übergangsmonate (Dezember des Vorjahres und Januar des Folgejahres).

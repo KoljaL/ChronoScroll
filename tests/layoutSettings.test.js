@@ -100,15 +100,19 @@ test('separator settings and next-year links update and restore before holidays 
   change('select-month-layout', 'single');
   assert.equal(get('input-month-separator-width').value, 5);
   assert.equal(get('select-month-separator-color').value, 'paper');
+  change('select-design-style', 'zen');
+  assert.equal(storage.cronoscroll_design_style, 'zen');
   get('input-preset-name').value = 'new';
   get('btn-save-preset').dispatch('click');
   const list = get('presets-list');
   const load = name => list.querySelectorAll('.btn-load-preset')
     .find(button => button.getAttribute('data-name') === name).dispatch('click');
   load('old');
+  assert.equal(latestState.designStyle, 'classic');
   assert.equal(latestState.monthSeparators.single.enabled, false);
   assert.equal(latestState.monthSeparators.double.enabled, false);
   load('new');
+  assert.equal(latestState.designStyle, 'zen');
   assert.equal(latestState.monthSeparators.single.widthMm, 5);
   assert.equal(latestState.monthSeparators.double.widthMm, 12);
   assert.equal(latestState.monthSeparators.double.header, true);
@@ -126,6 +130,7 @@ test('separator settings and next-year links update and restore before holidays 
   start();
   assert.equal(latestState.year, 2028);
   assert.equal(latestState.bannerCustomTitle, 'Familie 2028');
+  assert.equal(latestState.designStyle, 'zen');
   assert.equal(latestState.monthSeparators.double.widthMm, 12);
   assert.deepEqual(holidayCalls.at(-1), [2028, 'DE', 'NW']);
 });

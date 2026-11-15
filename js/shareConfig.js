@@ -32,7 +32,8 @@ window.CronoShare = (function() {
     ['paperColor', color], ['colorHeaderBg', color], ['colorHeaderText', color],
     ['colorGrid', color], ['colorText', color], ['colorSaturdayBg', color],
     ['colorSaturdayText', color], ['colorSundayBg', color], ['colorSundayText', color],
-    ['colorWeekendBg', color], ['colorWeekendText', color]
+    ['colorWeekendBg', color], ['colorWeekendText', color],
+    ['designStyle', choice('classic', 'midcentury', 'bauhaus', 'gantt', 'zen', 'kursbuch')]
   ];
   const separatorFields = [
     ['enabled', boolean], ['widthMm', number(0.1, 20)],
@@ -64,6 +65,7 @@ window.CronoShare = (function() {
     }
     const values = fields.map(([name, valid]) => {
       let value = state[name];
+      if (name === 'designStyle' && value === undefined) value = 'classic';
       if (name === 'year') value++;
       if (name === 'bannerCustomTitle' && typeof value === 'string') {
         value = value.replace(new RegExp(`(^|[^0-9])${state.year}(?=[^0-9]|$)`, 'g'), `$1${state.year + 1}`);
@@ -91,6 +93,7 @@ window.CronoShare = (function() {
     if (!encoded || params.getAll('config').length !== 1) return;
     const data = decode(encoded);
     if (!Array.isArray(data) || data.length !== 5 || data[0] !== 1 || !Array.isArray(data[1])) return;
+    if (data[1].length < fields.length) state.designStyle = 'classic';
     fields.forEach(([name, valid], index) => {
       if (valid(data[1][index])) state[name] = data[1][index];
     });

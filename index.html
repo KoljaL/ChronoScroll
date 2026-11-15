@@ -305,6 +305,18 @@
 
           <!-- TAB 3: STIL & FARBEN -->
           <div id="tab-style" class="tab-content hidden space-y-4">
+            <div class="space-y-1">
+              <label for="select-design-style" class="text-xs font-bold uppercase tracking-wider text-amber-400">Kalenderdesign</label>
+              <select id="select-design-style" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100">
+                <option value="classic">Klassisch (frei gestaltbar)</option>
+                <option value="midcentury">Mid-Century – Labor &amp; Messinstrument</option>
+                <option value="bauhaus">Bauhaus / Schweizer Typografie</option>
+                <option value="gantt">Gantt – Projekt-Timeline</option>
+                <option value="zen">Zen – minimalistischer Streifen</option>
+                <option value="kursbuch">Kursbuch – Fahrplan</option>
+              </select>
+              <p class="text-[11px] text-slate-400">Die fünf Designs zeichnen monochrom im bestehenden Monatsraster. Farben, Schriftwahl, Schreiblinien und Personen-Spalten gelten im klassischen Design.</p>
+            </div>
             <!-- 1-Klick Design-Themes -->
             <div class="space-y-2">
               <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">1-Klick Design-Welten</h3>
@@ -603,7 +615,7 @@
         </div>
         <div class="status-brand">
           <span class="build-label">Build: </span>
-          <span id="build-date"><!-- BUILD_DATE -->15.11.2026 21:10<!-- /BUILD_DATE --></span>
+          <span id="build-date"><!-- BUILD_DATE -->15.11.2026 21:46<!-- /BUILD_DATE --></span>
           <a class="status-logo-link" href="https://github.com/KoljaL/ChronoScroll" target="_blank" rel="noopener noreferrer" aria-label="ChronoScroll auf GitHub (öffnet einen neuen Tab)">
             <span class="sr-only">Code: </span>
             <img src="./img/logo.svg" alt="" width="18" height="18" />
@@ -730,6 +742,7 @@
     <script src="js/icsParser.js"></script>
     <script src="js/embeddedFonts.js"></script>
     <script src="js/fontManager.js"></script>
+    <script src="js/designPresets.js"></script>
     <script src="js/canvasRenderer.js"></script>
     <script src="js/shareConfig.js"></script>
     <script src="js/pdfExport.js"></script>

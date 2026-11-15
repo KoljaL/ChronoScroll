@@ -9,17 +9,23 @@ window.CronoVector = (function() {
 
   function exportSVG(state) {
     const geo = window.CronoGeometry.calculate(state);
+    const design = window.CronoDesigns && window.CronoDesigns.active(state);
     const monthsData = window.CronoHolidays.get14MonthsData(state.year, state.holidays, state);
 
     const wMm = geo.lTotalMm;
     const hMm = geo.hVisibleMm;
     const leadInMm = geo.pufferLeftMm;
     const leadOutMm = geo.pufferRightMm;
+    const designFont = design ? window.CronoEmbeddedFonts[window.CronoDesigns.fontKey(state)] : null;
 
     let svg = [
       `<?xml version="1.0" encoding="UTF-8"?>`,
       `<svg xmlns="http://www.w3.org/2000/svg" width="${wMm}mm" height="${hMm}mm" viewBox="0 0 ${wMm} ${hMm}">`,
       `<style>`,
+      ...(design ? [
+        `  @font-face { font-family: "${designFont.family}"; font-weight: normal; src: url(data:font/ttf;base64,${designFont.styles.normal}) format("truetype"); }`,
+        `  @font-face { font-family: "${designFont.family}"; font-weight: bold; src: url(data:font/ttf;base64,${designFont.styles.bold}) format("truetype"); }`
+      ] : []),
       `  text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }`,
       `  .header-text { font-weight: bold; font-size: 3.2mm; fill: ${state.colorText}; }`,
       `  .day-text { font-size: 2.6mm; fill: ${state.colorText}; }`,
@@ -30,9 +36,9 @@ window.CronoVector = (function() {
       `  .border-line { stroke: ${state.colorBorder || '#0f172a'}; stroke-width: ${state.lineBorder}mm; fill: none; }`,
       `</style>`,
       `<g id="background">`,
-      `  <rect x="0" y="0" width="${wMm}" height="${hMm}" fill="${state.paperColor || '#ffffff'}"/>`,
-      `  <rect x="0" y="0" width="${leadInMm}" height="${hMm}" fill="#f8fafc"/>`,
-      `  <rect x="${wMm - leadOutMm}" y="0" width="${leadOutMm}" height="${hMm}" fill="#f8fafc"/>`,
+      `  <rect x="0" y="0" width="${wMm}" height="${hMm}" fill="${design ? '#ffffff' : state.paperColor || '#ffffff'}"/>`,
+      `  <rect x="0" y="0" width="${leadInMm}" height="${hMm}" fill="${design ? '#ffffff' : '#f8fafc'}"/>`,
+      `  <rect x="${wMm - leadOutMm}" y="0" width="${leadOutMm}" height="${hMm}" fill="${design ? '#ffffff' : '#f8fafc'}"/>`,
       `</g>`,
       `<g id="grid">`
     ];
@@ -40,6 +46,10 @@ window.CronoVector = (function() {
     // 14 Monate
     monthsData.forEach((month, mIdx) => {
       const monthLeftMm = leadInMm + (mIdx * geo.bMonthMm);
+      if (design) {
+        svg.push(...window.CronoDesigns.svgCommands(window.CronoDesigns.monthCommands(state, geo, month, mIdx, monthLeftMm), designFont.family));
+        return;
+      }
       const metrics = geo.getMonthMetrics(mIdx);
       const contentLeftMm = monthLeftMm + metrics.leftInsetMm;
       const dayColumnWidthMm = metrics.dayColumnWidthMm;
@@ -115,7 +125,7 @@ window.CronoVector = (function() {
 
     if (geo.separatorWidthMm > 0) {
       const separator = state.monthSeparators[geo.monthLayout];
-      const color = separator.colorMode === 'paper' ? state.paperColor : separator.color;
+      const color = design ? '#ffffff' : separator.colorMode === 'paper' ? state.paperColor : separator.color;
       const topMm = separator.header ? 0 : geo.hDayMm;
       for (let i = 1; i < 14; i++) {
         svg.push(`  <rect x="${leadInMm + i * geo.bMonthMm - geo.separatorWidthMm / 2}" y="${topMm}" width="${geo.separatorWidthMm}" height="${hMm - topMm}" fill="${color}"/>`);
@@ -123,11 +133,13 @@ window.CronoVector = (function() {
     }
 
     // Puffer Beschriftungen
-    svg.push(`  <text x="${leadInMm / 2}" y="${hMm / 2}" transform="rotate(-90 ${leadInMm / 2} ${hMm / 2})" text-anchor="middle" fill="#94a3b8" font-size="3mm">WICKEL-PUFFER (MONTAGE)</text>`);
-    svg.push(`  <text x="${wMm - leadOutMm / 2}" y="${hMm / 2}" transform="rotate(-90 ${wMm - leadOutMm / 2} ${hMm / 2})" text-anchor="middle" fill="#94a3b8" font-size="3mm">WICKEL-PUFFER (MONTAGE)</text>`);
+    svg.push(`  <text x="${leadInMm / 2}" y="${hMm / 2}" transform="rotate(-90 ${leadInMm / 2} ${hMm / 2})" text-anchor="middle" fill="${design ? '#000000' : '#94a3b8'}" font-size="3mm">WICKEL-PUFFER (MONTAGE)</text>`);
+    svg.push(`  <text x="${wMm - leadOutMm / 2}" y="${hMm / 2}" transform="rotate(-90 ${wMm - leadOutMm / 2} ${hMm / 2})" text-anchor="middle" fill="${design ? '#000000' : '#94a3b8'}" font-size="3mm">WICKEL-PUFFER (MONTAGE)</text>`);
 
     // Rahmen
-    svg.push(`  <rect x="0" y="0" width="${wMm}" height="${hMm}" class="border-line"/>`);
+    if (state.designStyle !== 'zen') {
+      svg.push(design ? `  <rect x="0" y="0" width="${wMm}" height="${hMm}" fill="none" stroke="#000" stroke-width="${state.lineBorder}"/>` : `  <rect x="0" y="0" width="${wMm}" height="${hMm}" class="border-line"/>`);
+    }
     svg.push(`</g>`);
     svg.push(`</svg>`);
 
@@ -158,7 +170,9 @@ window.CronoVector = (function() {
       zoom: (offCanvas.height / (state.hVisible * 20))
     };
 
-    window.CronoCanvas.render(offCanvas, offContainer, offState);
+    const renderOptions = window.CronoDesigns && window.CronoDesigns.active(state)
+      ? { showViewportOverlay: false } : {};
+    window.CronoCanvas.render(offCanvas, offContainer, offState, renderOptions);
 
     offCanvas.toBlob((blob) => {
       if (!blob) return;

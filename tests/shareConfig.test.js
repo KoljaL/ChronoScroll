@@ -24,7 +24,7 @@ function state() {
     colorSaturdayText: '#666666', colorSundayBg: '#777777', colorSundayText: '#888888',
     colorWeekendBg: '#999999', colorWeekendText: '#aaaaaa',
     country: 'AT', bundesland: 'NOE', holidays: [{ title: 'Privater Termin' }],
-    zoom: 2, holidaySearchQuery: 'privat'
+    zoom: 2, holidaySearchQuery: 'privat', designStyle: 'gantt'
   };
 }
 
@@ -42,6 +42,7 @@ test('next-year URL round trips only durable settings and updates matching title
   assert.equal(restored.country, 'AT');
   assert.equal(restored.bundesland, 'NOE');
   assert.equal(restored.monthSeparators.double.widthMm, 2);
+  assert.equal(restored.designStyle, 'gantt');
   assert.deepEqual(restored.holidays, []);
   assert.equal(restored.zoom, 1);
   assert.equal(restored.holidaySearchQuery, '');
@@ -65,6 +66,16 @@ test('malformed, unsupported and invalid values do not block restoration', () =>
   assert.equal(target.country, 'AT');
   assert.equal(target.monthSeparators.single.widthMm, 2);
   assert.equal(target.monthSeparators.single.header, true);
+});
+
+test('links created before design styles restore the classic design', () => {
+  const original = state();
+  const url = new URL(share.createNextYearUrl(original));
+  const data = JSON.parse(Buffer.from(url.searchParams.get('config'), 'base64url').toString('utf8'));
+  data[1].pop();
+  const restored = state();
+  share.restore(`?config=${Buffer.from(JSON.stringify(data)).toString('base64url')}`, restored);
+  assert.equal(restored.designStyle, 'classic');
 });
 
 test('invalid current settings and out-of-range next year are reported', () => {
