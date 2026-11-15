@@ -6,30 +6,93 @@ window.CronoDesigns = (function() {
 
   const styles = ['midcentury', 'bauhaus', 'gantt', 'zen', 'kursbuch'];
   const active = state => styles.includes(state.designStyle);
-  const fontKey = state => state.designStyle === 'gantt' || state.designStyle === 'kursbuch' ? 'mono' : 'sans';
+  const fontKey = state => state.themeKey &&
+    (!window.CronoThemes || window.CronoThemes.isValidKey(state.themeKey))
+    ? state.fontFamily
+    : state.designStyle === 'gantt' || state.designStyle === 'kursbuch' ? 'mono' : 'sans';
+
+  function contrastText(background, preferred) {
+    const rgb = /^#([0-9a-f]{6})$/i.exec(background || '');
+    if (!rgb) return preferred || '#000000';
+    const channels = rgb[1].match(/../g).map(value => {
+      const channel = parseInt(value, 16) / 255;
+      return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+    });
+    const luminance = 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+    const blackContrast = (luminance + 0.05) / 0.05;
+    const whiteContrast = 1.05 / (luminance + 0.05);
+    if (preferred) {
+      const match = /^#([0-9a-f]{6})$/i.exec(preferred);
+      if (match) {
+        const preferredChannels = match[1].match(/../g).map(value => {
+          const channel = parseInt(value, 16) / 255;
+          return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+        });
+        const preferredLuminance = 0.2126 * preferredChannels[0] +
+          0.7152 * preferredChannels[1] + 0.0722 * preferredChannels[2];
+        const contrast = (Math.max(luminance, preferredLuminance) + 0.05) /
+          (Math.min(luminance, preferredLuminance) + 0.05);
+        if (contrast >= 4.5) return preferred;
+      }
+    }
+    return blackContrast >= whiteContrast ? '#000000' : '#ffffff';
+  }
 
   function monthCommands(state, geo, month, index, left) {
     const commands = [];
     const style = state.designStyle;
+    const colors = window.CronoThemes
+      ? window.CronoThemes.colorRoles(state)
+      : {
+        grid: state.colorGrid || '#000000',
+        text: state.colorText || '#000000',
+        header: {
+          background: state.colorHeaderBg || state.paperColor || '#ffffff',
+          text: state.colorHeaderText || state.colorText || '#000000'
+        },
+        saturday: {
+          background: state.colorSaturdayBg || state.colorWeekendBg || state.paperColor || '#ffffff',
+          text: state.colorSaturdayText || state.colorWeekendText || state.colorText || '#000000'
+        },
+        sunday: {
+          background: state.colorSundayBg || state.colorWeekendBg || state.paperColor || '#ffffff',
+          text: state.colorSundayText || state.colorWeekendText || state.colorText || '#000000'
+        },
+        highlight: state.colorSundayText || state.colorHeaderText || state.colorText || '#000000'
+      };
+    const gridColor = colors.grid;
+    const textColor = colors.text;
+    const headerBg = colors.header.background;
+    const headerText = colors.header.text;
+    const highlight = colors.highlight;
     const metrics = geo.getMonthMetrics(index);
     const x = left + metrics.leftInsetMm;
     const w = metrics.dayColumnWidthMm;
     const h = geo.hDayMm;
     const fullWidth = metrics.contentWidthMm;
     const line = (x1, y1, x2, y2, width = 0.15, dash = false) =>
-      commands.push({ type: 'line', x1, y1, x2, y2, width, dash });
-    const rect = (rx, ry, rw, rh, fill = false, width = 0.15) =>
-      commands.push({ type: 'rect', x: rx, y: ry, w: rw, h: rh, fill, width });
+      commands.push({ type: 'line', x1, y1, x2, y2, width, dash, strokeColor: gridColor });
+    const rect = (rx, ry, rw, rh, fill = false, width = 0.15, fillColor = textColor) =>
+      commands.push({ type: 'rect', x: rx, y: ry, w: rw, h: rh, fill, width, fillColor, strokeColor: gridColor });
     const text = (value, tx, ty, size, maxWidth, options = {}) =>
-      commands.push({ type: 'text', value: String(value), x: tx, y: ty, size, maxWidth: Math.max(0.1, maxWidth), ...options });
-    const circle = (cx, cy, r, fill = false) => commands.push({ type: 'circle', x: cx, y: cy, r, fill });
+      commands.push({
+        type: 'text', value: String(value), x: tx, y: ty, size,
+        maxWidth: Math.max(0.1, maxWidth), textColor, ...options
+      });
+    const circle = (cx, cy, r, fill = false) =>
+      commands.push({ type: 'circle', x: cx, y: cy, r, fill,
+        fillColor: highlight, strokeColor: gridColor });
     const daySize = Math.min(2.6 * (state.fontDayScale || 1), h * 0.55, w * 0.16);
     const headerSize = Math.min((style === 'bauhaus' ? 5 : 3.2) * (state.fontHeaderScale || 1), h * 0.65);
     const headerY = h * (style === 'gantt' ? 0.35 : 0.52);
-    if (style === 'midcentury') rect(x, 0, fullWidth, h, true);
+    if (style === 'midcentury') rect(x, 0, fullWidth, h, true, 0.15, headerBg);
     text(month.label.toUpperCase(), style === 'bauhaus' ? x + 2 : x + fullWidth / 2,
       headerY, headerSize, fullWidth - 4,
-      { align: style === 'bauhaus' ? 'left' : 'center', bold: style !== 'zen', white: style === 'midcentury' });
+      {
+        align: style === 'bauhaus' ? 'left' : 'center',
+        bold: style !== 'zen',
+        textColor: style === 'midcentury' ? contrastText(headerBg, headerText) : headerText
+      });
 
     if (style === 'gantt') {
       for (let col = 0; col < geo.dayColumns; col++) {
@@ -53,11 +116,16 @@ window.CronoDesigns = (function() {
       const weekend = day.isSaturday || day.isSunday;
       const strip = Math.min(style === 'kursbuch' ? 22 : 19, w * 0.38);
       const date = String(day.dayNum).padStart(2, '0');
+      const dayTextColor = day.isSunday
+        ? colors.sunday.text
+        : day.isSaturday
+          ? colors.saturday.text
+          : textColor;
       let detailStart = strip + 1;
 
       if (style === 'midcentury') {
         line(cx, y, cx + w, y, 0.25 * 25.4 / 72);
-        text(date + ' ' + day.dayName, cx + 2, cy, daySize, strip - 3);
+        text(date + ' ' + day.dayName, cx + 2, cy, daySize, strip - 3, { textColor: dayTextColor });
         if (state.showKW && day.isoWeek) {
           const r = Math.min(2.1, h * 0.23, Math.max(0.1, (w - strip - 1) / 2));
           circle(cx + strip + r, cy, r);
@@ -70,13 +138,19 @@ window.CronoDesigns = (function() {
           line(cx + w - 1, cy, cx + w - 2, cy + 1);
         }
       } else if (style === 'bauhaus') {
-        if (weekend) rect(cx, y, strip, h, true);
-        text(date, cx + 1.5, cy, daySize, strip * 0.4, { bold: true, white: weekend });
+        const weekendBg = day.isSunday ? colors.sunday.background : colors.saturday.background;
+        if (weekend) rect(cx, y, strip, h, true, 0.15, weekendBg);
+        text(date, cx + 1.5, cy, daySize, strip * 0.4, {
+          bold: true,
+          textColor: weekend ? contrastText(weekendBg, dayTextColor) : dayTextColor
+        });
         text(day.dayName.toUpperCase().split('').join(' '), cx + strip * 0.48, cy,
-          daySize * 0.75, strip * 0.48, { white: weekend });
+          daySize * 0.75, strip * 0.48, {
+            textColor: weekend ? contrastText(weekendBg, dayTextColor) : dayTextColor
+          });
       } else if (style === 'gantt') {
         const laneStart = Math.min(15, w * 0.28);
-        text(date + ' ' + day.dayName, cx + 1, cy, daySize, laneStart - 2);
+        text(date + ' ' + day.dayName, cx + 1, cy, daySize, laneStart - 2, { textColor: dayTextColor });
         if (day.dayName === 'Mo') {
           line(cx, y, cx + w, y, 0.25);
           const lane = (w - laneStart) / 3;
@@ -89,7 +163,7 @@ window.CronoDesigns = (function() {
         line(cx, y, cx + w, y, 0.08, true);
         if (day.isSunday || (day.events || []).some(event => event.type === 'public') ||
             (day.holiday && day.holiday.type === 'public')) circle(cx + 2, cy, 0.45, true);
-        text(date + ' ' + day.dayName, cx + 4, cy, daySize, strip - 4);
+        text(date + ' ' + day.dayName, cx + 4, cy, daySize, strip - 4, { textColor: dayTextColor });
       } else {
         line(cx, y, cx + w, y, 0.18);
         if (day.dayName === 'Mo') line(cx, y + Math.min(0.7, h * 0.1), cx + w, y + Math.min(0.7, h * 0.1), 0.18);
@@ -98,7 +172,8 @@ window.CronoDesigns = (function() {
         const counterWidth = Math.min(8, w * 0.15);
         line(cx + counterWidth, y, cx + counterWidth, y + h);
         text(String(ordinal).padStart(3, '0'), cx + counterWidth / 2, cy, daySize * 0.75, counterWidth - 1, { align: 'center' });
-        text(date + ' ' + day.dayName, cx + counterWidth + 1, cy, daySize, strip - counterWidth - 1);
+        text(date + ' ' + day.dayName, cx + counterWidth + 1, cy, daySize,
+          strip - counterWidth - 1, { textColor: dayTextColor });
       }
 
       if (state.showKW && day.isoWeek && style !== 'midcentury' && style !== 'gantt' && w - strip > 20) {
@@ -130,8 +205,8 @@ window.CronoDesigns = (function() {
     ctx.save();
     ctx.textBaseline = 'middle';
     commands.forEach(c => {
-      ctx.strokeStyle = '#000000';
-      ctx.fillStyle = c.white ? '#ffffff' : '#000000';
+      ctx.strokeStyle = c.strokeColor || '#000000';
+      ctx.fillStyle = c.fillColor || (c.white ? '#ffffff' : '#000000');
       ctx.lineWidth = (c.width || 0.15) * scale;
       ctx.setLineDash(c.dash ? [0.2 * scale, 0.8 * scale] : []);
       if (c.type === 'line') {
@@ -146,26 +221,34 @@ window.CronoDesigns = (function() {
       } else {
         ctx.font = `${c.bold ? 'bold ' : ''}${c.size * scale}px ${font}`;
         ctx.textAlign = c.align || 'left';
+        ctx.fillStyle = c.textColor || (c.white ? '#ffffff' : '#000000');
         ctx.fillText(c.value, c.x * scale, c.y * scale, Math.max(0.1, c.maxWidth * scale));
       }
     });
     ctx.restore();
   }
 
+  function hexRgb(hex) {
+    const match = /^#([0-9a-f]{6})$/i.exec(hex || '');
+    if (!match) return [0, 0, 0];
+    return match[1].match(/../g).map(channel => parseInt(channel, 16));
+  }
+
   function drawPdf(doc, commands, font) {
     commands.forEach(c => {
-      doc.setDrawColor(0, 0, 0);
+      const stroke = hexRgb(c.strokeColor || '#000000');
+      doc.setDrawColor(...stroke);
       doc.setLineWidth(c.width || 0.15);
       doc.setLineDashPattern(c.dash ? [0.2, 0.8] : [], 0);
       if (c.type === 'line') doc.line(c.x1, c.y1, c.x2, c.y2);
       else if (c.type === 'rect') {
-        doc.setFillColor(0, 0, 0);
+        doc.setFillColor(...hexRgb(c.fillColor || '#000000'));
         doc.rect(c.x, c.y, c.w, c.h, c.fill ? 'F' : 'D');
       } else if (c.type === 'circle') {
-        doc.setFillColor(0, 0, 0);
+        doc.setFillColor(...hexRgb(c.fillColor || '#000000'));
         doc.circle(c.x, c.y, c.r, c.fill ? 'F' : 'D');
       } else {
-        doc.setTextColor(c.white ? 255 : 0);
+        doc.setTextColor(...hexRgb(c.textColor || (c.white ? '#ffffff' : '#000000')));
         doc.setFont(font, c.bold ? 'bold' : 'normal');
         let size = c.size * 72 / 25.4;
         doc.setFontSize(size);
@@ -173,6 +256,7 @@ window.CronoDesigns = (function() {
         if (width > c.maxWidth) { size *= c.maxWidth / width; doc.setFontSize(size); }
         doc.text(c.value, c.x, c.y + size * 25.4 / 72 * 0.35, { align: c.align || 'left' });
       }
+
     });
     doc.setLineDashPattern([], 0);
   }
@@ -184,12 +268,12 @@ window.CronoDesigns = (function() {
 
   function svgCommands(commands, font) {
     return commands.map(c => {
-      if (c.type === 'line') return `<line x1="${c.x1}" y1="${c.y1}" x2="${c.x2}" y2="${c.y2}" stroke="#000" stroke-width="${c.width}"${c.dash ? ' stroke-dasharray="0.2 0.8"' : ''}/>`;
-      if (c.type === 'rect') return `<rect x="${c.x}" y="${c.y}" width="${c.w}" height="${c.h}" fill="${c.fill ? '#000' : 'none'}" stroke="#000" stroke-width="${c.width}"/>`;
-      if (c.type === 'circle') return `<circle cx="${c.x}" cy="${c.y}" r="${c.r}" fill="${c.fill ? '#000' : 'none'}" stroke="#000" stroke-width="0.15"/>`;
+      if (c.type === 'line') return `<line x1="${c.x1}" y1="${c.y1}" x2="${c.x2}" y2="${c.y2}" stroke="${c.strokeColor || '#000'}" stroke-width="${c.width}"${c.dash ? ' stroke-dasharray="0.2 0.8"' : ''}/>`;
+      if (c.type === 'rect') return `<rect x="${c.x}" y="${c.y}" width="${c.w}" height="${c.h}" fill="${c.fill ? c.fillColor || '#000' : 'none'}" stroke="${c.strokeColor || '#000'}" stroke-width="${c.width}"/>`;
+      if (c.type === 'circle') return `<circle cx="${c.x}" cy="${c.y}" r="${c.r}" fill="${c.fill ? c.fillColor || '#000' : 'none'}" stroke="${c.strokeColor || '#000'}" stroke-width="0.15"/>`;
       const anchor = c.align === 'center' ? 'middle' : c.align === 'right' ? 'end' : 'start';
       const clipX = c.x - (c.align === 'center' ? c.maxWidth / 2 : c.align === 'right' ? c.maxWidth : 0);
-      return `<svg x="${clipX}" y="${c.y - c.size}" width="${Math.max(0.1, c.maxWidth)}" height="${c.size * 2}" viewBox="0 0 ${Math.max(0.1, c.maxWidth)} ${c.size * 2}" overflow="hidden"><text x="${c.x - clipX}" y="${c.size * 1.35}" text-anchor="${anchor}" style="font-family:'${escapeXml(font)}'" font-size="${c.size}" font-weight="${c.bold ? 'bold' : 'normal'}" fill="${c.white ? '#fff' : '#000'}">${escapeXml(c.value)}</text></svg>`;
+      return `<svg x="${clipX}" y="${c.y - c.size}" width="${Math.max(0.1, c.maxWidth)}" height="${c.size * 2}" viewBox="0 0 ${Math.max(0.1, c.maxWidth)} ${c.size * 2}" overflow="hidden"><text x="${c.x - clipX}" y="${c.size * 1.35}" text-anchor="${anchor}" style="font-family:'${escapeXml(font)}'" font-size="${c.size}" font-weight="${c.bold ? 'bold' : 'normal'}" fill="${c.textColor || (c.white ? '#fff' : '#000')}">${escapeXml(c.value)}</text></svg>`;
     });
   }
 

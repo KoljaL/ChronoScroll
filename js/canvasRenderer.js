@@ -39,7 +39,8 @@ window.CronoCanvas = (function() {
   // Zeichnet Schnitt- und Passermarken
   function drawCropMark(ctx, x, y, lengthPx = 10, offsetPx = 3, monochrome = false) {
     ctx.save();
-    ctx.strokeStyle = monochrome ? '#000000' : '#0f172a';
+    ctx.strokeStyle = typeof monochrome === 'string'
+      ? monochrome : monochrome ? '#000000' : '#0f172a';
     ctx.lineWidth = 0.8;
     ctx.beginPath();
     // Horizontale Marke
@@ -88,7 +89,8 @@ window.CronoCanvas = (function() {
       const shift = (firstDay === 0) ? 6 : (firstDay - 1);
 
       ctx.font = `${5.5 * state.zoom}px ${baseFont}`;
-      ctx.fillStyle = state.designStyle && state.designStyle !== 'classic' ? '#000000' : '#64748b';
+      ctx.fillStyle = state.designStyle && state.designStyle !== 'classic'
+        ? state.colorText : '#64748b';
       for (let d = 1; d <= daysCount; d++) {
         const slot = shift + d - 1;
         const sCol = slot % 7;
@@ -319,7 +321,8 @@ window.CronoCanvas = (function() {
     const widthPx = geo.separatorWidth * 20 * state.zoom;
     const topPx = separator.header ? 0 : dayHeightPx;
     ctx.fillStyle = window.CronoDesigns && window.CronoDesigns.active(state)
-      ? '#ffffff' : separator.colorMode === 'paper' ? state.paperColor : separator.color;
+      ? state.paperColor || '#ffffff'
+      : separator.colorMode === 'paper' ? state.paperColor : separator.color;
     for (let i = 0; i <= count; i++) {
       const boundary = firstMonth + i;
       if (boundary <= 0 || boundary >= 14) continue;
@@ -340,7 +343,7 @@ window.CronoCanvas = (function() {
     const updateUi = renderOptions.updateUi !== false;
     const showViewportOverlay = renderOptions.showViewportOverlay !== false;
     const design = window.CronoDesigns && window.CronoDesigns.active(state);
-    const bufferState = design ? { ...state, colorText: '#000000', colorGrid: '#000000' } : state;
+    const bufferState = state;
 
     // HiDPI / Retina Device Pixel Ratio
     const dpr = renderOptions.pixelRatio ?? window.devicePixelRatio ?? 1;
@@ -371,7 +374,7 @@ window.CronoCanvas = (function() {
       ctx.scale(dpr, dpr);
 
       // Papier-Hintergrund
-      ctx.fillStyle = design ? '#ffffff' : state.paperColor || '#ffffff';
+      ctx.fillStyle = state.paperColor || '#ffffff';
       ctx.fillRect(0, 0, targetWidthPx, targetHeightPx);
 
       // 3 sichtbare Monate zeichnen
@@ -386,20 +389,21 @@ window.CronoCanvas = (function() {
 
       // Außenrahmen
       if (state.designStyle !== 'zen') {
-        ctx.strokeStyle = design ? '#000000' : state.colorBorder || '#0f172a';
+        ctx.strokeStyle = design ? state.colorText : state.colorBorder || '#0f172a';
         ctx.lineWidth = Math.max(2, state.lineBorder * state.zoom * 2);
         ctx.strokeRect(0, 0, targetWidthPx, targetHeightPx);
       }
 
       // Schnittmarken
       if (state.showCropMarks) {
-        drawCropMark(ctx, 0, 0, 10, 3, design);
-        drawCropMark(ctx, targetWidthPx, 0, 10, 3, design);
-        drawCropMark(ctx, 0, targetHeightPx, 10, 3, design);
-        drawCropMark(ctx, targetWidthPx, targetHeightPx, 10, 3, design);
+        const cropColor = design ? state.colorText : design;
+        drawCropMark(ctx, 0, 0, 10, 3, cropColor);
+        drawCropMark(ctx, targetWidthPx, 0, 10, 3, cropColor);
+        drawCropMark(ctx, 0, targetHeightPx, 10, 3, cropColor);
+        drawCropMark(ctx, targetWidthPx, targetHeightPx, 10, 3, cropColor);
         for (let i = 1; i < 3; i++) {
-          drawCropMark(ctx, i * monthWidthPx, 0, 10, 3, design);
-          drawCropMark(ctx, i * monthWidthPx, targetHeightPx, 10, 3, design);
+          drawCropMark(ctx, i * monthWidthPx, 0, 10, 3, cropColor);
+          drawCropMark(ctx, i * monthWidthPx, targetHeightPx, 10, 3, cropColor);
         }
       }
 
@@ -432,11 +436,11 @@ window.CronoCanvas = (function() {
       ctx.scale(dpr, dpr);
 
       // Papier-Hintergrund
-      ctx.fillStyle = design ? '#ffffff' : state.paperColor || '#ffffff';
+      ctx.fillStyle = state.paperColor || '#ffffff';
       ctx.fillRect(0, 0, targetWidthPx, targetHeightPx);
 
       // --- VORLAUF (WICKEL-PUFFER LINKS) ---
-      ctx.fillStyle = design ? '#ffffff' : '#f8fafc';
+      ctx.fillStyle = design ? state.paperColor || '#ffffff' : '#f8fafc';
       ctx.fillRect(0, 0, leadInPx, targetHeightPx);
 
       if (state.pufferLeftContent === 'year_overview') {
@@ -444,15 +448,15 @@ window.CronoCanvas = (function() {
       } else if (state.pufferLeftContent === 'notes') {
         drawBufferNotes(ctx, 'Notizen & Termine', 0, 0, leadInPx, targetHeightPx, bufferState);
       } else if (state.pufferLeftContent === 'title') {
-        ctx.fillStyle = design ? '#000000' : state.colorText;
+        ctx.fillStyle = state.colorText;
         ctx.font = `bold ${14 * state.zoom}px ${baseFont}`;
         ctx.textAlign = 'center';
         ctx.fillText(state.bannerCustomTitle || `CRONOSCROLL ${state.year}`, leadInPx / 2, targetHeightPx / 2 - 10 * state.zoom);
         ctx.font = `${9 * state.zoom}px ${baseFont}`;
-        ctx.fillStyle = design ? '#000000' : '#64748b';
+        ctx.fillStyle = design ? state.colorHeaderText || state.colorText : '#64748b';
         ctx.fillText('14-Monate-Endlosbanner für Holz-Rollkalender', leadInPx / 2, targetHeightPx / 2 + 10 * state.zoom);
       } else {
-        ctx.fillStyle = design ? '#000000' : '#94a3b8';
+        ctx.fillStyle = design ? state.colorText : '#94a3b8';
         ctx.font = `${11 * state.zoom}px ${baseFont}`;
         ctx.textAlign = 'center';
         ctx.fillText('WICKEL-PUFFER (MONTAGE)', leadInPx / 2, targetHeightPx / 2);
@@ -467,13 +471,13 @@ window.CronoCanvas = (function() {
 
       // --- NACHLAUF (WICKEL-PUFFER RECHTS) ---
       const leadOutStartPx = targetWidthPx - leadOutPx;
-      ctx.fillStyle = design ? '#ffffff' : '#f8fafc';
+      ctx.fillStyle = design ? state.paperColor || '#ffffff' : '#f8fafc';
       ctx.fillRect(leadOutStartPx, 0, leadOutPx, targetHeightPx);
 
       if (state.pufferRightContent === 'notes') {
         drawBufferNotes(ctx, 'Jahres-Rückblick', leadOutStartPx, 0, leadOutPx, targetHeightPx, bufferState);
       } else {
-        ctx.fillStyle = design ? '#000000' : '#94a3b8';
+        ctx.fillStyle = design ? state.colorText : '#94a3b8';
         ctx.font = `${11 * state.zoom}px ${baseFont}`;
         ctx.textAlign = 'center';
         ctx.fillText('WICKEL-PUFFER (MONTAGE)', leadOutStartPx + (leadOutPx / 2), targetHeightPx / 2);
@@ -481,26 +485,27 @@ window.CronoCanvas = (function() {
 
       // Außenrahmen
       if (state.designStyle !== 'zen') {
-        ctx.strokeStyle = design ? '#000000' : state.colorBorder || '#0f172a';
+        ctx.strokeStyle = design ? state.colorText : state.colorBorder || '#0f172a';
         ctx.lineWidth = Math.max(2, state.lineBorder * state.zoom * 2);
         ctx.strokeRect(0, 0, targetWidthPx, targetHeightPx);
       }
 
       // Schnittmarken
       if (state.showCropMarks) {
-        drawCropMark(ctx, 0, 0, 10, 3, design);
-        drawCropMark(ctx, targetWidthPx, 0, 10, 3, design);
-        drawCropMark(ctx, 0, targetHeightPx, 10, 3, design);
-        drawCropMark(ctx, targetWidthPx, targetHeightPx, 10, 3, design);
+        const cropColor = design ? state.colorText : design;
+        drawCropMark(ctx, 0, 0, 10, 3, cropColor);
+        drawCropMark(ctx, targetWidthPx, 0, 10, 3, cropColor);
+        drawCropMark(ctx, targetWidthPx, targetHeightPx, 10, 3, cropColor);
+        drawCropMark(ctx, 0, targetHeightPx, 10, 3, cropColor);
         // Marken an Puffergrenzen und allen Monaten
-        drawCropMark(ctx, leadInPx, 0, 10, 3, design);
-        drawCropMark(ctx, leadInPx, targetHeightPx, 10, 3, design);
-        drawCropMark(ctx, leadOutStartPx, 0, 10, 3, design);
-        drawCropMark(ctx, leadOutStartPx, targetHeightPx, 10, 3, design);
+        drawCropMark(ctx, leadInPx, 0, 10, 3, cropColor);
+        drawCropMark(ctx, leadInPx, targetHeightPx, 10, 3, cropColor);
+        drawCropMark(ctx, leadOutStartPx, 0, 10, 3, cropColor);
+        drawCropMark(ctx, leadOutStartPx, targetHeightPx, 10, 3, cropColor);
         for (let i = 1; i < 14; i++) {
           const xMark = leadInPx + (i * monthWidthPx);
-          drawCropMark(ctx, xMark, 0, 10, 3, design);
-          drawCropMark(ctx, xMark, targetHeightPx, 10, 3, design);
+          drawCropMark(ctx, xMark, 0, 10, 3, cropColor);
+          drawCropMark(ctx, xMark, targetHeightPx, 10, 3, cropColor);
         }
       }
 

@@ -6,7 +6,7 @@ const vm = require('node:vm');
 
 const context = { window: {} };
 vm.createContext(context);
-for (const file of ['geometry.js', 'holidays.js', 'designPresets.js']) {
+for (const file of ['geometry.js', 'holidays.js', 'themePresets.js', 'designPresets.js']) {
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js', file), 'utf8'), context);
 }
 const { CronoGeometry: geometry, CronoHolidays: holidays, CronoDesigns: designs } = context.window;
@@ -48,7 +48,7 @@ test('design signatures include exact hairlines, inverse weekends, lanes and zen
   assert.ok(mid.some(c => c.type === 'circle' && !c.fill));
   const bauhaus = commands('bauhaus');
   assert.ok(bauhaus.some(c => c.type === 'rect' && c.fill && c.y > 0));
-  assert.ok(bauhaus.some(c => c.type === 'text' && c.white && c.value === '05'));
+  assert.ok(bauhaus.some(c => c.type === 'text' && c.textColor === '#000000' && c.value === '05'));
   const gantt = commands('gantt');
   assert.ok(gantt.some(c => c.type === 'text' && c.value === 'MATERIAL'));
   assert.ok(gantt.some(c => c.type === 'line' && c.x1 === c.x2));
@@ -58,6 +58,67 @@ test('design signatures include exact hairlines, inverse weekends, lanes and zen
   assert.ok(zen.filter(c => c.type === 'line').every(c => c.y1 === c.y2));
   assert.ok(zen.some(c => c.type === 'circle' && c.fill));
   assert.ok(!zen.some(c => c.type === 'rect'));
+});
+
+test('every theme supplies palette and font roles to all five special designs', () => {
+  const geo = geometry.calculate(state);
+  for (const key of context.window.CronoThemes.keys) {
+    const theme = context.window.CronoThemes.themes[key];
+    for (const designStyle of designs.styles) {
+      const current = { ...state, designStyle };
+      context.window.CronoThemes.apply(current, key);
+      const commands = designs.monthCommands(current, geo, months[2], 2, 0);
+      assert.equal(designs.fontKey(current), theme.fontFamily);
+      assert.ok(commands.some(command => command.strokeColor === current.colorGrid));
+      assert.ok(commands.some(command => command.textColor === current.colorText ||
+        command.textColor === current.colorHeaderText));
+      if (designStyle === 'midcentury') {
+        assert.ok(commands.some(command => command.fillColor === current.colorHeaderBg));
+      }
+      if (designStyle === 'bauhaus') {
+        assert.ok(commands.some(command => command.fillColor === current.colorSaturdayBg ||
+          command.fillColor === current.colorSundayBg));
+      }
+
+      const svg = designs.svgCommands(commands, theme.fontFamily).join('');
+      assert.ok(svg.includes(current.colorGrid));
+      assert.ok(svg.includes(theme.fontFamily));
+      const canvasFonts = [];
+      designs.drawCanvas({
+        save() {}, restore() {}, setLineDash() {}, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {}, fill() {},
+        fillRect() {}, strokeRect() {}, arc() {},
+        fillText() { canvasFonts.push(this.font); }
+      }, commands, 1, theme.fontFamily);
+      assert.ok(canvasFonts.length > 0);
+      assert.ok(canvasFonts.every(font => font.includes(theme.fontFamily)));
+
+      const pdfFonts = [];
+      designs.drawPdf({
+        setDrawColor() {}, setFillColor() {}, setTextColor() {}, setLineWidth() {},
+        setLineDashPattern() {}, line() {}, rect() {}, circle() {},
+        setFont(font) { pdfFonts.push(font); }, setFontSize() {},
+        getTextWidth: text => text.length, text() {}
+      }, commands, theme.fontFamily);
+      assert.ok(pdfFonts.length > 0);
+      assert.ok(pdfFonts.every(font => font === theme.fontFamily));
+    }
+  }
+});
+
+test('inverse labels switch to a high-contrast color on dark theme fills', () => {
+  const geo = geometry.calculate(state);
+  const current = {
+    ...state, designStyle: 'midcentury',
+    colorHeaderBg: '#111111', colorHeaderText: '#222222'
+  };
+  const midcentury = designs.monthCommands(current, geo, months[2], 2, 0);
+  assert.equal(midcentury.find(command => command.type === 'text').textColor, '#ffffff');
+
+  current.designStyle = 'bauhaus';
+  current.colorSaturdayBg = '#111111';
+  current.colorSaturdayText = '#222222';
+  const bauhaus = designs.monthCommands(current, geo, months[2], 2, 0);
+  assert.ok(bauhaus.some(command => command.value === '05' && command.textColor === '#ffffff'));
 });
 
 test('very narrow split columns never produce negative text widths', () => {

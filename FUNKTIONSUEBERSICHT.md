@@ -62,16 +62,16 @@ Diese Einstellungen beeinflussen die Darstellung der Tageszeilen und Monatsköpf
 
 ## 4. Stil und Typografie
 
-Farben und Schrift bestimmen das Erscheinungsbild. Design-Welten ändern mehrere Stilwerte zugleich; einzelne Werte lassen sich anschließend separat einstellen.
+Farben und Schrift bestimmen das Erscheinungsbild. Design-Welten ändern mehrere Stilwerte zugleich; einzelne Werte lassen sich anschließend separat einstellen. Sie sind unabhängig vom Kalenderdesign und wirken auch auf alle fünf Spezialdesigns.
 
 | Noch benötigt? | Funktion | README | Webseite | Details / Einschränkungen |
 |---|---|---|---|---|
-| [ ] | Eine Design-Welt auswählen | Nein | Ja | Minimalist, Holz & Sepia, Blueprint oder Wald & Salbei; setzt Farben und Schriftfamilie. |
+| [ ] | Eine Design-Welt auswählen | Nein | Ja | Minimalist, Holz & Sepia, Blueprint oder Wald & Salbei; setzt Farben und Schriftfamilie, bleibt bearbeitbar und kann mit jedem Kalenderdesign kombiniert werden. |
 | [ ] | Mitgelieferte Schrift auswählen | Ja | Teilw. | Lato, PT Serif und Cousine sowie eine weitere Lato-Auswahl; Vorschau und PDF verwenden eingebettete Schriften, SVG eine fest vorgegebene Systemschrift. |
 | [ ] | Eigene TTF-Schrift lokal laden | Ja | Teilw. | Für Vorschau und PDF; eine Datei für normale, fette und kursive Stellen. Nach Neuladen erneut auswählen; SVG übernimmt sie nicht. Erkennbare übergroße Kerning-Untertabellen lösen eine Warnung aus. |
 | [ ] | Schriftgröße der Monatsköpfe skalieren | Ja | Teilw. | In Vorschau und PDF; SVG verwendet eine feste Größe. |
 | [ ] | Schriftgröße der Tageszeilen skalieren | Ja | Teilw. | In Vorschau und PDF; SVG verwendet eine feste Größe. |
-| [ ] | Papierfarbe wählen | Nein | Ja | Hintergrund des Kalenders; die Puffer haben eine eigene feste Hintergrundfarbe. |
+| [ ] | Papierfarbe wählen | Nein | Ja | Hintergrund des Kalenders und der Puffer bei Spezialdesigns; im klassischen Design haben die Puffer weiterhin eine eigene feste Hintergrundfarbe. |
 | [ ] | Stärke der Rasterlinien einstellen | Ja | Ja | Eingabe in Millimetern; Vorschau skaliert auf Bildschirmdarstellung. |
 | [ ] | Stärke des Außenrahmens einstellen | Ja | Ja | Eingabe in Millimetern; Vorschau skaliert auf Bildschirmdarstellung. |
 | [ ] | Rasterfarbe wählen | Ja | Ja | Für Kalenderlinien. |

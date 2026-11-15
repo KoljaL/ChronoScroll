@@ -6,62 +6,6 @@
 (function() {
   'use strict';
 
-  // 1-Klick Theme Presets
-  const THEMES = {
-    'wood': {
-      name: 'Holz & Leder (Sepia)',
-      paperColor: '#fdfbf7',
-      colorHeaderBg: '#fef3c7',
-      colorHeaderText: '#78350f',
-      colorGrid: '#e2d9cc',
-      colorText: '#292524',
-      colorSaturdayBg: '#fbf7ee',
-      colorSaturdayText: '#44403c',
-      colorSundayBg: '#fef2f2',
-      colorSundayText: '#b91c1c',
-      fontFamily: 'serif'
-    },
-    'minimal': {
-      name: 'Skandinavisch Minimal',
-      paperColor: '#ffffff',
-      colorHeaderBg: '#f8fafc',
-      colorHeaderText: '#0f172a',
-      colorGrid: '#e2e8f0',
-      colorText: '#0f172a',
-      colorSaturdayBg: '#f8fafc',
-      colorSaturdayText: '#334155',
-      colorSundayBg: '#f1f5f9',
-      colorSundayText: '#0f172a',
-      fontFamily: 'sans'
-    },
-    'architect': {
-      name: 'Architektur & Blueprint',
-      paperColor: '#ffffff',
-      colorHeaderBg: '#e0f2fe',
-      colorHeaderText: '#0369a1',
-      colorGrid: '#cbd5e1',
-      colorText: '#0f172a',
-      colorSaturdayBg: '#f0f9ff',
-      colorSaturdayText: '#0284c7',
-      colorSundayBg: '#e0f2fe',
-      colorSundayText: '#0369a1',
-      fontFamily: 'mono'
-    },
-    'sage': {
-      name: 'Wald & Salbei (Natur)',
-      paperColor: '#fcfdfa',
-      colorHeaderBg: '#dcfce7',
-      colorHeaderText: '#166534',
-      colorGrid: '#d1d5db',
-      colorText: '#1f2937',
-      colorSaturdayBg: '#f0fdf4',
-      colorSaturdayText: '#15803d',
-      colorSundayBg: '#fef2f2',
-      colorSundayText: '#b91c1c',
-      fontFamily: 'sans'
-    }
-  };
-
   function defaultMonthSeparators() {
     return {
       single: { enabled: false, widthMm: 0.5, colorMode: 'custom', color: '#cbd5e1', header: false },
@@ -82,6 +26,7 @@
 
     monthLayout: 'single', // 'single' oder 'double' Tageslisten pro Monat
     designStyle: 'classic',
+    themeKey: null,
     monthSeparators: defaultMonthSeparators(),
     subColumns: 1,        // 1 bis 4 Personen-Spalten pro Tag
     guideLinesCount: 0,   // 0, 1, 2, 3 Schreiblinien
@@ -267,6 +212,29 @@
     invalidateStaleCoverageAdvice();
   }
 
+  function renderThemeOptions() {
+    const container = document.getElementById('theme-options');
+    if (!container) return;
+    container.innerHTML = '';
+    window.CronoThemes.keys.forEach(key => {
+      const theme = window.CronoThemes.themes[key];
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'theme-pill';
+      button.setAttribute('data-theme', key);
+      button.setAttribute('aria-pressed', 'false');
+      const label = document.createElement('span');
+      label.className = 'text-xs font-semibold block text-slate-200';
+      label.textContent = theme.label;
+      const description = document.createElement('span');
+      description.className = 'text-[10px] text-slate-400';
+      description.textContent = theme.description;
+      button.appendChild(label);
+      button.appendChild(description);
+      container.appendChild(button);
+    });
+  }
+
   function updateNextYearLink() {
     const link = document.getElementById('next-year-link');
     const button = document.getElementById('btn-copy-next-year-link');
@@ -321,6 +289,11 @@
 
     // Stil
     setVal('select-design-style', state.designStyle);
+    document.querySelectorAll('.theme-pill').forEach(pill => {
+      const selected = pill.getAttribute('data-theme') === state.themeKey;
+      pill.classList.toggle('active', selected);
+      pill.setAttribute('aria-pressed', String(selected));
+    });
     const customFontOption = document.getElementById('option-custom-font');
     if (customFontOption) {
       const hasCustomFont = window.CronoFonts.hasCustomFont();
@@ -533,8 +506,9 @@
           if (preset !== data) {
             setFontStatus('Diese Vorlage verwendet eine eigene Schrift. Bitte lade die TTF-Datei erneut hoch.', true);
           }
-          Object.assign(state, { designStyle: 'classic' }, preset);
+          Object.assign(state, { designStyle: 'classic', themeKey: null }, preset);
           localStorage.setItem('cronoscroll_design_style', state.designStyle);
+          localStorage.setItem('cronoscroll_theme', state.themeKey || '');
           const defaults = defaultMonthSeparators();
           state.monthSeparators = {
             single: { ...defaults.single, ...(preset.monthSeparators && preset.monthSeparators.single) },
@@ -719,14 +693,9 @@
     document.querySelectorAll('.theme-pill').forEach(pill => {
       pill.addEventListener('click', () => {
         const key = pill.getAttribute('data-theme');
-        const th = THEMES[key];
-        if (th) {
-          Object.assign(state, th);
-          state.designStyle = 'classic';
-          localStorage.setItem('cronoscroll_design_style', state.designStyle);
+        if (window.CronoThemes.apply(state, key)) {
+          localStorage.setItem('cronoscroll_theme', state.themeKey);
           syncInputsFromState();
-          document.querySelectorAll('.theme-pill').forEach(p => p.classList.remove('active'));
-          pill.classList.add('active');
           renderPreview();
         }
       });
@@ -1034,12 +1003,16 @@
     if (['classic', 'midcentury', 'bauhaus', 'gantt', 'zen', 'kursbuch'].includes(savedDesign)) {
       state.designStyle = savedDesign;
     }
+    const savedTheme = localStorage.getItem('cronoscroll_theme');
+    if (window.CronoThemes.isValidKey(savedTheme)) window.CronoThemes.apply(state, savedTheme);
     window.CronoShare.restore(window.location.search, state);
     localStorage.setItem('cronoscroll_design_style', state.designStyle);
+    localStorage.setItem('cronoscroll_theme', state.themeKey || '');
     if (state.fontFamily === 'custom' && !window.CronoFonts.hasCustomFont()) {
       setFontStatus('Der Link verwendet eine eigene Schrift. Bitte lade die TTF-Datei erneut hoch.', true);
     }
     loadDefaultHolidays();
+    renderThemeOptions();
     syncInputsFromState();
     renderHolidaysList();
     renderPresetsList();

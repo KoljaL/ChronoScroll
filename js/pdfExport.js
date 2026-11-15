@@ -17,7 +17,9 @@ window.CronoPDF = (function() {
 
   function drawPdfCropMark(doc, xMm, yMm, lenMm = 4, offMm = 1.5, monochrome = false) {
     doc.setLineWidth(0.2);
-    doc.setDrawColor(...(monochrome ? [0, 0, 0] : [15, 23, 42]));
+    const color = typeof monochrome === 'string'
+      ? hexToRgb(monochrome) : monochrome ? [0, 0, 0] : [15, 23, 42];
+    doc.setDrawColor(...color);
     // Horizontale Marke
     doc.line(xMm - lenMm - offMm, yMm, xMm - offMm, yMm);
     doc.line(xMm + offMm, yMm, xMm + lenMm + offMm, yMm);
@@ -65,9 +67,9 @@ window.CronoPDF = (function() {
     const baseFont = window.CronoFonts.registerPdfFont(doc, design ? window.CronoDesigns.fontKey(state) : state.fontFamily);
 
     const gridRgb = hexToRgb(state.colorGrid);
-    const textRgb = hexToRgb(design ? '#000000' : state.colorText);
-    const borderRgb = hexToRgb(design ? '#000000' : state.colorBorder || '#0f172a');
-    const paperRgb = hexToRgb(design ? '#ffffff' : state.paperColor || '#ffffff');
+    const textRgb = hexToRgb(state.colorText);
+    const borderRgb = hexToRgb(design ? state.colorText : state.colorBorder || '#0f172a');
+    const paperRgb = hexToRgb(state.paperColor || '#ffffff');
 
     // 1. Hintergrund für gesamtes Banner
     doc.setFillColor(paperRgb[0], paperRgb[1], paperRgb[2]);
@@ -75,7 +77,7 @@ window.CronoPDF = (function() {
 
     // --- 2. VORLAUF (WICKEL-PUFFER LINKS) ---
     const leadInMm = geo.pufferLeftMm;
-    doc.setFillColor(...(design ? [255, 255, 255] : [248, 250, 252]));
+    doc.setFillColor(...(design ? paperRgb : [248, 250, 252]));
     doc.rect(0, 0, leadInMm, geo.hVisibleMm, 'F');
 
     if (state.pufferLeftContent === 'title') {
@@ -85,10 +87,10 @@ window.CronoPDF = (function() {
       doc.text(state.bannerCustomTitle || `CRONOSCROLL ${state.year}`, leadInMm / 2, geo.hVisibleMm / 2 - 4, { align: 'center' });
       doc.setFont(baseFont, 'normal');
       doc.setFontSize(9);
-      doc.setTextColor(...(design ? [0, 0, 0] : [100, 116, 139]));
+      doc.setTextColor(...(design ? hexToRgb(state.colorHeaderText || state.colorText) : [100, 116, 139]));
       doc.text('14-Monate-Endlosbanner für Holz-Rollkalender', leadInMm / 2, geo.hVisibleMm / 2 + 4, { align: 'center' });
     } else {
-      doc.setTextColor(...(design ? [0, 0, 0] : [148, 163, 184]));
+      doc.setTextColor(...(design ? textRgb : [148, 163, 184]));
       doc.setFont(baseFont, 'normal');
       doc.setFontSize(8);
       doc.text('WICKEL-PUFFER (MONTAGE)', leadInMm / 2, geo.hVisibleMm / 2, { align: 'center', angle: 90 });
@@ -241,7 +243,7 @@ window.CronoPDF = (function() {
 
     if (geo.separatorWidthMm > 0) {
       const separator = state.monthSeparators[geo.monthLayout];
-      const color = hexToRgb(design ? '#ffffff' : separator.colorMode === 'paper' ? state.paperColor : separator.color);
+      const color = hexToRgb(design ? state.paperColor || '#ffffff' : separator.colorMode === 'paper' ? state.paperColor : separator.color);
       const topMm = separator.header ? 0 : geo.hDayMm;
       doc.setFillColor(color[0], color[1], color[2]);
       for (let i = 1; i < 14; i++) {
@@ -252,7 +254,7 @@ window.CronoPDF = (function() {
 
     // --- 4. NACHLAUF (WICKEL-PUFFER RECHTS) ---
     const leadOutStartMm = geo.lTotalMm - geo.pufferRightMm;
-    doc.setFillColor(...(design ? [255, 255, 255] : [248, 250, 252]));
+    doc.setFillColor(...(design ? paperRgb : [248, 250, 252]));
     doc.rect(leadOutStartMm, 0, geo.pufferRightMm, geo.hVisibleMm, 'F');
     const qrX = leadOutStartMm + (geo.pufferRightMm - qrSizeMm) / 2;
     const qrY = (geo.hVisibleMm - qrSizeMm) / 2;
@@ -279,18 +281,19 @@ window.CronoPDF = (function() {
 
     // --- 6. SCHNEIDEMARKEN ---
     if (state.showCropMarks) {
-      drawPdfCropMark(doc, 0, 0, 4, 1.5, design);
-      drawPdfCropMark(doc, geo.lTotalMm, 0, 4, 1.5, design);
-      drawPdfCropMark(doc, 0, geo.hVisibleMm, 4, 1.5, design);
-      drawPdfCropMark(doc, geo.lTotalMm, geo.hVisibleMm, 4, 1.5, design);
-      drawPdfCropMark(doc, leadInMm, 0, 4, 1.5, design);
-      drawPdfCropMark(doc, leadInMm, geo.hVisibleMm, 4, 1.5, design);
-      drawPdfCropMark(doc, leadOutStartMm, 0, 4, 1.5, design);
-      drawPdfCropMark(doc, leadOutStartMm, geo.hVisibleMm, 4, 1.5, design);
+      const cropColor = design ? state.colorText : design;
+      drawPdfCropMark(doc, 0, 0, 4, 1.5, cropColor);
+      drawPdfCropMark(doc, geo.lTotalMm, 0, 4, 1.5, cropColor);
+      drawPdfCropMark(doc, 0, geo.hVisibleMm, 4, 1.5, cropColor);
+      drawPdfCropMark(doc, geo.lTotalMm, geo.hVisibleMm, 4, 1.5, cropColor);
+      drawPdfCropMark(doc, leadInMm, 0, 4, 1.5, cropColor);
+      drawPdfCropMark(doc, leadInMm, geo.hVisibleMm, 4, 1.5, cropColor);
+      drawPdfCropMark(doc, leadOutStartMm, 0, 4, 1.5, cropColor);
+      drawPdfCropMark(doc, leadOutStartMm, geo.hVisibleMm, 4, 1.5, cropColor);
       for (let i = 1; i < 14; i++) {
         const xMark = leadInMm + (i * geo.bMonthMm);
-        drawPdfCropMark(doc, xMark, 0, 4, 1.5, design);
-        drawPdfCropMark(doc, xMark, geo.hVisibleMm, 4, 1.5, design);
+        drawPdfCropMark(doc, xMark, 0, 4, 1.5, cropColor);
+        drawPdfCropMark(doc, xMark, geo.hVisibleMm, 4, 1.5, cropColor);
       }
     }
 

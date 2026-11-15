@@ -47,7 +47,10 @@ test('separator settings and next-year links update and restore before holidays 
     if (!elements.has(id)) elements.set(id, new Element());
     return elements.get(id);
   };
-  const storage = { cronoscroll_v2_presets: JSON.stringify({ old: { monthLayout: 'single' } }) };
+  const storage = {
+    cronoscroll_v2_presets: JSON.stringify({ old: { monthLayout: 'single' } }),
+    cronoscroll_theme: 'sage'
+  };
   let latestState;
   let start;
   let copied;
@@ -58,7 +61,7 @@ test('separator settings and next-year links update and restore before holidays 
     document: {
       getElementById: get,
       createElement: () => new Element(),
-      querySelectorAll: () => []
+      querySelectorAll: selector => selector === '.theme-pill' ? get('theme-options').children : []
     },
     Option: class {},
     localStorage: {
@@ -77,9 +80,12 @@ test('separator settings and next-year links update and restore before holidays 
     }
   };
   vm.createContext(context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/themePresets.js'), 'utf8'), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/shareConfig.js'), 'utf8'), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/app.js'), 'utf8'), context);
   start();
+  assert.equal(latestState.themeKey, 'sage');
+  assert.equal(latestState.paperColor, '#fcfdfa');
   const change = (id, value, type = 'change') => {
     const element = get(id);
     if (typeof value === 'boolean') element.checked = value;
@@ -102,6 +108,11 @@ test('separator settings and next-year links update and restore before holidays 
   assert.equal(get('select-month-separator-color').value, 'paper');
   change('select-design-style', 'zen');
   assert.equal(storage.cronoscroll_design_style, 'zen');
+  get('theme-options').children.find(button => button.getAttribute('data-theme') === 'wood').dispatch('click');
+  assert.equal(latestState.designStyle, 'zen');
+  assert.equal(latestState.themeKey, 'wood');
+  assert.equal(latestState.paperColor, '#fdfbf7');
+  assert.equal(storage.cronoscroll_theme, 'wood');
   get('input-preset-name').value = 'new';
   get('btn-save-preset').dispatch('click');
   const list = get('presets-list');
@@ -109,10 +120,12 @@ test('separator settings and next-year links update and restore before holidays 
     .find(button => button.getAttribute('data-name') === name).dispatch('click');
   load('old');
   assert.equal(latestState.designStyle, 'classic');
+  assert.equal(latestState.themeKey, null);
   assert.equal(latestState.monthSeparators.single.enabled, false);
   assert.equal(latestState.monthSeparators.double.enabled, false);
   load('new');
   assert.equal(latestState.designStyle, 'zen');
+  assert.equal(latestState.themeKey, 'wood');
   assert.equal(latestState.monthSeparators.single.widthMm, 5);
   assert.equal(latestState.monthSeparators.double.widthMm, 12);
   assert.equal(latestState.monthSeparators.double.header, true);
@@ -131,6 +144,7 @@ test('separator settings and next-year links update and restore before holidays 
   assert.equal(latestState.year, 2028);
   assert.equal(latestState.bannerCustomTitle, 'Familie 2028');
   assert.equal(latestState.designStyle, 'zen');
+  assert.equal(latestState.themeKey, 'wood');
   assert.equal(latestState.monthSeparators.double.widthMm, 12);
   assert.deepEqual(holidayCalls.at(-1), [2028, 'DE', 'NW']);
 });

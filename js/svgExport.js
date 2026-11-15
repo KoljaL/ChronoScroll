@@ -16,7 +16,10 @@ window.CronoVector = (function() {
     const hMm = geo.hVisibleMm;
     const leadInMm = geo.pufferLeftMm;
     const leadOutMm = geo.pufferRightMm;
-    const designFont = design ? window.CronoEmbeddedFonts[window.CronoDesigns.fontKey(state)] : null;
+    const designFontKey = design ? window.CronoDesigns.fontKey(state) : null;
+    const designFont = design
+      ? window.CronoEmbeddedFonts[designFontKey === 'architect' || designFontKey === 'custom' ? 'sans' : designFontKey]
+      : null;
 
     let svg = [
       `<?xml version="1.0" encoding="UTF-8"?>`,
@@ -36,9 +39,9 @@ window.CronoVector = (function() {
       `  .border-line { stroke: ${state.colorBorder || '#0f172a'}; stroke-width: ${state.lineBorder}mm; fill: none; }`,
       `</style>`,
       `<g id="background">`,
-      `  <rect x="0" y="0" width="${wMm}" height="${hMm}" fill="${design ? '#ffffff' : state.paperColor || '#ffffff'}"/>`,
-      `  <rect x="0" y="0" width="${leadInMm}" height="${hMm}" fill="${design ? '#ffffff' : '#f8fafc'}"/>`,
-      `  <rect x="${wMm - leadOutMm}" y="0" width="${leadOutMm}" height="${hMm}" fill="${design ? '#ffffff' : '#f8fafc'}"/>`,
+      `  <rect x="0" y="0" width="${wMm}" height="${hMm}" fill="${state.paperColor || '#ffffff'}"/>`,
+      `  <rect x="0" y="0" width="${leadInMm}" height="${hMm}" fill="${design ? state.paperColor || '#ffffff' : '#f8fafc'}"/>`,
+      `  <rect x="${wMm - leadOutMm}" y="0" width="${leadOutMm}" height="${hMm}" fill="${design ? state.paperColor || '#ffffff' : '#f8fafc'}"/>`,
       `</g>`,
       `<g id="grid">`
     ];
@@ -125,7 +128,7 @@ window.CronoVector = (function() {
 
     if (geo.separatorWidthMm > 0) {
       const separator = state.monthSeparators[geo.monthLayout];
-      const color = design ? '#ffffff' : separator.colorMode === 'paper' ? state.paperColor : separator.color;
+      const color = design ? state.paperColor || '#ffffff' : separator.colorMode === 'paper' ? state.paperColor : separator.color;
       const topMm = separator.header ? 0 : geo.hDayMm;
       for (let i = 1; i < 14; i++) {
         svg.push(`  <rect x="${leadInMm + i * geo.bMonthMm - geo.separatorWidthMm / 2}" y="${topMm}" width="${geo.separatorWidthMm}" height="${hMm - topMm}" fill="${color}"/>`);
@@ -133,12 +136,12 @@ window.CronoVector = (function() {
     }
 
     // Puffer Beschriftungen
-    svg.push(`  <text x="${leadInMm / 2}" y="${hMm / 2}" transform="rotate(-90 ${leadInMm / 2} ${hMm / 2})" text-anchor="middle" fill="${design ? '#000000' : '#94a3b8'}" font-size="3mm">WICKEL-PUFFER (MONTAGE)</text>`);
-    svg.push(`  <text x="${wMm - leadOutMm / 2}" y="${hMm / 2}" transform="rotate(-90 ${wMm - leadOutMm / 2} ${hMm / 2})" text-anchor="middle" fill="${design ? '#000000' : '#94a3b8'}" font-size="3mm">WICKEL-PUFFER (MONTAGE)</text>`);
+    svg.push(`  <text x="${leadInMm / 2}" y="${hMm / 2}" transform="rotate(-90 ${leadInMm / 2} ${hMm / 2})" text-anchor="middle" fill="${design ? state.colorText : '#94a3b8'}" font-size="3mm">WICKEL-PUFFER (MONTAGE)</text>`);
+    svg.push(`  <text x="${wMm - leadOutMm / 2}" y="${hMm / 2}" transform="rotate(-90 ${wMm - leadOutMm / 2} ${hMm / 2})" text-anchor="middle" fill="${design ? state.colorText : '#94a3b8'}" font-size="3mm">WICKEL-PUFFER (MONTAGE)</text>`);
 
     // Rahmen
     if (state.designStyle !== 'zen') {
-      svg.push(design ? `  <rect x="0" y="0" width="${wMm}" height="${hMm}" fill="none" stroke="#000" stroke-width="${state.lineBorder}"/>` : `  <rect x="0" y="0" width="${wMm}" height="${hMm}" class="border-line"/>`);
+      svg.push(design ? `  <rect x="0" y="0" width="${wMm}" height="${hMm}" fill="none" stroke="${state.colorText}" stroke-width="${state.lineBorder}"/>` : `  <rect x="0" y="0" width="${wMm}" height="${hMm}" class="border-line"/>`);
     }
     svg.push(`</g>`);
     svg.push(`</svg>`);

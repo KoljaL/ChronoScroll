@@ -7,6 +7,8 @@ const vm = require('node:vm');
 const geometryContext = { window: {} };
 vm.createContext(geometryContext);
 vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/geometry.js'), 'utf8'), geometryContext);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/themePresets.js'), 'utf8'), geometryContext);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/designPresets.js'), 'utf8'), geometryContext);
 
 const months = Array.from({ length: 14 }, (_, monthIndex) => ({
   label: `MONAT ${monthIndex + 1}`,
@@ -28,7 +30,10 @@ const months = Array.from({ length: 14 }, (_, monthIndex) => ({
 const context = {
   window: {
     CronoGeometry: geometryContext.window.CronoGeometry,
-    CronoHolidays: { get14MonthsData: () => months }
+    CronoHolidays: { get14MonthsData: () => months },
+    CronoThemes: geometryContext.window.CronoThemes,
+    CronoDesigns: geometryContext.window.CronoDesigns,
+    CronoFonts: { getCanvasFamily: key => `Embedded-${key}` }
   },
   document: { getElementById: () => null }
 };
@@ -156,6 +161,49 @@ test('canvas preview draws day 16 in the second half of its month', () => {
   const day16 = textCommands.find(([text]) => text === '16 Mo');
   assert.ok(day16);
   assert.equal(day16[1], 146);
+});
+
+test('all special-design and theme combinations use the active canvas colors and font', () => {
+  for (const themeKey of context.window.CronoThemes.keys) {
+    const theme = context.window.CronoThemes.themes[themeKey];
+    for (const designStyle of context.window.CronoDesigns.styles) {
+      const fills = [];
+      const strokes = [];
+      const fonts = [];
+      const drawContext = {
+        fillStyle: '', strokeStyle: '',
+        save() {}, restore() {}, scale() {}, setLineDash() {},
+        beginPath() {}, moveTo() {}, lineTo() { strokes.push(this.strokeStyle); },
+        stroke() { strokes.push(this.strokeStyle); }, fill() {}, arc() {},
+        fillRect() { fills.push(this.fillStyle); },
+        strokeRect() { strokes.push(this.strokeStyle); },
+        fillText() { fonts.push(this.font); },
+        measureText(text) { return { width: String(text).length * 6 }; }
+      };
+      const state = {
+        bVisible: 42, hVisible: 32, pufferLeft: 15, pufferRight: 15,
+        monthLayout: 'single', subColumns: 1, guideLinesCount: 0,
+        viewMode: 'banner', currentMonthIndex: 2, year: 2027, holidays: [], zoom: 1,
+        lineGrid: 0.2, lineBorder: 0.6, fontHeaderScale: 1, fontDayScale: 1,
+        headerAlign: 'center', headerStyle: 'uppercase',
+        showKW: false, showMoon: false, showCropMarks: false, designStyle,
+        themeKey: null
+      };
+      context.window.CronoThemes.apply(state, themeKey);
+      context.window.CronoCanvas.render(
+        { style: {}, getContext: () => drawContext }, { style: {} }, state,
+        { showViewportOverlay: false }
+      );
+
+      assert.ok(fills.includes(theme.paperColor));
+      if (designStyle !== 'bauhaus') {
+        assert.ok(strokes.includes(theme.colorGrid),
+          `${themeKey}/${designStyle} expected ${theme.colorGrid}, received ${JSON.stringify(strokes.slice(0, 5))}`);
+      }
+      assert.ok(fonts.length > 0);
+      assert.ok(fonts.every(font => font.includes(`Embedded-${theme.fontFamily}`)));
+    }
+  }
 });
 
 test('separator hit testing excludes the gap in both views and keeps split dates correct', () => {

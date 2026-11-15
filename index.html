@@ -315,29 +315,13 @@
                 <option value="zen">Zen – minimalistischer Streifen</option>
                 <option value="kursbuch">Kursbuch – Fahrplan</option>
               </select>
-              <p class="text-[11px] text-slate-400">Die fünf Designs zeichnen monochrom im bestehenden Monatsraster. Farben, Schriftwahl, Schreiblinien und Personen-Spalten gelten im klassischen Design.</p>
+              <p class="text-[11px] text-slate-400">Das Kalenderdesign bestimmt Aufbau und Zeichenformen. Farben und Schrift der Design-Welt gelten unabhängig davon für alle Designs.</p>
             </div>
             <!-- 1-Klick Design-Themes -->
             <div class="space-y-2">
               <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">1-Klick Design-Welten</h3>
-              <div class="grid grid-cols-2 gap-2">
-                <div class="theme-pill" data-theme="minimal">
-                  <span class="text-xs font-semibold block text-slate-200">Minimalist</span>
-                  <span class="text-[10px] text-slate-400">Schwarz/Weiß, dezent</span>
-                </div>
-                <div class="theme-pill" data-theme="wood">
-                  <span class="text-xs font-semibold block text-amber-300">Holz & Sepia</span>
-                  <span class="text-[10px] text-slate-400">Warm, Buchdruck-Look</span>
-                </div>
-                <div class="theme-pill" data-theme="architect">
-                  <span class="text-xs font-semibold block text-sky-300">Blueprint</span>
-                  <span class="text-[10px] text-slate-400">Technisch, Monospace</span>
-                </div>
-                <div class="theme-pill" data-theme="sage">
-                  <span class="text-xs font-semibold block text-emerald-300">Wald & Salbei</span>
-                  <span class="text-[10px] text-slate-400">Naturgrün, organisch</span>
-                </div>
-              </div>
+              <p class="text-[11px] text-slate-400">Setzt eine bearbeitbare Farbpalette und Schrift. Die Auswahl ändert das Kalenderdesign nicht.</p>
+              <div id="theme-options" class="grid grid-cols-2 gap-2"></div>
             </div>
 
             <!-- Typografie -->
@@ -615,7 +599,7 @@
         </div>
         <div class="status-brand">
           <span class="build-label">Build: </span>
-          <span id="build-date"><!-- BUILD_DATE -->15.11.2026 21:46<!-- /BUILD_DATE --></span>
+          <span id="build-date"><!-- BUILD_DATE -->15.11.2026 22:12<!-- /BUILD_DATE --></span>
           <a class="status-logo-link" href="https://github.com/KoljaL/ChronoScroll" target="_blank" rel="noopener noreferrer" aria-label="ChronoScroll auf GitHub (öffnet einen neuen Tab)">
             <span class="sr-only">Code: </span>
             <img src="./img/logo.svg" alt="" width="18" height="18" />
@@ -742,6 +726,7 @@
     <script src="js/icsParser.js"></script>
     <script src="js/embeddedFonts.js"></script>
     <script src="js/fontManager.js"></script>
+    <script src="js/themePresets.js"></script>
     <script src="js/designPresets.js"></script>
     <script src="js/canvasRenderer.js"></script>
     <script src="js/shareConfig.js"></script>

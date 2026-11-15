@@ -293,3 +293,82 @@ test('PDF encodes the shared URL as vector modules within the right buffer', () 
   state.pufferRight = 0;
   assert.throws(() => context.window.CronoPDF.exportPlotterPDF(state), /puffer.*zu schmal/i);
 });
+
+test('all special-design and theme combinations keep palette and font in PDF and SVG', () => {
+  let exportedDoc;
+  let exportedBlob;
+  let registeredFont;
+  class JsPdf {
+    constructor() {
+      this.drawColors = [];
+      this.textColors = [];
+      this.fillColors = [];
+      exportedDoc = this;
+    }
+    rect() {}
+    getTextWidth(text) { return String(text).length; }
+    save() {}
+    line() {}
+    setLineWidth() {}
+    setDrawColor(...color) { this.drawColors.push(color); }
+    setFillColor(...color) { this.fillColors.push(color); }
+    setTextColor(...color) { this.textColors.push(color); }
+    setFont() {}
+    setFontSize() {}
+    setLineDashPattern() {}
+    text() {}
+  }
+  const font = key => ({
+    family: `Embedded-${key}`,
+    styles: { normal: 'normal', bold: 'bold' }
+  });
+  const context = {
+    window: {
+      jspdf: { jsPDF: JsPdf },
+      CronoShare: { createNextYearUrl: () => 'https://example.com/' },
+      qrcode: () => ({ addData() {}, make() {}, getModuleCount: () => 1, isDark: () => true }),
+      CronoHolidays: { get14MonthsData: createMonths },
+      CronoFonts: { registerPdfFont(_doc, key) { registeredFont = key; return key; } },
+      CronoEmbeddedFonts: { sans: font('sans'), serif: font('serif'), mono: font('mono') }
+    },
+    Blob: class { constructor(parts) { this.content = parts.join(''); } },
+    URL: {
+      createObjectURL(blob) { exportedBlob = blob; return 'blob:calendar'; },
+      revokeObjectURL() {}
+    },
+    document: {
+      body: { appendChild() {}, removeChild() {} },
+      createElement: () => ({ click() {} })
+    }
+  };
+  vm.createContext(context);
+  for (const file of ['geometry.js', 'themePresets.js', 'designPresets.js', 'pdfExport.js', 'svgExport.js']) {
+    vm.runInContext(fs.readFileSync(path.join(root, 'js', file), 'utf8'), context);
+  }
+
+  const rgb = hex => hex.match(/[0-9a-f]{2}/gi).map(value => parseInt(value, 16));
+  for (const themeKey of context.window.CronoThemes.keys) {
+    const theme = context.window.CronoThemes.themes[themeKey];
+    for (const designStyle of context.window.CronoDesigns.styles) {
+      const state = {
+        ...createState('single'),
+        year: 2027, designStyle, holidays: [], showCropMarks: false,
+        showKW: false, showMoon: false, themeKey: null
+      };
+      context.window.CronoThemes.apply(state, themeKey);
+      context.window.CronoPDF.exportPlotterPDF(state);
+      context.window.CronoVector.exportSVG(state);
+
+      assert.equal(registeredFont, theme.fontFamily);
+      assert.ok(exportedDoc.fillColors.some(color => JSON.stringify(color) === JSON.stringify(rgb(theme.paperColor))));
+      if (designStyle !== 'bauhaus') {
+        assert.ok(exportedDoc.drawColors.some(color => JSON.stringify(color) === JSON.stringify(rgb(theme.colorGrid))),
+          `${themeKey}/${designStyle} expected ${theme.colorGrid}, received ${JSON.stringify(exportedDoc.drawColors.slice(0, 5))}`);
+      }
+      assert.ok(exportedDoc.textColors.some(color => JSON.stringify(color) === JSON.stringify(rgb(theme.colorText))));
+      assert.ok(exportedBlob.content.includes(theme.paperColor));
+      assert.ok(exportedBlob.content.includes(theme.colorGrid));
+      assert.ok(exportedBlob.content.includes(`Embedded-${theme.fontFamily}`));
+    }
+  }
+});
