@@ -148,7 +148,10 @@ test('header controls, separator settings and next-year links update correctly',
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/themePresets.js'), 'utf8'), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/shareConfig.js'), 'utf8'), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/app.js'), 'utf8'), context);
+  context.window.location.search = '?mode=calendar&tab=style';
   start();
+  assert.equal(appModeButtons.find(button => button.getAttribute('data-app-mode') === 'calendar').getAttribute('aria-pressed'), 'true');
+  assert.equal(tabs.find(button => button.getAttribute('data-tab') === 'tab-style').getAttribute('aria-selected'), 'true');
   get('btn-zoom-in').dispatch('click');
   assert.equal(latestState.zoom, 1.2);
   get('btn-zoom-reset').dispatch('click');
@@ -173,7 +176,7 @@ test('header controls, separator settings and next-year links update correctly',
   get('btn-mode-cad').dispatch('click');
   assert.equal(get('app-container').classList.contains('cad-mode'), true);
   assert.equal(get('cad-mode-root').getAttribute('aria-hidden'), 'false');
-  assert.equal(modeChangeEvents.length, 1);
+  assert.equal(modeChangeEvents.length, 2);
   const activeMonth = latestState.currentMonthIndex;
   windowListeners.get('keydown')[0]({ target: { tagName: 'BODY' }, key: 'ArrowLeft' });
   assert.equal(latestState.currentMonthIndex, activeMonth);
@@ -267,13 +270,37 @@ test('header controls, separator settings and next-year links update correctly',
   assert.equal(copied, link);
   assert.equal(get('next-year-link-status').textContent, 'Link kopiert.');
 
-  context.window.location.search = new URL(link).search;
+  tabs[0].dispatch('click');
+  context.window.location.search = `${new URL(link).search}&mode=cad&tab=style`;
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/app.js'), 'utf8'), context);
   start();
+  assert.equal(get('app-container').classList.contains('cad-mode'), true);
+  assert.equal(get('cad-mode-root').getAttribute('aria-hidden'), 'false');
+  assert.equal(tabs[0].getAttribute('aria-selected'), 'true');
+  assert.equal(tabs.find(button => button.getAttribute('data-tab') === 'tab-style').getAttribute('aria-selected'), 'false');
   assert.equal(latestState.year, 2028);
   assert.equal(latestState.bannerCustomTitle, 'Familie 2028');
   assert.equal(latestState.designStyle, 'zen');
   assert.equal(latestState.themeKey, 'wood');
   assert.equal(latestState.monthSeparators.double.widthMm, 12);
   assert.deepEqual(holidayCalls.at(-1), [2028, 'DE', 'NW']);
+
+  context.window.location.search = `${new URL(link).search}&mode=calendar&tab=holidays`;
+  start();
+  assert.equal(get('app-container').classList.contains('cad-mode'), false);
+  assert.equal(tabs.find(button => button.getAttribute('data-tab') === 'tab-holidays').getAttribute('aria-selected'), 'true');
+  assert.equal(latestState.year, 2028);
+
+  for (const tab of tabNames) {
+    context.window.location.search = `?mode=calendar&tab=${tab}`;
+    start();
+    assert.equal(tabs.find(button => button.getAttribute('data-tab') === `tab-${tab}`).getAttribute('aria-selected'), 'true');
+  }
+
+  tabs[0].dispatch('click');
+  get('btn-mode-calendar').dispatch('click');
+  context.window.location.search = '?mode=unknown&tab=unknown';
+  start();
+  assert.equal(get('app-container').classList.contains('cad-mode'), false);
+  assert.equal(tabs[0].getAttribute('aria-selected'), 'true');
 });

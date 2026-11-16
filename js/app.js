@@ -1266,10 +1266,19 @@
       const button = event.target.closest && event.target.closest('[data-coverage-action]');
       if (button) applyCoverageAdvice(button.getAttribute('data-coverage-action'));
     });
+
+    return activateTab;
   }
 
   // Initialisierung beim Laden
   window.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const requestedMode = params.get('mode');
+    const initialMode = ['calendar', 'cad'].includes(requestedMode) ? requestedMode : null;
+    const requestedTab = params.get('tab');
+    const initialTab = ['geometry', 'layout', 'style', 'holidays', 'presets'].includes(requestedTab)
+      ? requestedTab
+      : null;
     const savedDesign = localStorage.getItem('cronoscroll_design_style');
     if (['classic', 'midcentury', 'bauhaus', 'gantt', 'zen', 'kursbuch'].includes(savedDesign)) {
       state.designStyle = savedDesign;
@@ -1289,7 +1298,13 @@
     syncInputsFromState();
     renderHolidaysList();
     renderPresetsList();
-    bindEvents();
+    const activateTab = bindEvents();
+    if (initialMode) setAppMode(initialMode);
+    if ((initialMode || 'calendar') === 'calendar' && initialTab) {
+      const tabButton = Array.from(document.querySelectorAll('.tab-btn'))
+        .find(button => button.getAttribute('data-tab') === `tab-${initialTab}`);
+      if (tabButton) activateTab(tabButton);
+    }
     renderPreview();
     window.CronoFonts.loadStandardFonts().then(
       renderPreview,
