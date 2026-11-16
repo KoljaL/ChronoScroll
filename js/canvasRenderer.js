@@ -401,10 +401,6 @@ window.CronoCanvas = (function() {
         drawCropMark(ctx, targetWidthPx, 0, 10, 3, cropColor);
         drawCropMark(ctx, 0, targetHeightPx, 10, 3, cropColor);
         drawCropMark(ctx, targetWidthPx, targetHeightPx, 10, 3, cropColor);
-        for (let i = 1; i < 3; i++) {
-          drawCropMark(ctx, i * monthWidthPx, 0, 10, 3, cropColor);
-          drawCropMark(ctx, i * monthWidthPx, targetHeightPx, 10, 3, cropColor);
-        }
       }
 
       ctx.restore();
@@ -493,20 +489,12 @@ window.CronoCanvas = (function() {
       // Schnittmarken
       if (state.showCropMarks) {
         const cropColor = design ? state.colorText : design;
-        drawCropMark(ctx, 0, 0, 10, 3, cropColor);
-        drawCropMark(ctx, targetWidthPx, 0, 10, 3, cropColor);
-        drawCropMark(ctx, targetWidthPx, targetHeightPx, 10, 3, cropColor);
-        drawCropMark(ctx, 0, targetHeightPx, 10, 3, cropColor);
-        // Marken an Puffergrenzen und allen Monaten
-        drawCropMark(ctx, leadInPx, 0, 10, 3, cropColor);
-        drawCropMark(ctx, leadInPx, targetHeightPx, 10, 3, cropColor);
-        drawCropMark(ctx, leadOutStartPx, 0, 10, 3, cropColor);
-        drawCropMark(ctx, leadOutStartPx, targetHeightPx, 10, 3, cropColor);
-        for (let i = 1; i < 14; i++) {
-          const xMark = leadInPx + (i * monthWidthPx);
-          drawCropMark(ctx, xMark, 0, 10, 3, cropColor);
-          drawCropMark(ctx, xMark, targetHeightPx, 10, 3, cropColor);
-        }
+        const viewportStartPx = leadInPx + (state.currentMonthIndex * monthWidthPx);
+        const viewportEndPx = viewportStartPx + (geo.bVisible * pxPerCm);
+        drawCropMark(ctx, viewportStartPx, 0, 10, 3, cropColor);
+        drawCropMark(ctx, viewportEndPx, 0, 10, 3, cropColor);
+        drawCropMark(ctx, viewportStartPx, targetHeightPx, 10, 3, cropColor);
+        drawCropMark(ctx, viewportEndPx, targetHeightPx, 10, 3, cropColor);
       }
 
       if (showViewportOverlay) {

@@ -37,7 +37,7 @@
     guideLinesStyle: 'dashed', // 'dashed', 'dotted', 'solid'
     showKW: true,
     showMoon: true,
-    showCropMarks: true,
+    showCropMarks: false,
     headerStyle: 'uppercase', // 'uppercase', 'titlecase', 'numbered'
     headerAlign: 'center',
 
@@ -678,10 +678,74 @@
     if (!isCadMode) renderPreview();
   }
 
+  function bindExportMenu(container, toggle, menu) {
+    const items = Array.from(menu.querySelectorAll('[role="menuitem"]'));
+    const close = (restoreFocus = false) => {
+      menu.hidden = true;
+      toggle.setAttribute('aria-expanded', 'false');
+      if (restoreFocus) toggle.focus();
+    };
+    const open = (focusIndex = -1) => {
+      menu.hidden = false;
+      toggle.setAttribute('aria-expanded', 'true');
+      if (focusIndex >= 0) items[focusIndex].focus();
+    };
+
+    toggle.addEventListener('click', () => {
+      if (menu.hidden) open();
+      else close();
+    });
+    toggle.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !menu.hidden) {
+        event.preventDefault();
+        close(true);
+      } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        open(event.key === 'ArrowUp' ? items.length - 1 : 0);
+      }
+    });
+    menu.addEventListener('keydown', event => {
+      const currentIndex = items.indexOf(document.activeElement);
+      let nextIndex = currentIndex;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        close(true);
+      } else if (event.key === 'ArrowDown') {
+        nextIndex = (currentIndex + 1) % items.length;
+      } else if (event.key === 'ArrowUp') {
+        nextIndex = (currentIndex - 1 + items.length) % items.length;
+      } else if (event.key === 'Home') {
+        nextIndex = 0;
+      } else if (event.key === 'End') {
+        nextIndex = items.length - 1;
+      } else {
+        return;
+      }
+      event.preventDefault();
+      items[nextIndex].focus();
+    });
+    menu.addEventListener('click', event => {
+      if (event.target.closest('[role="menuitem"]')) close(true);
+    });
+    container.addEventListener('focusout', () => {
+      queueMicrotask(() => {
+        if (!container.contains(document.activeElement)) close();
+      });
+    });
+    document.addEventListener('pointerdown', event => {
+      if (!container.contains(event.target)) close();
+    });
+  }
+
   // --- EVENTS BINDEN ---
   function bindEvents() {
     document.getElementById('btn-mode-calendar').addEventListener('click', () => setAppMode('calendar'));
     document.getElementById('btn-mode-cad').addEventListener('click', () => setAppMode('cad'));
+    bindExportMenu(
+      document.getElementById('calendar-export-group'),
+      document.getElementById('calendar-export-menu-toggle'),
+      document.getElementById('calendar-export-menu')
+    );
 
     // 1. Maße & Geometrie
     const bindNum = (id, prop) => {

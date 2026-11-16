@@ -123,6 +123,57 @@ test('PDF export places day 16 in the second half without changing the roll size
   ));
 });
 
+test('PDF crop marks are limited to the visible window edges', () => {
+  let exportedDoc;
+  class JsPdf {
+    constructor() {
+      this.lines = [];
+      exportedDoc = this;
+    }
+
+    line(...args) { this.lines.push(args); }
+    rect() {}
+    getTextWidth(text) { return String(text).length; }
+    save() {}
+    setLineWidth() {}
+    setDrawColor() {}
+    setFillColor() {}
+    setTextColor() {}
+    setFont() {}
+    setFontSize() {}
+    text() {}
+  }
+
+  const context = {
+    window: {
+      ...stubQrDependencies(),
+      jspdf: { jsPDF: JsPdf },
+      CronoHolidays: { get14MonthsData: createMonths },
+      CronoFonts: { registerPdfFont: () => 'helvetica' }
+    }
+  };
+  vm.createContext(context);
+  vm.runInContext(fs.readFileSync(path.join(root, 'js/geometry.js'), 'utf8'), context);
+  vm.runInContext(fs.readFileSync(path.join(root, 'js/pdfExport.js'), 'utf8'), context);
+
+  const state = { ...createState('double'), currentMonthIndex: 4, showCropMarks: true };
+  const geo = context.window.CronoGeometry.calculate(state);
+  context.window.CronoPDF.exportPlotterPDF(state);
+
+  const start = geo.pufferLeftMm + state.currentMonthIndex * geo.bMonthMm;
+  const end = start + geo.bVisibleMm;
+  const expectedLines = [[start, 0], [end, 0], [start, geo.hVisibleMm], [end, geo.hVisibleMm]].flatMap(([x, y]) => [
+    [x - 5.5, y, x - 1.5, y],
+    [x + 1.5, y, x + 5.5, y],
+    [x, y - 5.5, x, y - 1.5],
+    [x, y + 1.5, x, y + 5.5]
+  ]);
+  assert.deepEqual(exportedDoc.lines, expectedLines);
+  state.showCropMarks = false;
+  context.window.CronoPDF.exportPlotterPDF(state);
+  assert.deepEqual(exportedDoc.lines, []);
+});
+
 test('SVG export uses the same split-column coordinates as the PDF geometry', () => {
   let exportedBlob;
   const context = {

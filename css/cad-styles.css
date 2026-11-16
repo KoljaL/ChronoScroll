@@ -686,8 +686,20 @@
     background: var(--bg-canvas);
   }
 
+  #cad-stage.cad-validation-error #cad-validation-box {
+    order: -1;
+  }
+
   .cad-drawing-card {
     min-width: 0;
+  }
+
+  .cad-export-dropdown {
+    z-index: 2;
+  }
+
+  .cad-export-dropdown .export-dropdown-menu {
+    top: calc(100% + 0.35rem);
   }
 
   #cad-drawing-svg {

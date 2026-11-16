@@ -1144,6 +1144,7 @@
 
         const hasErr = geom.checks.some(c => c.level === 'error');
         const hasWarn = geom.checks.some(c => c.level === 'warning');
+        cadElement('stage').classList.toggle('cad-validation-error', hasErr);
 
         if (hasErr) {
           box.style.backgroundColor = 'var(--err-bg)';
@@ -1320,6 +1321,64 @@
       }
 
       function bindActions(svgEl) {
+        const exportMenu = cadElement('export-menu');
+        const exportMenuToggle = cadElement('export-menu-toggle');
+        const exportMenuItems = Array.from(exportMenu.querySelectorAll('[role="menuitem"]'));
+        const closeExportMenu = (restoreFocus = false) => {
+          exportMenu.hidden = true;
+          exportMenuToggle.setAttribute('aria-expanded', 'false');
+          if (restoreFocus) exportMenuToggle.focus();
+        };
+        const openExportMenu = (focusIndex = -1) => {
+          exportMenu.hidden = false;
+          exportMenuToggle.setAttribute('aria-expanded', 'true');
+          if (focusIndex >= 0) exportMenuItems[focusIndex].focus();
+        };
+        exportMenuToggle.addEventListener('click', () => {
+          if (exportMenu.hidden) openExportMenu();
+          else closeExportMenu();
+        });
+        exportMenuToggle.addEventListener('keydown', event => {
+          if (event.key === 'Escape' && !exportMenu.hidden) {
+            event.preventDefault();
+            closeExportMenu(true);
+          } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault();
+            openExportMenu(event.key === 'ArrowUp' ? exportMenuItems.length - 1 : 0);
+          }
+        });
+        exportMenu.addEventListener('keydown', event => {
+          const currentIndex = exportMenuItems.indexOf(document.activeElement);
+          let nextIndex = currentIndex;
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            closeExportMenu(true);
+          } else if (event.key === 'ArrowDown') {
+            nextIndex = (currentIndex + 1) % exportMenuItems.length;
+          } else if (event.key === 'ArrowUp') {
+            nextIndex = (currentIndex - 1 + exportMenuItems.length) % exportMenuItems.length;
+          } else if (event.key === 'Home') {
+            nextIndex = 0;
+          } else if (event.key === 'End') {
+            nextIndex = exportMenuItems.length - 1;
+          } else {
+            return;
+          }
+          event.preventDefault();
+          exportMenuItems[nextIndex].focus();
+        });
+        exportMenu.addEventListener('click', event => {
+          if (event.target.closest('[role="menuitem"]')) closeExportMenu(true);
+        });
+        cadElement('drawing-card').addEventListener('focusout', () => {
+          queueMicrotask(() => {
+            if (!cadElement('drawing-card').contains(document.activeElement)) closeExportMenu();
+          });
+        });
+        document.addEventListener('pointerdown', event => {
+          if (!cadElement('drawing-card').contains(event.target)) closeExportMenu();
+        });
+
         // Presets speichern
         cadElement('btn-save-preset').addEventListener('click', () => {
           const nameInput = cadElement('preset-name-input');

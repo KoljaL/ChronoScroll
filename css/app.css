@@ -61,6 +61,19 @@
   --err-text: #fecaca;
 }
 
+.theme-transitioning body,
+.theme-transitioning #app-container,
+.theme-transitioning #app-header,
+.theme-transitioning #app-sidebar,
+.theme-transitioning #app-workspace,
+.theme-transitioning #cad-mode-root,
+.theme-transitioning .card,
+.theme-transitioning .btn,
+.theme-transitioning .kpi-box,
+.theme-transitioning .validation-card {
+  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
+}
+
 html, body {
   height: 100%;
   width: 100%;
@@ -97,6 +110,22 @@ html, body {
   grid-column: 1 / -1;
   height: 56px;
   z-index: 30;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+}
+
+#app-header > .mode-switch {
+  justify-self: center;
+}
+
+#app-header > .header-actions {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
 }
 
 #app-sidebar {
@@ -260,6 +289,74 @@ html, body {
   color: var(--accent-contrast);
 }
 
+.calendar-export-group {
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.export-dropdown {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0.25rem;
+}
+
+.export-dropdown-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  padding-inline: 0.55rem;
+}
+
+.export-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 45;
+  min-width: 10rem;
+  padding: 0.3rem;
+  border: 1px solid var(--border-medium);
+  border-radius: 0.5rem;
+  background: var(--bg-surface);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.2);
+}
+
+.export-dropdown-menu[hidden] {
+  display: none;
+}
+
+.export-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 0;
+  border-radius: 0.3rem;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.export-dropdown-item:hover,
+.export-dropdown-item:focus-visible {
+  background: var(--bg-muted);
+  outline: none;
+}
+
+#app-container button,
+#app-container a,
+.modal-overlay button,
+.modal-overlay a {
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
+}
+
 @media (max-width: 500px) {
   .status-engine,
   .status-separator {
@@ -280,17 +377,31 @@ html, body {
   #btn-export-pdf > span {
     display: none;
   }
+
+  #app-header {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 0.4rem;
+  }
+
+  #app-header > .mode-switch {
+    justify-self: end;
+  }
 }
 
 @media (max-width: 380px) {
   #app-header { padding-inline: 0.5rem; }
   #app-header > div:first-child > div:nth-child(2) { display: none; }
-  #app-header > div:last-child > :not([hidden]) ~ :not([hidden]) { margin-left: 0.25rem; }
+  #app-header > .header-actions { gap: 0.25rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .status-logo-link img {
     transition: none;
+  }
+
+  .theme-transitioning,
+  .theme-transitioning * {
+    transition: none !important;
   }
 }
 

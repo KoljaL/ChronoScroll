@@ -29,7 +29,7 @@
     <!-- HAUPT-CONTAINER (CSS-GRID) -->
     <div id="app-container">
       <!-- 1. HEADER (KOPFZEILE) -->
-      <header id="app-header" class="bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between shadow-md">
+      <header id="app-header" class="bg-slate-900 border-b border-slate-800 px-4 shadow-md">
         <!-- Brand & Sidebar Toggle -->
         <div class="flex items-center space-x-3">
           <button id="btn-toggle-sidebar" class="text-slate-400 hover:text-slate-100 p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer" title="Seitenleiste ein-/ausklappen">
@@ -47,8 +47,38 @@
           </div>
         </div>
 
+        <div class="mode-switch" role="group" aria-label="Arbeitsmodus">
+          <button type="button" id="btn-mode-calendar" class="mode-switch-button active" aria-label="Kalender-Editor" aria-pressed="true" data-app-mode="calendar">
+            <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+            <span>Kalender-Editor</span>
+          </button>
+          <button type="button" id="btn-mode-cad" class="mode-switch-button" aria-label="CAD-Konstruktion" aria-pressed="false" data-app-mode="cad">
+            <i class="fa-solid fa-compass-drafting" aria-hidden="true"></i>
+            <span>CAD-Konstruktion</span>
+          </button>
+        </div>
+
         <!-- Export-Aktionen -->
-        <div class="flex items-center space-x-2">
+        <div class="header-actions">
+          <div id="calendar-export-group" class="calendar-export-action calendar-export-group">
+            <button id="btn-export-pdf" aria-label="Plotter-PDF exportieren" title="Plotter-PDF exportieren" class="calendar-export-action bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3.5 py-1.5 rounded-lg text-xs shadow-md transition flex items-center space-x-1.5 cursor-pointer active:scale-95">
+              <i class="fa-solid fa-file-pdf text-sm" aria-hidden="true"></i>
+              <span>Plotter-PDF exportieren</span>
+            </button>
+            <div class="export-dropdown">
+              <button type="button" id="calendar-export-menu-toggle" class="export-dropdown-toggle" aria-label="Weitere Kalender-Exportformate" aria-haspopup="menu" aria-expanded="false" aria-controls="calendar-export-menu">
+                <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+              </button>
+              <div id="calendar-export-menu" class="export-dropdown-menu" role="menu" aria-label="Kalender exportieren" hidden>
+                <button type="button" id="btn-export-svg" class="export-dropdown-item" role="menuitem">
+                  <i class="fa-solid fa-vector-square text-sky-400" aria-hidden="true"></i> SVG
+                </button>
+                <button type="button" id="btn-export-png" class="export-dropdown-item" role="menuitem">
+                  <i class="fa-regular fa-image text-emerald-400" aria-hidden="true"></i> 300-DPI-PNG
+                </button>
+              </div>
+            </div>
+          </div>
           <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Dark Mode" aria-pressed="false" title="Darstellung wechseln">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
               <mask id="theme-toggle-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="32">
@@ -62,31 +92,6 @@
               </g>
             </svg>
           </button>
-          <div class="mode-switch" role="group" aria-label="Arbeitsmodus">
-            <button type="button" id="btn-mode-calendar" class="mode-switch-button active" aria-label="Kalender-Editor" aria-pressed="true" data-app-mode="calendar">
-              <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
-              <span>Kalender-Editor</span>
-            </button>
-            <button type="button" id="btn-mode-cad" class="mode-switch-button" aria-label="CAD-Konstruktion" aria-pressed="false" data-app-mode="cad">
-              <i class="fa-solid fa-compass-drafting" aria-hidden="true"></i>
-              <span>CAD-Konstruktion</span>
-            </button>
-          </div>
-
-          <button id="btn-export-svg" class="calendar-export-action bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1.5 rounded-lg text-xs border border-slate-700 transition flex items-center space-x-1 cursor-pointer" title="Skalierbares SVG herunterladen">
-            <i class="fa-solid fa-vector-square text-sky-400 text-xs"></i>
-            <span class="hidden lg:inline">SVG</span>
-          </button>
-
-          <button id="btn-export-png" class="calendar-export-action bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1.5 rounded-lg text-xs border border-slate-700 transition flex items-center space-x-1 cursor-pointer" title="300 DPI Druck-PNG herunterladen">
-            <i class="fa-regular fa-image text-emerald-400 text-xs"></i>
-            <span class="hidden lg:inline">300 DPI</span>
-          </button>
-
-          <button id="btn-export-pdf" aria-label="Plotter-PDF exportieren" title="Plotter-PDF exportieren" class="calendar-export-action bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3.5 py-1.5 rounded-lg text-xs shadow-md transition flex items-center space-x-1.5 cursor-pointer active:scale-95">
-            <i class="fa-solid fa-file-pdf text-sm"></i>
-            <span>Plotter-PDF exportieren</span>
-          </button>
         </div>
       </header>
 
@@ -94,11 +99,11 @@
       <aside id="app-sidebar" class="bg-slate-900 border-r border-slate-800 flex flex-col">
         <!-- REITER-NAVIGATION -->
         <div role="tablist" aria-label="Kalendereinstellungen" class="flex border-b border-slate-800 bg-slate-950/70 text-xs font-medium shrink-0 overflow-x-auto">
-          <button type="button" role="tab" id="tab-button-geometry" aria-controls="tab-geometry" aria-selected="true" tabindex="0" data-tab="tab-geometry" class="tab-btn flex-1 py-3 px-2 text-center text-amber-400 border-b-2 border-amber-400 font-semibold transition whitespace-nowrap"><i class="fa-solid fa-ruler-combined mr-1"></i> Maße / Format</button>
-          <button type="button" role="tab" id="tab-button-layout" aria-controls="tab-layout" aria-selected="false" tabindex="-1" data-tab="tab-layout" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-table-columns mr-1"></i> Kalenderstruktur</button>
-          <button type="button" role="tab" id="tab-button-style" aria-controls="tab-style" aria-selected="false" tabindex="-1" data-tab="tab-style" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-palette mr-1"></i> Erscheinungsbild</button>
-          <button type="button" role="tab" id="tab-button-holidays" aria-controls="tab-holidays" aria-selected="false" tabindex="-1" data-tab="tab-holidays" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-calendar-check mr-1"></i> Termine</button>
-          <button type="button" role="tab" id="tab-button-presets" aria-controls="tab-presets" aria-selected="false" tabindex="-1" data-tab="tab-presets" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-bookmark mr-1"></i> Vorlagen &amp; Teilen</button>
+          <button type="button" role="tab" id="tab-button-geometry" aria-controls="tab-geometry" aria-selected="true" tabindex="0" data-tab="tab-geometry" class="tab-btn flex-1 py-3 px-2 text-center text-amber-400 border-b-2 border-amber-400 font-semibold transition whitespace-nowrap"><i class="fa-solid fa-ruler-combined mr-1"></i>Maße</button>
+          <button type="button" role="tab" id="tab-button-layout" aria-controls="tab-layout" aria-selected="false" tabindex="-1" data-tab="tab-layout" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-table-columns mr-1"></i>Struktur</button>
+          <button type="button" role="tab" id="tab-button-style" aria-controls="tab-style" aria-selected="false" tabindex="-1" data-tab="tab-style" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-palette mr-1"></i>Style</button>
+          <button type="button" role="tab" id="tab-button-holidays" aria-controls="tab-holidays" aria-selected="false" tabindex="-1" data-tab="tab-holidays" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-calendar-check mr-1"></i>Termine</button>
+          <button type="button" role="tab" id="tab-button-presets" aria-controls="tab-presets" aria-selected="false" tabindex="-1" data-tab="tab-presets" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-bookmark mr-1"></i>Vorlagen</button>
         </div>
 
         <!-- INHALT DER REITER -->
@@ -302,7 +307,7 @@
                 </label>
 
                 <label class="flex items-center space-x-2 cursor-pointer text-xs text-slate-200">
-                  <input type="checkbox" id="checkbox-show-cropmarks" checked class="rounded border-slate-700 bg-slate-950 text-amber-500 focus:ring-0" />
+                  <input type="checkbox" id="checkbox-show-cropmarks" class="rounded border-slate-700 bg-slate-950 text-amber-500 focus:ring-0" />
                   <span>Schnitt- & Passermarken (Crop Marks für Rollenplotter)</span>
                 </label>
               </div>
@@ -653,7 +658,7 @@
                 <button type="button" id="cad-btn-load-preset" class="btn btn-secondary">Laden</button>
               </div>
               <div class="preset-row">
-                <input type="text" id="cad-preset-name-input" placeholder="Neuer Modellname..." aria-label="CAD-Modellname">
+                <input type="text" id="cad-preset-name-input" placeholder="Neuer Modellname..." aria-label="CAD-Modellname" />
               </div>
               <div class="preset-actions-grid">
                 <button type="button" id="cad-btn-save-preset" class="btn btn-primary"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Speichern</button>
@@ -663,7 +668,7 @@
               <div class="preset-io-grid">
                 <button type="button" id="cad-btn-export-json" class="btn">JSON Export</button>
                 <button type="button" id="cad-btn-import-json" class="btn">JSON Import</button>
-                <input type="file" id="cad-json-file-input" accept=".json,application/json" hidden>
+                <input type="file" id="cad-json-file-input" accept=".json,application/json" hidden />
               </div>
             </div>
           </section>
@@ -675,20 +680,20 @@
             <div class="card-body">
               <div class="form-field">
                 <label for="cad-tb-title-input">Zeichnungstitel</label>
-                <input type="text" id="cad-tb-title-input" value="CHRONOSCROLL – BAUGRUPPENZEICHNUNG">
+                <input type="text" id="cad-tb-title-input" value="CHRONOSCROLL – BAUGRUPPENZEICHNUNG" />
               </div>
               <div class="form-field">
                 <label for="cad-tb-material-input">Werkstoff / Beschreibung</label>
-                <input type="text" id="cad-tb-material-input" value="Massivholz, Multiplex, PTFE, DIN 466">
+                <input type="text" id="cad-tb-material-input" value="Massivholz, Multiplex, PTFE, DIN 466" />
               </div>
               <div class="form-grid-2">
                 <div class="form-field">
                   <label for="cad-tb-dwg-input">Zeichnungs-Nr.</label>
-                  <input type="text" id="cad-tb-dwg-input" value="CS-CAD-2.1">
+                  <input type="text" id="cad-tb-dwg-input" value="CS-CAD-2.1" />
                 </div>
                 <div class="form-field">
                   <label for="cad-tb-author-input">Autor / Datum</label>
-                  <input type="text" id="cad-tb-author-input" value="ChronoScroll">
+                  <input type="text" id="cad-tb-author-input" value="ChronoScroll" />
                 </div>
               </div>
             </div>
@@ -699,10 +704,10 @@
               <h2 class="card-title"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> Zeichnungs-Layer</h2>
             </div>
             <div class="card-body cad-option-stack">
-              <label class="checkbox-label"><input type="checkbox" id="cad-chk-show-maxroll" checked> Max. Rollendurchmesser anzeigen</label>
-              <label class="checkbox-label"><input type="checkbox" id="cad-chk-show-centerlines" checked> Rollenachsen / Mittellinien anzeigen</label>
-              <label class="checkbox-label"><input type="checkbox" id="cad-chk-show-section" checked> Schnittebene A–A anzeigen</label>
-              <label class="checkbox-label"><input type="checkbox" id="cad-chk-calendar-preview"> Kalendervorschau im Sichtfenster</label>
+              <label class="checkbox-label"><input type="checkbox" id="cad-chk-show-maxroll" checked /> Max. Rollendurchmesser anzeigen</label>
+              <label class="checkbox-label"><input type="checkbox" id="cad-chk-show-centerlines" checked /> Rollenachsen / Mittellinien anzeigen</label>
+              <label class="checkbox-label"><input type="checkbox" id="cad-chk-show-section" checked /> Schnittebene A–A anzeigen</label>
+              <label class="checkbox-label"><input type="checkbox" id="cad-chk-calendar-preview" /> Kalendervorschau im Sichtfenster</label>
             </div>
           </section>
 
@@ -720,12 +725,40 @@
         </aside>
 
         <section id="cad-stage" class="main-stage" aria-label="CAD-Zeichenblatt und Stückliste">
-          <section class="kpi-grid" aria-label="Berechnete Konstruktionsmaße">
-            <div class="kpi-box"><span class="kpi-label">Achsabstand Wickelstäbe</span><span id="cad-kpi-axis-distance" class="kpi-value">—</span><span class="kpi-sub">Fenster + 2×Spalt + Ø Stab</span></div>
-            <div class="kpi-box"><span class="kpi-label">Außenmaße Gehäuse (B × H)</span><span id="cad-kpi-outer-dims" class="kpi-value">—</span><span id="cad-kpi-total-with-nuts" class="kpi-sub">—</span></div>
-            <div class="kpi-box"><span class="kpi-label">Stablänge (Zuschnitt)</span><span id="cad-kpi-rod-cut" class="kpi-value">—</span><span class="kpi-sub">Abzüglich Gleiter- und Münzstapel</span></div>
-            <div class="kpi-box cad-kpi-blue"><span class="kpi-label">Max. Rollendurchmesser D<sub>max</sub></span><span id="cad-kpi-max-roll" class="kpi-value">—</span><span id="cad-kpi-radial-build" class="kpi-sub">—</span></div>
-            <div class="kpi-box cad-kpi-amber"><span class="kpi-label">Umlenkwinkel α</span><span id="cad-kpi-wrap-angle" class="kpi-value">—</span><span id="cad-kpi-tangent-len" class="kpi-sub">—</span></div>
+          <section id="cad-drawing-card" class="card cad-drawing-card" aria-label="Technische Mehrtafelzeichnung">
+            <div class="drawing-toolbar">
+              <div class="legend-group">
+                <span class="legend-item"
+                  ><svg width="18" height="4" aria-hidden="true"><line x1="0" y1="2" x2="18" y2="2" stroke="currentColor" stroke-width="1.6" /></svg> Körperkante</span
+                >
+                <span class="legend-item"
+                  ><svg width="18" height="4" aria-hidden="true"><line x1="0" y1="2" x2="18" y2="2" stroke="#0284c7" stroke-width="1.6" /></svg> Papierbahn / Rolle</span
+                >
+                <span class="legend-item"
+                  ><svg width="18" height="4" aria-hidden="true"><line x1="0" y1="2" x2="18" y2="2" stroke="#dc2626" stroke-width="1.1" stroke-dasharray="6 2 1 2" /></svg> Mittellinie</span
+                >
+              </div>
+              <div class="zoom-controls" title="Mausrad zum Zoomen, Ziehen zum Verschieben">
+                <button type="button" id="cad-btn-zoom-out" class="btn" aria-label="Verkleinern"><i class="fa-solid fa-magnifying-glass-minus" aria-hidden="true"></i></button>
+                <span id="cad-zoom-readout" class="zoom-readout">100%</span>
+                <button type="button" id="cad-btn-zoom-in" class="btn" aria-label="Vergrößern"><i class="fa-solid fa-magnifying-glass-plus" aria-hidden="true"></i></button>
+                <button type="button" id="cad-btn-zoom-fit" class="btn" title="Ansicht einpassen">Einpassen</button>
+                <div class="export-dropdown cad-export-dropdown">
+                  <button type="button" id="cad-btn-export-pdf" class="btn btn-primary"><i class="fa-solid fa-file-pdf" aria-hidden="true"></i> PDF</button>
+                  <button type="button" id="cad-export-menu-toggle" class="btn btn-primary export-dropdown-toggle" aria-label="Weitere CAD-Exportformate" aria-haspopup="menu" aria-expanded="false" aria-controls="cad-export-menu">
+                    <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                  </button>
+                  <div id="cad-export-menu" class="export-dropdown-menu" role="menu" aria-label="CAD exportieren" hidden>
+                    <button type="button" id="cad-btn-export-svg" class="export-dropdown-item" role="menuitem">
+                      <i class="fa-solid fa-vector-square text-sky-400" aria-hidden="true"></i> SVG
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="cad-viewport-wrapper" class="viewport-wrapper">
+              <svg id="cad-drawing-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Technische CAD-Zeichnung"></svg>
+            </div>
           </section>
 
           <section id="cad-validation-box" class="validation-card" aria-live="polite">
@@ -736,32 +769,31 @@
             <ul id="cad-validation-list" class="validation-list"></ul>
           </section>
 
-          <section class="card cad-drawing-card" aria-label="Technische Mehrtafelzeichnung">
-            <div class="drawing-toolbar">
-              <div class="legend-group">
-                <span class="legend-item"><svg width="18" height="4" aria-hidden="true"><line x1="0" y1="2" x2="18" y2="2" stroke="currentColor" stroke-width="1.6"/></svg> Körperkante</span>
-                <span class="legend-item"><svg width="18" height="4" aria-hidden="true"><line x1="0" y1="2" x2="18" y2="2" stroke="#0284c7" stroke-width="1.6"/></svg> Papierbahn / Rolle</span>
-                <span class="legend-item"><svg width="18" height="4" aria-hidden="true"><line x1="0" y1="2" x2="18" y2="2" stroke="#dc2626" stroke-width="1.1" stroke-dasharray="6 2 1 2"/></svg> Mittellinie</span>
-              </div>
-              <div class="zoom-controls" title="Mausrad zum Zoomen, Ziehen zum Verschieben">
-                <button type="button" id="cad-btn-zoom-out" class="btn" aria-label="Verkleinern"><i class="fa-solid fa-magnifying-glass-minus" aria-hidden="true"></i></button>
-                <span id="cad-zoom-readout" class="zoom-readout">100%</span>
-                <button type="button" id="cad-btn-zoom-in" class="btn" aria-label="Vergrößern"><i class="fa-solid fa-magnifying-glass-plus" aria-hidden="true"></i></button>
-                <button type="button" id="cad-btn-zoom-fit" class="btn" title="Ansicht einpassen">Einpassen</button>
-                <button type="button" id="cad-btn-export-svg" class="btn btn-primary"><i class="fa-solid fa-download" aria-hidden="true"></i> SVG</button>
-                <button type="button" id="cad-btn-export-pdf" class="btn btn-primary"><i class="fa-solid fa-file-pdf" aria-hidden="true"></i> PDF</button>
-              </div>
+          <section class="kpi-grid" aria-label="Berechnete Konstruktionsmaße">
+            <div class="kpi-box"><span class="kpi-label">Achsabstand Wickelstäbe</span><span id="cad-kpi-axis-distance" class="kpi-value">—</span><span class="kpi-sub">Fenster + 2×Spalt + Ø Stab</span></div>
+            <div class="kpi-box"><span class="kpi-label">Außenmaße Gehäuse (B × H)</span><span id="cad-kpi-outer-dims" class="kpi-value">—</span><span id="cad-kpi-total-with-nuts" class="kpi-sub">—</span></div>
+            <div class="kpi-box"><span class="kpi-label">Stablänge (Zuschnitt)</span><span id="cad-kpi-rod-cut" class="kpi-value">—</span><span class="kpi-sub">Abzüglich Gleiter- und Münzstapel</span></div>
+            <div class="kpi-box cad-kpi-blue">
+              <span class="kpi-label">Max. Rollendurchmesser D<sub>max</sub></span
+              ><span id="cad-kpi-max-roll" class="kpi-value">—</span><span id="cad-kpi-radial-build" class="kpi-sub">—</span>
             </div>
-            <div id="cad-viewport-wrapper" class="viewport-wrapper">
-              <svg id="cad-drawing-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Technische CAD-Zeichnung"></svg>
-            </div>
+            <div class="kpi-box cad-kpi-amber"><span class="kpi-label">Umlenkwinkel α</span><span id="cad-kpi-wrap-angle" class="kpi-value">—</span><span id="cad-kpi-tangent-len" class="kpi-sub">—</span></div>
           </section>
 
           <section class="card cad-bom-card" aria-label="Dynamische Stückliste">
-            <div class="card-header"><h2 class="card-title"><i class="fa-solid fa-list-check" aria-hidden="true"></i> Stückliste (BOM)</h2></div>
+            <div class="card-header">
+              <h2 class="card-title"><i class="fa-solid fa-list-check" aria-hidden="true"></i> Stückliste (BOM)</h2>
+            </div>
             <div class="cad-bom-scroll">
               <table class="cad-bom-table">
-                <thead><tr><th scope="col">Anz.</th><th scope="col">Bauteil</th><th scope="col">Zuschnitt / Maß</th><th scope="col">Material / Hinweis</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th scope="col">Anz.</th>
+                    <th scope="col">Bauteil</th>
+                    <th scope="col">Zuschnitt / Maß</th>
+                    <th scope="col">Material / Hinweis</th>
+                  </tr>
+                </thead>
                 <tbody id="cad-bom-items"></tbody>
               </table>
             </div>
@@ -782,7 +814,7 @@
         </div>
         <div class="status-brand">
           <span class="build-label">Build: </span>
-          <span id="build-date"><!-- BUILD_DATE -->16.11.2026 14:41<!-- /BUILD_DATE --></span>
+          <span id="build-date"><!-- BUILD_DATE -->16.11.2026 16:36<!-- /BUILD_DATE --></span>
           <a class="status-logo-link" href="https://github.com/KoljaL/ChronoScroll" target="_blank" rel="noopener noreferrer" aria-label="ChronoScroll auf GitHub (öffnet einen neuen Tab)">
             <span class="sr-only">Code: </span>
             <img src="./img/logo.svg" alt="" width="18" height="18" />

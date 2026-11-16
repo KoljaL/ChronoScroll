@@ -4,6 +4,7 @@
   const storageKey = 'cronoscroll_ui_theme';
   const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
   let override = null;
+  let transitionTimer = null;
 
   try {
     const saved = localStorage.getItem(storageKey);
@@ -13,9 +14,19 @@
     console.warn('Oberflächendarstellung konnte nicht geladen werden:', error);
   }
 
-  function applyTheme() {
+  function applyTheme({ animate = false } = {}) {
     const dark = override ? override === 'dark' : systemTheme.matches;
-    document.documentElement.dataset.uiTheme = dark ? 'dark' : 'light';
+    const root = document.documentElement;
+    const nextTheme = dark ? 'dark' : 'light';
+    if (animate && root.dataset.uiTheme !== nextTheme &&
+        !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      root.classList.add('theme-transitioning');
+      window.clearTimeout(transitionTimer);
+      transitionTimer = window.setTimeout(() => {
+        root.classList.remove('theme-transitioning');
+      }, 220);
+    }
+    root.dataset.uiTheme = nextTheme;
     const button = document.getElementById('theme-toggle');
     if (button) {
       button.classList.toggle('is-dark', dark);
@@ -26,7 +37,7 @@
 
   applyTheme();
   systemTheme.addEventListener('change', () => {
-    if (!override) applyTheme();
+    if (!override) applyTheme({ animate: true });
   });
 
   window.addEventListener('DOMContentLoaded', () => {
@@ -34,7 +45,7 @@
     applyTheme();
     button.addEventListener('click', () => {
       override = document.documentElement.dataset.uiTheme === 'dark' ? 'light' : 'dark';
-      applyTheme();
+      applyTheme({ animate: true });
       try {
         localStorage.setItem(storageKey, override);
       } catch (error) {

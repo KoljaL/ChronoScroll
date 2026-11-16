@@ -28,6 +28,7 @@ test('separator settings and next-year links update and restore before holidays 
     add() {}
     appendChild(child) { this.children.push(child); }
     addEventListener(type, fn) { this.listeners[type] = fn; }
+    contains(element) { return element === this; }
     setAttribute(name, value) { this.attributes[name] = value; }
     removeAttribute(name) { delete this.attributes[name]; }
     getAttribute(name) { return this.attributes[name]; }
@@ -89,6 +90,7 @@ test('separator settings and next-year links update and restore before holidays 
     navigator: { clipboard: { async writeText(text) { copied = text; } } },
     document: {
       getElementById: get,
+      addEventListener() {},
       createElement: () => new Element(),
       querySelectorAll: selector => {
         if (selector === '.theme-pill') return get('theme-options').children;

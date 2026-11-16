@@ -12,10 +12,12 @@ function createTheme({ saved = null, dark = false, failSave = false } = {}) {
   const classes = new Set();
   const storage = {};
   const alerts = [];
+  const timers = [];
   const media = {
     matches: dark,
     addEventListener(type, listener) { listeners.media = listener; }
   };
+  const reducedMotion = { matches: false };
   const button = {
     classList: {
       toggle(name, enabled) {
@@ -27,13 +29,26 @@ function createTheme({ saved = null, dark = false, failSave = false } = {}) {
     addEventListener(type, listener) { listeners[type] = listener; }
   };
   const document = {
-    documentElement: { dataset: {} },
+    documentElement: {
+      dataset: {},
+      classList: {
+        add(name) { classes.add(name); },
+        remove(name) { classes.delete(name); }
+      }
+    },
     getElementById() { return button; }
   };
   const window = {
-    matchMedia() { return media; },
+    matchMedia(query) {
+      return query === '(prefers-reduced-motion: reduce)' ? reducedMotion : media;
+    },
     addEventListener(type, listener) { listeners[type] = listener; },
-    alert(message) { alerts.push(message); }
+    alert(message) { alerts.push(message); },
+    setTimeout(callback, delay) {
+      timers.push({ callback, delay });
+      return timers.length;
+    },
+    clearTimeout() {}
   };
   const localStorage = {
     getItem() { return saved; },
@@ -46,7 +61,7 @@ function createTheme({ saved = null, dark = false, failSave = false } = {}) {
     document, window, localStorage, console: { warn() {}, error() {} }
   });
   listeners.DOMContentLoaded();
-  return { document, media, listeners, attributes, classes, storage, alerts };
+  return { document, media, reducedMotion, timers, listeners, attributes, classes, storage, alerts };
 }
 
 test('system theme is followed until a manual choice is saved', () => {
@@ -82,4 +97,17 @@ test('storage failure keeps the chosen theme and notifies the user', () => {
   ui.listeners.click();
   assert.equal(ui.document.documentElement.dataset.uiTheme, 'dark');
   assert.equal(ui.alerts.length, 1);
+});
+
+test('theme changes briefly transition unless reduced motion is requested', () => {
+  const ui = createTheme();
+  ui.listeners.click();
+  assert.equal(ui.classes.has('theme-transitioning'), true);
+  assert.equal(ui.timers.at(-1).delay, 220);
+
+  const reducedMotionUi = createTheme();
+  reducedMotionUi.reducedMotion.matches = true;
+  reducedMotionUi.listeners.click();
+  assert.equal(reducedMotionUi.classes.has('theme-transitioning'), false);
+  assert.equal(reducedMotionUi.timers.length, 0);
 });

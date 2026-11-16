@@ -282,19 +282,12 @@ window.CronoPDF = (function() {
     // --- 6. SCHNEIDEMARKEN ---
     if (state.showCropMarks) {
       const cropColor = design ? state.colorText : design;
-      drawPdfCropMark(doc, 0, 0, 4, 1.5, cropColor);
-      drawPdfCropMark(doc, geo.lTotalMm, 0, 4, 1.5, cropColor);
-      drawPdfCropMark(doc, 0, geo.hVisibleMm, 4, 1.5, cropColor);
-      drawPdfCropMark(doc, geo.lTotalMm, geo.hVisibleMm, 4, 1.5, cropColor);
-      drawPdfCropMark(doc, leadInMm, 0, 4, 1.5, cropColor);
-      drawPdfCropMark(doc, leadInMm, geo.hVisibleMm, 4, 1.5, cropColor);
-      drawPdfCropMark(doc, leadOutStartMm, 0, 4, 1.5, cropColor);
-      drawPdfCropMark(doc, leadOutStartMm, geo.hVisibleMm, 4, 1.5, cropColor);
-      for (let i = 1; i < 14; i++) {
-        const xMark = leadInMm + (i * geo.bMonthMm);
-        drawPdfCropMark(doc, xMark, 0, 4, 1.5, cropColor);
-        drawPdfCropMark(doc, xMark, geo.hVisibleMm, 4, 1.5, cropColor);
-      }
+      const viewportStartMm = leadInMm + (state.currentMonthIndex * geo.bMonthMm);
+      const viewportEndMm = viewportStartMm + geo.bVisibleMm;
+      drawPdfCropMark(doc, viewportStartMm, 0, 4, 1.5, cropColor);
+      drawPdfCropMark(doc, viewportEndMm, 0, 4, 1.5, cropColor);
+      drawPdfCropMark(doc, viewportStartMm, geo.hVisibleMm, 4, 1.5, cropColor);
+      drawPdfCropMark(doc, viewportEndMm, geo.hVisibleMm, 4, 1.5, cropColor);
     }
 
     doc.save(`Rollkalender-${state.year}.pdf`);

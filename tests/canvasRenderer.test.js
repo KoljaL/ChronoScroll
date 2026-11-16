@@ -163,6 +163,58 @@ test('canvas preview draws day 16 in the second half of its month', () => {
   assert.equal(day16[1], 146);
 });
 
+test('banner crop marks align with the visible window and never mark month or buffer boundaries', () => {
+  const strokedPaths = [];
+  let currentPath = [];
+  let currentPoint = null;
+  const drawContext = {
+    save() {},
+    restore() {},
+    scale() {},
+    fillRect() {},
+    strokeRect() {},
+    setLineDash() {},
+    beginPath() { currentPath = []; },
+    moveTo(x, y) { currentPoint = [x, y]; },
+    lineTo(x, y) {
+      currentPath.push([...currentPoint, x, y]);
+      currentPoint = [x, y];
+    },
+    stroke() { strokedPaths.push(currentPath.slice()); },
+    fillText() {},
+    measureText(text) { return { width: String(text).length * 6 }; }
+  };
+  const state = {
+    bVisible: 42, hVisible: 32, pufferLeft: 15, pufferRight: 15,
+    monthLayout: 'double', subColumns: 1, guideLinesCount: 0,
+    viewMode: 'banner', currentMonthIndex: 4, year: 2027, holidays: [], zoom: 1,
+    lineGrid: 0.2, lineBorder: 0.6, paperColor: '#ffffff',
+    colorHeaderBg: '#f1f5f9', colorHeaderText: '#0f172a',
+    colorText: '#0f172a', colorGrid: '#cbd5e1',
+    fontFamily: 'sans', fontHeaderScale: 1, fontDayScale: 1,
+    headerAlign: 'center', headerStyle: 'uppercase',
+    showKW: false, showMoon: false, showCropMarks: true
+  };
+  const geo = geometryContext.window.CronoGeometry.calculate(state);
+  context.window.CronoCanvas.render(
+    { style: {}, getContext: () => drawContext }, { style: {} }, state
+  );
+
+  const start = geo.pufferLeft * 20 + state.currentMonthIndex * geo.bMonth * 20;
+  const end = start + geo.bVisible * 20;
+  const height = state.hVisible * 20;
+  const expectedPaths = [[start, 0], [end, 0], [start, height], [end, height]].map(([x, y]) => [
+    [x - 13, y, x - 3, y],
+    [x + 3, y, x + 13, y],
+    [x, y - 13, x, y - 3],
+    [x, y + 3, x, y + 13]
+  ]);
+  const cropPaths = strokedPaths.filter(path => expectedPaths.some(expected =>
+    JSON.stringify(path) === JSON.stringify(expected)
+  ));
+  assert.deepEqual(cropPaths, expectedPaths);
+});
+
 test('all special-design and theme combinations use the active canvas colors and font', () => {
   for (const themeKey of context.window.CronoThemes.keys) {
     const theme = context.window.CronoThemes.themes[themeKey];
