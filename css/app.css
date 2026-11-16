@@ -300,7 +300,7 @@ html, body {
   min-height: 0;
   height: 100%;
   display: grid;
-  grid-template-rows: 52px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   overflow: hidden;
   position: relative;
 }
