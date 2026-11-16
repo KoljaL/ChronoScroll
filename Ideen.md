@@ -1,22 +1,14 @@
 # Feature-Vorschläge & Erweiterungen
 
-## 1 URL-basierte State-Speicherung (Shareable Links):
+zur zeit springt der umschalter für kalender-editor und cad im header immer hin und her beim wechsel der modi, dass sollte auch behoben werden, damit der zustand konsistent bleibt und der nutzer nicht verwirrt wird.
 
-Speicherung aller Kalender-Parameter in den URL-Query-Parametern (oder Hash), damit Nutzer ihre Konfigurationen einfach per Link teilen oder als Lesezeichen speichern können.
+die export funktion des kalenders im header zeigt derzeit drei buttons (svg, png und pdf), was die bedienung etwas unübersichtlich macht. eine mögliche verbesserung wäre, die exportoptionen in einem dropdown zusammenzufassen, um platz zu sparen und die nutzerführung zu vereinfachen. wobei ein klick ausreichen soll, um als pdf zu exportieren, ohne dass der nutzer erst das dropdown öffnen muss.
 
+im cad modus wäre es soll die export funktion ähnlich wie im kalender umgesetzt werden, also mit einem dropdown für verschiedene formate, wobei ein klick auf das standardformat (z. b. pdf) direkt den export auslöst, ohne dass der nutzer erst das dropdown öffnen muss.
+außerdem sollen die angaben der Maße und die konstruktionsprüfung unter der zeichnung angezeigt werden, um eine bessere Übersicht und Kontrolle zu ermöglichen. außer die prüfung ist nicht bestanden, dann sollte diese über der zeichnung angezeigt werden.
 
-## 2 Erweiterter iCal-Filter:
+das theme switch icon soll nach ganz rechts, also an den äußersten rechten rand des headers, verschoben werden.
 
-Einbindung einer Filter-Option für importierte iCal-Kalender  
+die schnittmarken sind falsch positioniert und müssen korrigiert werden, damit sie den tatsächlichen Beschnittbereich korrekt anzeigen. eigentlich nur am anfang und ende horizontal in höhe des sichtbereiches.
 
-## 3 Export/Import von Vorlagen (JSON):
-
-Ein einfacher Export- und Import-Button für das eigene Preset als JSON-Datei, falls man die Konfiguration im nächsten Jahr wiederverwenden möchte.
- 
-
-
-# To Check
-- Land vor der Regionsprüfung als Zeichenkette validiert werden. Ein manipuliertes Objekt kann dort derzeit einen Fehler auslösen und den App-Start stoppen. Die Änderung wurde bisher nicht freigegeben.
-- Randfall testen: Einen Test ergänzen, der eine solche manipulierte URL lädt und bestätigt, dass die App mit den Standardeinstellungen startet.
-- Praktisch prüfen: Eine PDF exportieren, den QR-Code scannen und prüfen, ob der angezeigte Folgejahres-Link geöffnet wird. Die automatisierten Tests prüfen bereits URL und Platzierung, ersetzen aber keinen Scan.
-- Veröffentlichen: Die neue qrcode.js, ihre Lizenz und die übrigen Änderungen in Git aufnehmen und veröffentlichen.
+abhängogkleiten von cdn für schriften icons etc evtl verringern, um die ladezeiten zu verbessern und die app unabhängiger von externen ressourcen zu machen.

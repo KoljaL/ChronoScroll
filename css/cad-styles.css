@@ -2,35 +2,6 @@
 /* ==========================================================================
        1. DESIGN-TOKENS & BASIS-RESET (Technisches Zeichenbrett / Bauhaus-CAD)
        ========================================================================== */
-    :scope {
-      --bg-canvas: #eef2f6;
-      --bg-surface: #ffffff;
-      --bg-subtle: #f8fafc;
-      --bg-muted: #f1f5f9;
-      --border-light: #e2e8f0;
-      --border-medium: #cbd5e1;
-      --border-strong: #94a3b8;
-      --text-primary: #0f172a;
-      --text-secondary: #475569;
-      --text-muted: #64748b;
-      --accent: #0284c7;
-      --accent-hover: #0369a1;
-      --accent-soft: #e0f2fe;
-      --ok-bg: #ecfdf5;
-      --ok-border: #10b981;
-      --ok-text: #065f46;
-      --warn-bg: #fffbeb;
-      --warn-border: #f59e0b;
-      --warn-text: #92400e;
-      --err-bg: #fef2f2;
-      --err-border: #ef4444;
-      --err-text: #991b1b;
-      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      --font-mono: 'JetBrains Mono', monospace;
-      --radius-sm: 6px;
-      --radius-md: 8px;
-    }
-
     *, *::before, *::after {
       box-sizing: border-box;
     }
@@ -154,8 +125,8 @@
     }
 
     .btn-primary {
-      background-color: var(--accent);
-      border-color: var(--accent);
+      background-color: var(--accent-fill);
+      border-color: var(--accent-fill);
       color: #ffffff;
     }
 
@@ -171,14 +142,14 @@
     }
 
     .btn-danger {
-      background-color: #fef2f2;
-      border-color: #fecaca;
-      color: #dc2626;
+      background-color: var(--err-bg);
+      border-color: var(--err-border);
+      color: var(--err-text);
     }
 
     .btn-danger:hover {
-      background-color: #fee2e2;
-      border-color: #fca5a5;
+      background-color: var(--bg-muted);
+      border-color: var(--err-border);
     }
 
     /* ==========================================================================
@@ -682,13 +653,13 @@
   }
 
   .cad-kpi-blue {
-    background: #f0f9ff;
-    border-color: #bae6fd;
+    background: var(--accent-soft);
+    border-color: var(--accent);
   }
 
   .cad-kpi-amber {
-    background: #fffbeb;
-    border-color: #fde68a;
+    background: var(--warn-bg);
+    border-color: var(--warn-border);
   }
 
   .cad-option-stack {

@@ -1149,19 +1149,19 @@
           box.style.backgroundColor = 'var(--err-bg)';
           box.style.borderColor = 'var(--err-border)';
           box.style.color = 'var(--err-text)';
-          badge.style.backgroundColor = '#fee2e2';
+          badge.style.backgroundColor = 'var(--err-bg)';
           badge.textContent = 'FEHLER / KOLLISION';
         } else if (hasWarn) {
           box.style.backgroundColor = 'var(--warn-bg)';
           box.style.borderColor = 'var(--warn-border)';
           box.style.color = 'var(--warn-text)';
-          badge.style.backgroundColor = '#fef3c7';
+          badge.style.backgroundColor = 'var(--warn-bg)';
           badge.textContent = 'WARNUNG';
         } else {
           box.style.backgroundColor = 'var(--ok-bg)';
           box.style.borderColor = 'var(--ok-border)';
           box.style.color = 'var(--ok-text)';
-          badge.style.backgroundColor = '#d1fae5';
+          badge.style.backgroundColor = 'var(--ok-bg)';
           badge.textContent = 'OK / KOLLISIONSFREI';
         }
 
