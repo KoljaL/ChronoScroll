@@ -22,6 +22,7 @@ test('header controls, separator settings and next-year links update correctly',
         toggle(name, force) {
           if (force === undefined ? !this.classes.has(name) : force) this.classes.add(name);
           else this.classes.delete(name);
+          return this.classes.has(name);
         }
       };
     }
@@ -35,9 +36,12 @@ test('header controls, separator settings and next-year links update correctly',
     getAttribute(name) { return this.attributes[name]; }
     get valueAsNumber() { return this.value === '' ? NaN : Number(this.value); }
     dispatch(type, extra = {}) {
-      if (this.listeners[type]) this.listeners[type]({
-        target: this, currentTarget: this, preventDefault() {}, ...extra
-      });
+      const event = {
+        target: this, currentTarget: this, defaultPrevented: false,
+        preventDefault() { this.defaultPrevented = true; }, ...extra
+      };
+      if (this.listeners[type]) this.listeners[type](event);
+      return event;
     }
     focus() {}
     querySelectorAll(selector) {
@@ -56,6 +60,7 @@ test('header controls, separator settings and next-year links update correctly',
     if (!elements.has(id)) elements.set(id, new Element());
     return elements.get(id);
   };
+  get('canvas-container').clientWidth = 567 - 34;
   get('select-design-style').options = [
     ['classic', 'Klassisch (frei gestaltbar)'],
     ['midcentury', 'Mid-Century – Labor & Messinstrument'],
@@ -94,9 +99,11 @@ test('header controls, separator settings and next-year links update correctly',
   let latestState;
   let start;
   let copied;
+  let totalRollLength = 226;
   const holidayCalls = [];
   const context = {
     TextEncoder, TextDecoder, URLSearchParams, btoa, atob,
+    setTimeout: callback => callback(),
     navigator: { clipboard: { async writeText(text) { copied = text; } } },
     document: {
       getElementById: get,
@@ -152,7 +159,8 @@ test('header controls, separator settings and next-year links update correctly',
           { id: `vacation-${year}`, title: 'Ferien', start: `${year}-07-01`, end: `${year}-07-07`, color: '#000000', type: 'vacation' }
         ]
       },
-      CronoGeometry: { calculate: () => ({ bVisible: 42, hVisible: 32, lTotal: 226 }) },
+      getComputedStyle: () => ({ paddingLeft: '32px', paddingRight: '32px' }),
+      CronoGeometry: { calculate: () => ({ bVisible: 42, hVisible: 32, lTotal: totalRollLength }) },
       CronoCanvas: { render(canvas, container, state) { latestState = structuredClone(state); } },
       CronoFonts: { hasCustomFont: () => false, loadStandardFonts: () => new Promise(() => {}) }
     }
@@ -170,12 +178,56 @@ test('header controls, separator settings and next-year links update correctly',
   assert.equal(latestState.zoom, 1.2);
   get('btn-zoom-reset').dispatch('click');
   assert.equal(latestState.zoom, 1);
+  get('btn-zoom-out').dispatch('click');
+  assert.equal(latestState.zoom, 0.8);
+  get('btn-zoom-in').dispatch('click');
+  assert.equal(latestState.zoom, 1);
   get('btn-prev-month').dispatch('click');
   assert.equal(latestState.currentMonthIndex, 0);
   get('btn-next-month').dispatch('click');
   assert.equal(latestState.currentMonthIndex, 1);
+  const tabKeyEvent = get('tab-button-style').dispatch('keydown', { key: 'ArrowRight' });
+  windowListeners.get('keydown')[0](tabKeyEvent);
+  assert.equal(get('tab-button-holidays').getAttribute('aria-selected'), 'true');
+  assert.equal(latestState.currentMonthIndex, 1);
+  windowListeners.get('keydown')[0]({ target: { tagName: 'BODY' }, key: 'ArrowRight' });
+  assert.equal(latestState.currentMonthIndex, 2);
   get('btn-mode-banner').dispatch('click');
   assert.equal(latestState.viewMode, 'banner');
+  get('btn-zoom-fit-banner').dispatch('click');
+  assert.ok(latestState.zoom < 0.12);
+  assert.ok(226 * 20 * latestState.zoom <= 567 - 34 - 64 - 16);
+  const fittedZoom = latestState.zoom;
+  get('btn-zoom-out').dispatch('click');
+  assert.ok(latestState.zoom > 0);
+  assert.ok(latestState.zoom < fittedZoom);
+  get('btn-zoom-in').dispatch('click');
+  assert.ok(latestState.zoom > fittedZoom);
+  get('btn-zoom-fit-banner').dispatch('click');
+  const wheelFitZoom = latestState.zoom;
+  get('canvas-container').dispatch('wheel', { ctrlKey: true, deltaY: 1 });
+  assert.ok(latestState.zoom > 0);
+  assert.ok(latestState.zoom < wheelFitZoom);
+  get('btn-zoom-fit-banner').dispatch('click');
+  get('btn-zoom-in').dispatch('click');
+  assert.ok(latestState.zoom > 0.12);
+  get('btn-zoom-reset').dispatch('click');
+  assert.equal(latestState.zoom, 1);
+  get('canvas-container').clientWidth = 64;
+  get('btn-zoom-fit-banner').dispatch('click');
+  assert.equal(latestState.zoom, 1);
+  get('canvas-container').clientWidth = 567 - 34;
+  totalRollLength = 10000;
+  get('btn-zoom-fit-banner').dispatch('click');
+  assert.ok(latestState.zoom > 0);
+  assert.ok(totalRollLength * 20 * latestState.zoom <= 567 - 34 - 64 - 16);
+  const longRollFit = latestState.zoom;
+  get('btn-zoom-out').dispatch('click');
+  assert.ok(latestState.zoom < longRollFit);
+  totalRollLength = 226;
+  get('canvas-container').clientWidth = 10000;
+  get('btn-zoom-fit-banner').dispatch('click');
+  assert.equal(latestState.zoom, 1);
   get('btn-mode-plate').dispatch('click');
   assert.equal(latestState.viewMode, 'plate');
   const calendarMenu = get('calendar-export-menu');
@@ -196,6 +248,20 @@ test('header controls, separator settings and next-year links update correctly',
   assert.equal(latestState.currentMonthIndex, activeMonth);
   get('btn-mode-calendar').dispatch('click');
   assert.equal(get('app-container').classList.contains('cad-mode'), false);
+  const sidebarToggle = get('btn-toggle-sidebar');
+  sidebarToggle.dispatch('click');
+  assert.equal(get('app-container').classList.contains('sidebar-collapsed'), true);
+  assert.equal(sidebarToggle.getAttribute('aria-expanded'), 'false');
+  assert.equal(get('app-sidebar').inert, true);
+  assert.equal(get('cad-sidebar').inert, true);
+  get('btn-mode-cad').dispatch('click');
+  assert.equal(get('app-container').classList.contains('sidebar-collapsed'), true);
+  sidebarToggle.dispatch('click');
+  assert.equal(get('app-container').classList.contains('sidebar-collapsed'), false);
+  assert.equal(sidebarToggle.getAttribute('aria-expanded'), 'true');
+  assert.equal(get('app-sidebar').inert, false);
+  assert.equal(get('cad-sidebar').inert, false);
+  get('btn-mode-calendar').dispatch('click');
   assert.equal(context.window.CronoScrollCADBridge.getSnapshot().dimensions.windowWidth, 420);
   assert.equal(context.window.CronoScrollCADBridge.getSnapshot().dimensions.windowHeight, 320);
   assert.equal(context.window.CronoScrollCADBridge.getSnapshot().dimensions.paperLength, 2260);

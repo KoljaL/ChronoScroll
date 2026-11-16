@@ -359,9 +359,11 @@ window.CronoCanvas = (function() {
     let targetWidthPx = 0;
     let targetHeightPx = state.hVisible * pxPerCm;
 
+    container.style.justifyContent = 'flex-start';
+    canvas.style.marginInline = state.viewMode === 'plate' ? 'auto' : '0';
+
     if (state.viewMode === 'plate') {
       // --- MODUS 1: 3-MONATS-SCHREIBPLATTE ---
-      container.style.justifyContent = 'center';
       targetWidthPx = geo.bVisible * pxPerCm;
 
       // Canvas physisch auf HiDPI skalieren
@@ -417,7 +419,6 @@ window.CronoCanvas = (function() {
 
     } else {
       // --- MODUS 2: GANZE DRUCKROLLE (14 MONATE) ---
-      container.style.justifyContent = 'flex-start';
       targetWidthPx = geo.lTotal * pxPerCm;
 
       canvas.width = Math.round(targetWidthPx * dpr);

@@ -32,7 +32,7 @@
       <header id="app-header" class="bg-slate-900 border-b border-slate-800 px-4 shadow-md">
         <!-- Brand & Sidebar Toggle -->
         <div class="header-brand flex items-center space-x-3">
-          <button id="btn-toggle-sidebar" class="text-slate-400 hover:text-slate-100 p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer" title="Seitenleiste ein-/ausklappen">
+          <button id="btn-toggle-sidebar" class="text-slate-400 hover:text-slate-100 p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer" type="button" aria-label="Seitenleiste ein-/ausklappen" aria-controls="app-sidebar cad-sidebar" aria-expanded="true" title="Seitenleiste ein-/ausklappen">
             <i class="fa-solid fa-bars-staggered text-sm"></i>
           </button>
           <div class="bg-amber-500 text-slate-950 p-2 rounded-lg font-bold flex items-center justify-center w-8 h-8 shadow">
@@ -155,7 +155,7 @@
         <!-- INHALT DER REITER -->
         <div class="calendar-tabpanels">
           <!-- TAB 1: MAßE & GEOMETRIE -->
-          <div id="tab-geometry" role="tabpanel" aria-labelledby="tab-button-geometry" tabindex="0" class="tab-content calendar-tabpanel space-y-4">
+          <div id="tab-geometry" role="tabpanel" aria-labelledby="tab-button-geometry" tabindex="0" class="tab-content calendar-tabpanel">
             <!-- Kalender-Zieljahr -->
             <div class="space-y-1.5">
               <label for="input-year" class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex justify-between">
@@ -261,7 +261,7 @@
           </div>
 
           <!-- TAB 2: LAYOUT & ZEILEN -->
-          <div id="tab-layout" role="tabpanel" aria-labelledby="tab-button-layout" tabindex="0" class="tab-content calendar-tabpanel hidden space-y-4">
+          <div id="tab-layout" role="tabpanel" aria-labelledby="tab-button-layout" tabindex="0" class="tab-content calendar-tabpanel hidden">
             <div class="space-y-3">
               <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Tagesfelder und Schreibfläche</h3>
 
@@ -384,7 +384,7 @@
           </div>
 
           <!-- TAB 3: ERSCHEINUNGSBILD -->
-          <div id="tab-style" role="tabpanel" aria-labelledby="tab-button-style" tabindex="0" class="tab-content calendar-tabpanel hidden space-y-4">
+          <div id="tab-style" role="tabpanel" aria-labelledby="tab-button-style" tabindex="0" class="tab-content calendar-tabpanel hidden">
             <section class="choice-section space-y-2" aria-labelledby="design-style-heading">
               <div>
                 <h3 id="design-style-heading" class="text-xs font-bold uppercase tracking-wider text-amber-400">Kalenderdarstellung</h3>
@@ -535,7 +535,7 @@
           </div>
 
           <!-- TAB 4: FEIERTAGS- & TERMIN-ENGINE -->
-          <div id="tab-holidays" role="tabpanel" aria-labelledby="tab-button-holidays" tabindex="0" class="tab-content calendar-tabpanel hidden space-y-4">
+          <div id="tab-holidays" role="tabpanel" aria-labelledby="tab-button-holidays" tabindex="0" class="tab-content calendar-tabpanel hidden">
             <div class="space-y-1">
               <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Termine verwalten</h3>
               <p class="text-[11px] text-slate-400">Regionale Feiertage und Ferien laden, eigene Termine pflegen oder einen .ics-Kalender importieren. Farben werden im Tab „Erscheinung“ festgelegt.</p>
@@ -612,10 +612,9 @@
           </div>
 
           <!-- TAB 5: VORLAGEN -->
-          <div id="tab-presets" role="tabpanel" aria-labelledby="tab-button-presets" tabindex="0" class="tab-content calendar-tabpanel hidden space-y-4">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Vorlagen und Teilen</h3>
-
+          <div id="tab-presets" role="tabpanel" aria-labelledby="tab-button-presets" tabindex="0" class="tab-content calendar-tabpanel hidden">
             <div class="space-y-2">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Vorlagen und Teilen</h3>
               <h4 class="text-xs font-semibold text-slate-300">Einstellungen fürs Folgejahr teilen</h4>
               <a id="next-year-link" class="block text-xs text-amber-400 break-all" target="_blank" rel="noopener noreferrer"></a>
               <button id="btn-copy-next-year-link" type="button" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs">Link kopieren</button>
@@ -792,7 +791,7 @@
         </div>
         <div class="status-brand">
           <span class="build-label">Build: </span>
-          <span id="build-date"><!-- BUILD_DATE -->16.11.2026 21:19<!-- /BUILD_DATE --></span>
+          <span id="build-date"><!-- BUILD_DATE -->16.11.2026 22:08<!-- /BUILD_DATE --></span>
           <a class="status-logo-link" href="https://github.com/KoljaL/ChronoScroll" target="_blank" rel="noopener noreferrer" aria-label="ChronoScroll auf GitHub (öffnet einen neuen Tab)">
             <span class="sr-only">Code: </span>
             <img src="./img/logo.svg" alt="" width="18" height="18" />

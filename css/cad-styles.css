@@ -414,6 +414,7 @@
     .viewport-wrapper {
       width: 100%;
       overflow: hidden;
+      border-radius: var(--radius-md);
       background-color: #ffffff;
       background-image:
         linear-gradient(to right, rgba(203, 213, 225, 0.28) 1px, transparent 1px),

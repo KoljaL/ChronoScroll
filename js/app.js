@@ -1210,6 +1210,7 @@
     document.getElementById('btn-next-month').addEventListener('click', () => stepMonth(1));
 
     window.addEventListener('keydown', (e) => {
+      if (e.defaultPrevented) return;
       if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
       if (document.getElementById('app-container').classList.contains('cad-mode')) return;
       if (e.key === 'ArrowLeft') stepMonth(-1);
@@ -1217,15 +1218,22 @@
     });
 
     // 14. Zoom & Pan
+    const adjustManualZoom = (delta) => {
+      if (delta < 0 && state.zoom < 0.15) {
+        state.zoom = Math.max(Number.MIN_VALUE, state.zoom * (1 + delta));
+      } else {
+        state.zoom = Math.max(0.15, Math.min(3.5, state.zoom + delta));
+      }
+      renderPreview();
+    };
+
     document.getElementById('btn-zoom-in').addEventListener('click', () => {
       if (document.getElementById('app-container').classList.contains('cad-mode')) return;
-      state.zoom = Math.min(3.5, state.zoom + 0.2);
-      renderPreview();
+      adjustManualZoom(0.2);
     });
     document.getElementById('btn-zoom-out').addEventListener('click', () => {
       if (document.getElementById('app-container').classList.contains('cad-mode')) return;
-      state.zoom = Math.max(0.15, state.zoom - 0.2);
-      renderPreview();
+      adjustManualZoom(-0.2);
     });
     document.getElementById('btn-zoom-reset').addEventListener('click', () => {
       if (document.getElementById('app-container').classList.contains('cad-mode')) return;
@@ -1236,8 +1244,15 @@
       if (document.getElementById('app-container').classList.contains('cad-mode')) return;
       if (state.viewMode !== 'banner') return;
       const geo = window.CronoGeometry.calculate(state);
-      const avail = container.clientWidth - 80;
-      state.zoom = Math.max(0.12, Math.min(1.0, avail / (geo.lTotal * 20)));
+      const style = window.getComputedStyle(container);
+      const horizontalPadding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      const availableWidth = container.clientWidth - horizontalPadding - 16;
+      const unscaledWidth = geo.lTotal * 20;
+      if (!Number.isFinite(availableWidth) || availableWidth <= 0
+        || !Number.isFinite(unscaledWidth) || unscaledWidth <= 0) return;
+      const fitZoom = Math.min(1.0, availableWidth / unscaledWidth);
+      if (!Number.isFinite(fitZoom) || fitZoom <= 0) return;
+      state.zoom = fitZoom;
       renderPreview();
     });
 
@@ -1248,8 +1263,7 @@
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault();
           const delta = e.deltaY < 0 ? 0.1 : -0.1;
-          state.zoom = Math.max(0.15, Math.min(3.5, state.zoom + delta));
-          renderPreview();
+          adjustManualZoom(delta);
         }
       },
       { passive: false },
@@ -1295,7 +1309,11 @@
     const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
     if (btnToggleSidebar) {
       btnToggleSidebar.addEventListener('click', () => {
-        document.getElementById('app-container').classList.toggle('sidebar-collapsed');
+        const appContainer = document.getElementById('app-container');
+        const collapsed = appContainer.classList.toggle('sidebar-collapsed');
+        btnToggleSidebar.setAttribute('aria-expanded', String(!collapsed));
+        document.getElementById('app-sidebar').inert = collapsed;
+        document.getElementById('cad-sidebar').inert = collapsed;
         setTimeout(renderPreview, 260);
       });
     }

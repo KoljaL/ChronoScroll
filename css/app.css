@@ -34,6 +34,7 @@
   --font-mono: 'JetBrains Mono', monospace;
   --radius-sm: 6px;
   --radius-md: 8px;
+  --workspace-module-gap: 0.9rem;
 }
 
 :root[data-ui-theme="dark"] {
@@ -287,7 +288,7 @@ html, body {
   z-index: 20;
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: var(--workspace-module-gap);
   padding: 1rem;
   background: var(--bg-canvas);
   overflow-y: auto;
@@ -400,16 +401,21 @@ html, body {
   flex: 1 1 0;
   min-height: 0;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: var(--workspace-module-gap);
   overflow-y: auto;
-  padding-right: 0.2rem;
 }
 
 .calendar-tabpanel {
   flex: 0 0 auto;
+  flex-direction: column;
+  gap: var(--workspace-module-gap);
 }
 
-#app-container .calendar-tabpanel > :is(div, section, h3) {
+.calendar-tabpanel:not(.hidden) {
+  display: flex;
+}
+
+#app-container .calendar-tabpanel > :is(div, section) {
   padding: 0.85rem 0.9rem;
   background: var(--bg-surface);
   border: 1px solid var(--border-medium);
@@ -421,6 +427,7 @@ html, body {
   flex: 1 0 0;
   min-width: 0;
   min-height: 0;
+  overflow: hidden;
 }
 
 .calendar-preview-viewport {
@@ -526,6 +533,54 @@ html, body {
 
 #app-container.cad-mode.sidebar-collapsed {
   grid-template-columns: 0 minmax(0, 1fr);
+}
+
+@media (max-width: 750px) {
+  #app-container,
+  #app-container.sidebar-collapsed {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #app-container.cad-mode.sidebar-collapsed {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #app-sidebar,
+  #app-workspace {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  #app-workspace {
+    width: 100%;
+  }
+
+  #app-sidebar,
+  #cad-sidebar {
+    z-index: 25;
+    width: min(400px, calc(100vw - 3rem));
+    transform: translateX(0);
+    transition: transform 0.25s ease;
+  }
+
+  #app-container.sidebar-collapsed :is(#app-sidebar, #cad-sidebar) {
+    padding-inline: 1rem;
+    transform: translateX(calc(-100% - 1rem));
+  }
+
+  #app-container #cad-mode-root {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #cad-sidebar,
+  #cad-stage {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  #cad-stage {
+    width: 100%;
+  }
 }
 
 #app-container.cad-mode #header-calendar-nav {
