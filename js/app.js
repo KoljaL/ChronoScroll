@@ -694,6 +694,10 @@
 
   function setAppMode(mode) {
     const isCadMode = mode === 'cad';
+    const url = new URL(window.location.href);
+    url.searchParams.set('mode', mode);
+    window.history.replaceState(null, '', url);
+
     const appContainer = document.getElementById('app-container');
     appContainer.classList.toggle('cad-mode', isCadMode);
     document.getElementById('cad-mode-root').setAttribute('aria-hidden', String(!isCadMode));
@@ -775,7 +779,10 @@
 
   // --- EVENTS BINDEN ---
   function bindEvents() {
-    document.getElementById('btn-mode-calendar').addEventListener('click', () => setAppMode('calendar'));
+    document.getElementById('btn-mode-calendar').addEventListener('click', () => {
+      setAppMode('calendar');
+      activateTabFromUrl();
+    });
     document.getElementById('btn-mode-cad').addEventListener('click', () => setAppMode('cad'));
     bindExportMenu(document.getElementById('calendar-export-group'), document.getElementById('calendar-export-menu-toggle'), document.getElementById('calendar-export-menu'));
 
@@ -1124,6 +1131,10 @@
     // 12. Reiter-Umschaltung
     const activateTab = (btn, focus = false) => {
       const tabId = btn.getAttribute('data-tab');
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', tabId.replace(/^tab-/, ''));
+      window.history.replaceState(null, '', url);
+
       document.querySelectorAll('.tab-btn').forEach((b) => {
         const selected = b === btn;
         b.classList.remove('text-amber-400', 'border-b-2', 'border-amber-400', 'font-semibold');
@@ -1138,6 +1149,13 @@
       document.getElementById(tabId).classList.remove('hidden');
       if (focus && btn.focus) btn.focus();
     };
+    function activateTabFromUrl() {
+      const requestedTab = new URLSearchParams(window.location.search).get('tab');
+      if (!['geometry', 'layout', 'style', 'holidays', 'presets'].includes(requestedTab)) return;
+      const tabButton = Array.from(document.querySelectorAll('.tab-btn'))
+        .find((button) => button.getAttribute('data-tab') === `tab-${requestedTab}`);
+      if (tabButton) activateTab(tabButton);
+    }
     document.querySelectorAll('.tab-btn').forEach((btn, index, buttons) => {
       btn.addEventListener('click', () => activateTab(btn));
       btn.addEventListener('keydown', (event) => {

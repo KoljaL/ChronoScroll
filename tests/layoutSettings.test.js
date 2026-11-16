@@ -90,6 +90,7 @@ test('header controls, separator settings and next-year links update correctly',
   };
   const windowListeners = new Map();
   const modeChangeEvents = [];
+  let currentUrl = new URL('https://example.test/');
   let latestState;
   let start;
   let copied;
@@ -118,7 +119,19 @@ test('header controls, separator settings and next-year links update correctly',
       setItem: (key, value) => { storage[key] = value; }
     },
     window: {
-      location: { search: '' },
+      location: {
+        get href() { return currentUrl.href; },
+        set href(value) { currentUrl = new URL(value, currentUrl); },
+        get search() { return currentUrl.search; },
+        set search(value) {
+          const nextUrl = new URL(currentUrl);
+          nextUrl.search = value;
+          currentUrl = nextUrl;
+        }
+      },
+      history: {
+        replaceState(_state, _title, url) { currentUrl = new URL(url, currentUrl); }
+      },
       addEventListener(type, fn) {
         if (type === 'DOMContentLoaded') start = fn;
         else windowListeners.set(type, [...(windowListeners.get(type) || []), fn]);
@@ -144,6 +157,7 @@ test('header controls, separator settings and next-year links update correctly',
       CronoFonts: { hasCustomFont: () => false, loadStandardFonts: () => new Promise(() => {}) }
     }
   };
+  context.URL = URL;
   vm.createContext(context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/themePresets.js'), 'utf8'), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/shareConfig.js'), 'utf8'), context);
@@ -270,7 +284,23 @@ test('header controls, separator settings and next-year links update correctly',
   assert.equal(copied, link);
   assert.equal(get('next-year-link-status').textContent, 'Link kopiert.');
 
+  context.window.location.href = `${link}&mode=calendar&tab=style&source=test#calendar`;
   tabs[0].dispatch('click');
+  let updatedUrl = new URL(context.window.location.href);
+  assert.equal(updatedUrl.searchParams.get('tab'), 'geometry');
+  assert.equal(updatedUrl.searchParams.get('mode'), 'calendar');
+  assert.equal(updatedUrl.searchParams.get('config'), new URL(link).searchParams.get('config'));
+  assert.equal(updatedUrl.searchParams.get('source'), 'test');
+  assert.equal(updatedUrl.hash, '#calendar');
+  get('btn-mode-cad').dispatch('click');
+  updatedUrl = new URL(context.window.location.href);
+  assert.equal(updatedUrl.searchParams.get('mode'), 'cad');
+  assert.equal(updatedUrl.searchParams.get('tab'), 'geometry');
+  get('btn-mode-calendar').dispatch('click');
+  updatedUrl = new URL(context.window.location.href);
+  assert.equal(updatedUrl.searchParams.get('mode'), 'calendar');
+  assert.equal(updatedUrl.searchParams.get('tab'), 'geometry');
+
   context.window.location.search = `${new URL(link).search}&mode=cad&tab=style`;
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/app.js'), 'utf8'), context);
   start();
@@ -278,6 +308,10 @@ test('header controls, separator settings and next-year links update correctly',
   assert.equal(get('cad-mode-root').getAttribute('aria-hidden'), 'false');
   assert.equal(tabs[0].getAttribute('aria-selected'), 'true');
   assert.equal(tabs.find(button => button.getAttribute('data-tab') === 'tab-style').getAttribute('aria-selected'), 'false');
+  get('btn-mode-calendar').dispatch('click');
+  assert.equal(get('app-container').classList.contains('cad-mode'), false);
+  assert.equal(tabs.find(button => button.getAttribute('data-tab') === 'tab-style').getAttribute('aria-selected'), 'true');
+  assert.equal(new URL(context.window.location.href).searchParams.get('mode'), 'calendar');
   assert.equal(latestState.year, 2028);
   assert.equal(latestState.bannerCustomTitle, 'Familie 2028');
   assert.equal(latestState.designStyle, 'zen');
