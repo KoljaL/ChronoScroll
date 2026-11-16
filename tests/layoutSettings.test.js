@@ -4,7 +4,7 @@ const path = require('node:path');
 const test = require('node:test');
 const vm = require('node:vm');
 
-test('separator settings and next-year links update and restore before holidays load', async () => {
+test('header controls, separator settings and next-year links update correctly', async () => {
   class Element {
     constructor() {
       this.value = '';
@@ -18,6 +18,7 @@ test('separator settings and next-year links update and restore before holidays 
         classes: new Set(),
         add(...names) { names.forEach(name => this.classes.add(name)); },
         remove(...names) { names.forEach(name => this.classes.delete(name)); },
+        contains(name) { return this.classes.has(name); },
         toggle(name, force) {
           if (force === undefined ? !this.classes.has(name) : force) this.classes.add(name);
           else this.classes.delete(name);
@@ -70,6 +71,12 @@ test('separator settings and next-year links update and restore before holidays 
     tab.setAttribute('aria-selected', String(index === 0));
     return tab;
   });
+  const appModeButtons = ['calendar', 'cad'].map((mode, index) => {
+    const button = get(`btn-mode-${mode}`);
+    button.setAttribute('data-app-mode', mode);
+    button.setAttribute('aria-pressed', String(index === 0));
+    return button;
+  });
   const panels = tabNames.map(name => get(`tab-${name}`));
   const filters = ['all', 'public', 'vacation', 'custom'].map((filter, index) => {
     const button = get(`filter-${filter}`);
@@ -81,6 +88,8 @@ test('separator settings and next-year links update and restore before holidays 
     cronoscroll_v2_presets: JSON.stringify({ old: { monthLayout: 'single' } }),
     cronoscroll_theme: 'sage'
   };
+  const windowListeners = new Map();
+  const modeChangeEvents = [];
   let latestState;
   let start;
   let copied;
@@ -93,6 +102,7 @@ test('separator settings and next-year links update and restore before holidays 
       addEventListener() {},
       createElement: () => new Element(),
       querySelectorAll: selector => {
+        if (selector === '[data-app-mode]') return appModeButtons;
         if (selector === '.theme-pill') return get('theme-options').children;
         if (selector === '.design-card') return get('design-options').children;
         if (selector === '.tab-btn') return tabs;
@@ -102,13 +112,22 @@ test('separator settings and next-year links update and restore before holidays 
       }
     },
     Option: class {},
+    Event: class { constructor(type) { this.type = type; } },
     localStorage: {
       getItem: key => storage[key],
       setItem: (key, value) => { storage[key] = value; }
     },
     window: {
       location: { search: '' },
-      addEventListener(type, fn) { if (type === 'DOMContentLoaded') start = fn; },
+      addEventListener(type, fn) {
+        if (type === 'DOMContentLoaded') start = fn;
+        else windowListeners.set(type, [...(windowListeners.get(type) || []), fn]);
+      },
+      dispatchEvent(event) {
+        if (event.type === 'cronoscroll:modechange') modeChangeEvents.push(event.type);
+        (windowListeners.get(event.type) || []).forEach(listener => listener(event));
+        return true;
+      },
       CronoHolidays: {
         get14MonthsData: () => [],
         getDACHHolidays: (...args) => {
@@ -130,6 +149,36 @@ test('separator settings and next-year links update and restore before holidays 
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/shareConfig.js'), 'utf8'), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/app.js'), 'utf8'), context);
   start();
+  get('btn-zoom-in').dispatch('click');
+  assert.equal(latestState.zoom, 1.2);
+  get('btn-zoom-reset').dispatch('click');
+  assert.equal(latestState.zoom, 1);
+  get('btn-prev-month').dispatch('click');
+  assert.equal(latestState.currentMonthIndex, 0);
+  get('btn-next-month').dispatch('click');
+  assert.equal(latestState.currentMonthIndex, 1);
+  get('btn-mode-banner').dispatch('click');
+  assert.equal(latestState.viewMode, 'banner');
+  get('btn-mode-plate').dispatch('click');
+  assert.equal(latestState.viewMode, 'plate');
+  const calendarMenu = get('calendar-export-menu');
+  calendarMenu.hidden = true;
+  const calendarMenuToggle = get('calendar-export-menu-toggle');
+  calendarMenuToggle.dispatch('click');
+  assert.equal(calendarMenu.hidden, false);
+  assert.equal(calendarMenuToggle.getAttribute('aria-expanded'), 'true');
+  calendarMenuToggle.dispatch('keydown', { key: 'Escape' });
+  assert.equal(calendarMenu.hidden, true);
+  assert.equal(calendarMenuToggle.getAttribute('aria-expanded'), 'false');
+  get('btn-mode-cad').dispatch('click');
+  assert.equal(get('app-container').classList.contains('cad-mode'), true);
+  assert.equal(get('cad-mode-root').getAttribute('aria-hidden'), 'false');
+  assert.equal(modeChangeEvents.length, 1);
+  const activeMonth = latestState.currentMonthIndex;
+  windowListeners.get('keydown')[0]({ target: { tagName: 'BODY' }, key: 'ArrowLeft' });
+  assert.equal(latestState.currentMonthIndex, activeMonth);
+  get('btn-mode-calendar').dispatch('click');
+  assert.equal(get('app-container').classList.contains('cad-mode'), false);
   assert.equal(context.window.CronoScrollCADBridge.getSnapshot().dimensions.windowWidth, 420);
   assert.equal(context.window.CronoScrollCADBridge.getSnapshot().dimensions.windowHeight, 320);
   assert.equal(context.window.CronoScrollCADBridge.getSnapshot().dimensions.paperLength, 2260);

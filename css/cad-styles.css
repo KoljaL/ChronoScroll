@@ -219,12 +219,6 @@
       color: var(--text-muted);
     }
 
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
     /* Haupt-Grid */
     .workspace {
       max-width: 1760px;
@@ -521,21 +515,6 @@
       gap: 0.35rem;
     }
 
-    .zoom-controls {
-      display: flex;
-      align-items: center;
-      gap: 0.35rem;
-    }
-
-    .zoom-readout {
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      font-weight: 600;
-      min-width: 3.4rem;
-      text-align: center;
-      color: var(--text-primary);
-    }
-
     .viewport-wrapper {
       width: 100%;
       overflow: hidden;
@@ -692,14 +671,6 @@
 
   .cad-drawing-card {
     min-width: 0;
-  }
-
-  .cad-export-dropdown {
-    z-index: 2;
-  }
-
-  .cad-export-dropdown .export-dropdown-menu {
-    top: calc(100% + 0.35rem);
   }
 
   #cad-drawing-svg {

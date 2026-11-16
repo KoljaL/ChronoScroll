@@ -10,6 +10,11 @@
     }
     return element;
   };
+  const sharedElement = (id) => {
+    const element = document.getElementById(id);
+    if (!element) throw new Error(`Gemeinsames Element "${id}" wurde nicht gefunden.`);
+    return element;
+  };
 
 'use strict';
 
@@ -1179,7 +1184,7 @@
           'viewBox',
           `${currentViewBox.x.toFixed(1)} ${currentViewBox.y.toFixed(1)} ${currentViewBox.w.toFixed(1)} ${currentViewBox.h.toFixed(1)}`
         );
-        cadElement('zoom-readout').textContent = `${Math.round(zoomFactor * 100)}%`;
+        sharedElement('preview-scale-indicator').textContent = `${Math.round(zoomFactor * 100)}%`;
       }
 
       function setZoom(svgEl, nextZoom, anchorNormX = 0.5, anchorNormY = 0.5) {
@@ -1204,10 +1209,24 @@
 
       function initPanZoom(svgEl) {
         const wrapper = cadElement('viewport-wrapper');
+        window.addEventListener('cronoscroll:modechange', () => {
+          if (document.getElementById('app-container').classList.contains('cad-mode')) {
+            sharedElement('preview-scale-indicator').textContent = `${Math.round(zoomFactor * 100)}%`;
+          }
+        });
 
-        cadElement('btn-zoom-in').addEventListener('click', () => setZoom(svgEl, zoomFactor * 1.2));
-        cadElement('btn-zoom-out').addEventListener('click', () => setZoom(svgEl, zoomFactor / 1.2));
-        cadElement('btn-zoom-fit').addEventListener('click', () => resetZoom(svgEl));
+        sharedElement('btn-zoom-in').addEventListener('click', () => {
+          if (document.getElementById('app-container').classList.contains('cad-mode')) setZoom(svgEl, zoomFactor * 1.2);
+        });
+        sharedElement('btn-zoom-out').addEventListener('click', () => {
+          if (document.getElementById('app-container').classList.contains('cad-mode')) setZoom(svgEl, zoomFactor / 1.2);
+        });
+        sharedElement('btn-zoom-reset').addEventListener('click', () => {
+          if (document.getElementById('app-container').classList.contains('cad-mode')) resetZoom(svgEl);
+        });
+        sharedElement('btn-zoom-fit-banner').addEventListener('click', () => {
+          if (document.getElementById('app-container').classList.contains('cad-mode')) resetZoom(svgEl);
+        });
 
         wrapper.addEventListener('wheel', (e) => {
           e.preventDefault();
@@ -1321,8 +1340,8 @@
       }
 
       function bindActions(svgEl) {
-        const exportMenu = cadElement('export-menu');
-        const exportMenuToggle = cadElement('export-menu-toggle');
+        const exportMenu = sharedElement('cad-export-menu');
+        const exportMenuToggle = sharedElement('cad-export-menu-toggle');
         const exportMenuItems = Array.from(exportMenu.querySelectorAll('[role="menuitem"]'));
         const closeExportMenu = (restoreFocus = false) => {
           exportMenu.hidden = true;
@@ -1370,13 +1389,13 @@
         exportMenu.addEventListener('click', event => {
           if (event.target.closest('[role="menuitem"]')) closeExportMenu(true);
         });
-        cadElement('drawing-card').addEventListener('focusout', () => {
+        sharedElement('cad-export-group').addEventListener('focusout', () => {
           queueMicrotask(() => {
-            if (!cadElement('drawing-card').contains(document.activeElement)) closeExportMenu();
+            if (!sharedElement('cad-export-group').contains(document.activeElement)) closeExportMenu();
           });
         });
         document.addEventListener('pointerdown', event => {
-          if (!cadElement('drawing-card').contains(event.target)) closeExportMenu();
+          if (!sharedElement('cad-export-group').contains(event.target)) closeExportMenu();
         });
 
         // Presets speichern
@@ -1515,7 +1534,7 @@
         });
 
         // SVG Export
-        cadElement('btn-export-svg').addEventListener('click', () => {
+        sharedElement('cad-btn-export-svg').addEventListener('click', () => {
           const prevVB = svgEl.getAttribute('viewBox');
           svgEl.setAttribute('viewBox', `${baseViewBox.x} ${baseViewBox.y} ${baseViewBox.w} ${baseViewBox.h}`);
           const serializer = new XMLSerializer();
@@ -1539,30 +1558,11 @@
           showToast(`Vektorzeichnung „${filename}“ gespeichert.`);
         });
 
-        cadElement('btn-export-pdf').addEventListener('click', async () => {
+        sharedElement('cad-btn-export-pdf').addEventListener('click', async () => {
           try {
-            if (!window.jspdf || typeof window.jspdf.jsPDF !== 'function') {
-              throw new Error('jsPDF ist nicht geladen.');
-            }
-            const doc = new window.jspdf.jsPDF({
-              orientation: 'landscape',
-              unit: 'mm',
-              format: 'a4',
-              compress: true
-            });
-            if (typeof doc.svg !== 'function') {
-              throw new Error('Der SVG-zu-PDF-Vektorexport ist nicht verfügbar.');
-            }
-            const previousViewBox = svgEl.getAttribute('viewBox');
-            svgEl.setAttribute('viewBox', `${baseViewBox.x} ${baseViewBox.y} ${baseViewBox.w} ${baseViewBox.h}`);
-            try {
-              await doc.svg(svgEl, { x: 0, y: 0, width: 297, height: 210 });
-            } finally {
-              svgEl.setAttribute('viewBox', previousViewBox);
-            }
             const rawName = cadElement('preset-name-input').value.trim();
             const filename = rawName ? `ChronoScroll_${rawName.replace(/[^a-z0-9_-]/gi, '_')}.pdf` : 'ChronoScroll_CAD.pdf';
-            doc.save(filename);
+            await window.CronoScrollCADPdf.exportCadDrawing(svgEl, baseViewBox, filename);
             showToast(`Technisches PDF „${filename}“ gespeichert.`);
           } catch (err) {
             showToast(`PDF-Export fehlgeschlagen: ${err.message}`);

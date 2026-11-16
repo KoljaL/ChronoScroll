@@ -410,9 +410,6 @@ window.CronoCanvas = (function() {
         const firstM = monthsData[state.currentMonthIndex];
         const thirdM = monthsData[state.currentMonthIndex + 2];
         if (firstM && thirdM) {
-          const labelText = `${firstM.monthName.substring(0, 3)} ${firstM.year} – ${thirdM.monthName.substring(0, 3)} ${thirdM.year}`;
-          const elLabel = document.getElementById('plate-month-label');
-          if (elLabel) elLabel.textContent = labelText;
           const elDim = document.getElementById('status-dimensions');
           if (elDim) elDim.textContent = `Sichtfenster: ${geo.bVisible.toFixed(1)} cm × ${state.hVisible.toFixed(1)} cm (${firstM.label} bis ${thirdM.label})`;
         }

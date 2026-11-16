@@ -93,7 +93,7 @@ html, body {
 /* 2-Spalten Layout */
 #app-container {
   display: grid;
-  grid-template-rows: 56px minmax(0, 1fr) 32px;
+  grid-template-rows: auto minmax(0, 1fr) 32px;
   grid-template-columns: min(400px, 100vw) minmax(0, 1fr);
   height: 100vh;
   height: 100dvh;
@@ -108,24 +108,174 @@ html, body {
 
 #app-header {
   grid-column: 1 / -1;
-  height: 56px;
+  min-height: 56px;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
   z-index: 30;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+  grid-template-areas: "brand mode controls theme";
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.6rem;
+  padding-block: 0.25rem;
+}
+
+#app-header > .header-brand {
+  grid-area: brand;
+  min-width: 0;
 }
 
 #app-header > .mode-switch {
+  grid-area: mode;
   justify-self: center;
 }
 
-#app-header > .header-actions {
+#app-header > .header-controls {
+  grid-area: controls;
   justify-self: end;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   min-width: 0;
+}
+
+#app-header > .theme-toggle {
+  grid-area: theme;
+}
+
+.header-controls,
+.header-nav-slot,
+.header-view-switch,
+.header-month-navigation,
+.header-zoom-controls,
+.header-export-group {
+  display: flex;
+  align-items: center;
+}
+
+.header-controls {
+  gap: 0.4rem;
+}
+
+.header-nav-slot {
+  gap: 0.35rem;
+  width: 9.15rem;
+  flex: 0 0 9.15rem;
+}
+
+.header-view-switch,
+.header-month-navigation,
+.header-zoom-controls {
+  gap: 0.2rem;
+}
+
+.header-month-navigation {
+  margin-left: auto;
+}
+
+.header-zoom-controls {
+  gap: 0.25rem;
+  flex: 0 0 auto;
+}
+
+.header-zoom-readout {
+  min-width: 2.8rem;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-align: center;
+}
+
+.header-tool-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 1px solid var(--border-medium);
+  border-radius: 0.45rem;
+  background: var(--bg-muted);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.header-tool-button:hover {
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+}
+
+.header-tool-button:focus-visible,
+.header-export-primary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.header-tool-button.active {
+  border-color: var(--accent-fill);
+  background: var(--accent-fill);
+  color: var(--accent-contrast);
+}
+
+.header-export-slot {
+  position: relative;
+  width: 12.25rem;
+  height: 2rem;
+  flex: 0 0 12.25rem;
+}
+
+.header-export-group {
+  position: absolute;
+  inset: 0 auto auto 0;
+  height: 2rem;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.header-export-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 2rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--accent-fill);
+  border-radius: 0.45rem;
+  background: var(--accent-fill);
+  color: var(--accent-contrast);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.header-export-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+#cad-export-group {
+  display: none;
+}
+
+#app-container.cad-mode #calendar-export-group {
+  display: none;
+}
+
+#app-container.cad-mode #cad-export-group {
+  display: flex;
+}
+
+.header-control-hidden {
+  visibility: hidden;
+}
+
+#cad-export-menu {
+  right: 0;
 }
 
 #app-sidebar {
@@ -245,12 +395,8 @@ html, body {
   overflow: hidden;
 }
 
-.calendar-export-action {
-  display: inline-flex;
-}
-
-#app-container.cad-mode .calendar-export-action {
-  display: none;
+#app-container.cad-mode #header-calendar-nav {
+  visibility: hidden;
 }
 
 .mode-switch {
@@ -287,11 +433,6 @@ html, body {
 .mode-switch-button.active {
   background: var(--accent-fill);
   color: var(--accent-contrast);
-}
-
-.calendar-export-group {
-  align-items: center;
-  gap: 0.3rem;
 }
 
 .export-dropdown {
@@ -364,6 +505,21 @@ html, body {
   }
 }
 
+@media (max-width: 1500px) {
+  #app-header {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "brand mode theme"
+      "controls controls controls";
+    padding-block: 0.4rem;
+    row-gap: 0.35rem;
+  }
+
+  #app-header > .header-controls {
+    justify-self: center;
+  }
+}
+
 @media (max-width: 750px) {
   .mode-switch-button {
     padding-inline: 0.45rem;
@@ -373,14 +529,8 @@ html, body {
     display: none;
   }
 
-  #app-header > div:first-child > div:last-child,
-  #btn-export-pdf > span {
+  #app-header > .header-brand > div:last-child {
     display: none;
-  }
-
-  #app-header {
-    grid-template-columns: minmax(0, 1fr) auto auto;
-    gap: 0.4rem;
   }
 
   #app-header > .mode-switch {
@@ -388,10 +538,26 @@ html, body {
   }
 }
 
+@media (max-width: 500px) {
+  .header-nav-slot { width: 8rem; flex-basis: 8rem; }
+  .header-export-slot { width: 4.25rem; flex-basis: 4.25rem; }
+  .header-export-primary span { display: none; }
+  .header-zoom-readout { display: none; }
+  .header-tool-button { width: 1.75rem; height: 1.75rem; }
+  .header-export-primary { width: 1.75rem; height: 1.75rem; padding: 0; }
+}
+
 @media (max-width: 380px) {
   #app-header { padding-inline: 0.5rem; }
-  #app-header > div:first-child > div:nth-child(2) { display: none; }
-  #app-header > .header-actions { gap: 0.25rem; }
+  #app-header > .header-brand > div:nth-child(2) { display: none; }
+  #app-header > .header-controls { gap: 0.15rem; }
+}
+
+@media (max-width: 350px) {
+  .header-nav-slot { width: 6.75rem; flex-basis: 6.75rem; gap: 0.2rem; }
+  .header-zoom-controls { gap: 0.15rem; }
+  .header-tool-button { width: 1.5rem; height: 1.5rem; }
+  .header-export-primary { width: 1.5rem; height: 1.5rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -628,15 +794,6 @@ html, body {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
-
-#workspace-toolbar {
-  gap: 0.75rem;
-  overflow-x: auto;
-}
-
-#workspace-toolbar > * { flex-shrink: 0; }
-#workspace-toolbar button,
-#plate-month-label { white-space: nowrap; }
 
 .theme-toggle {
   display: inline-flex;

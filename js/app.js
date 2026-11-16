@@ -668,12 +668,19 @@
     const appContainer = document.getElementById('app-container');
     appContainer.classList.toggle('cad-mode', isCadMode);
     document.getElementById('cad-mode-root').setAttribute('aria-hidden', String(!isCadMode));
+    window.dispatchEvent(new Event('cronoscroll:modechange'));
 
     document.querySelectorAll('[data-app-mode]').forEach(button => {
       const selected = button.getAttribute('data-app-mode') === mode;
       button.classList.toggle('active', selected);
       button.setAttribute('aria-pressed', String(selected));
     });
+
+    const fitButton = document.getElementById('btn-zoom-fit-banner');
+    fitButton.classList.toggle('header-control-hidden', !isCadMode && state.viewMode !== 'banner');
+    fitButton.title = isCadMode ? 'CAD-Ansicht einpassen' : 'Rolle einpassen';
+    fitButton.setAttribute('aria-label', isCadMode ? 'CAD-Ansicht einpassen' : 'Rolle einpassen');
+    document.getElementById('header-calendar-nav').setAttribute('aria-hidden', String(isCadMode));
 
     if (!isCadMode) renderPreview();
   }
@@ -1133,20 +1140,26 @@
 
     btnModePlate.addEventListener('click', () => {
       state.viewMode = 'plate';
-      btnModePlate.className = 'px-3 py-1 rounded text-xs font-bold bg-amber-500 text-slate-950 shadow transition flex items-center space-x-1.5 cursor-pointer';
-      btnModeBanner.className = 'px-3 py-1 rounded text-xs font-medium text-slate-400 hover:text-slate-200 transition flex items-center space-x-1.5 cursor-pointer';
-      plateNav.classList.remove('hidden');
-      btnFitBanner.classList.add('hidden');
+      btnModePlate.classList.add('active');
+      btnModeBanner.classList.remove('active');
+      btnModePlate.setAttribute('aria-pressed', 'true');
+      btnModeBanner.setAttribute('aria-pressed', 'false');
+      plateNav.classList.remove('header-control-hidden');
+      btnFitBanner.classList.add('header-control-hidden');
+      btnFitBanner.title = 'Rolle einpassen';
       state.zoom = 1.0;
       renderPreview();
     });
 
     btnModeBanner.addEventListener('click', () => {
       state.viewMode = 'banner';
-      btnModeBanner.className = 'px-3 py-1 rounded text-xs font-bold bg-amber-500 text-slate-950 shadow transition flex items-center space-x-1.5 cursor-pointer';
-      btnModePlate.className = 'px-3 py-1 rounded text-xs font-medium text-slate-400 hover:text-slate-200 transition flex items-center space-x-1.5 cursor-pointer';
-      plateNav.classList.add('hidden');
-      btnFitBanner.classList.remove('hidden');
+      btnModeBanner.classList.add('active');
+      btnModePlate.classList.remove('active');
+      btnModeBanner.setAttribute('aria-pressed', 'true');
+      btnModePlate.setAttribute('aria-pressed', 'false');
+      plateNav.classList.add('header-control-hidden');
+      btnFitBanner.classList.remove('header-control-hidden');
+      btnFitBanner.title = 'Rolle einpassen';
       renderPreview();
       container.scrollLeft = 0;
     });
@@ -1163,24 +1176,30 @@
 
     window.addEventListener('keydown', (e) => {
       if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
+      if (document.getElementById('app-container').classList.contains('cad-mode')) return;
       if (e.key === 'ArrowLeft') stepMonth(-1);
       if (e.key === 'ArrowRight') stepMonth(1);
     });
 
     // 14. Zoom & Pan
     document.getElementById('btn-zoom-in').addEventListener('click', () => {
+      if (document.getElementById('app-container').classList.contains('cad-mode')) return;
       state.zoom = Math.min(3.5, state.zoom + 0.2);
       renderPreview();
     });
     document.getElementById('btn-zoom-out').addEventListener('click', () => {
+      if (document.getElementById('app-container').classList.contains('cad-mode')) return;
       state.zoom = Math.max(0.15, state.zoom - 0.2);
       renderPreview();
     });
     document.getElementById('btn-zoom-reset').addEventListener('click', () => {
+      if (document.getElementById('app-container').classList.contains('cad-mode')) return;
       state.zoom = 1.0;
       renderPreview();
     });
     btnFitBanner.addEventListener('click', () => {
+      if (document.getElementById('app-container').classList.contains('cad-mode')) return;
+      if (state.viewMode !== 'banner') return;
       const geo = window.CronoGeometry.calculate(state);
       const avail = container.clientWidth - 80;
       state.zoom = Math.max(0.12, Math.min(1.0, avail / (geo.lTotal * 20)));
