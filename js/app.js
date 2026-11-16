@@ -82,6 +82,58 @@
   const canvas = document.getElementById('preview-canvas');
   const container = document.getElementById('canvas-container');
   let coverageAdviceStateKey = null;
+  const cadDimensionListeners = new Set();
+  let lastCadSnapshot = '';
+
+  function getCadSnapshot() {
+    const geo = window.CronoGeometry.calculate(state);
+    const months = window.CronoHolidays
+      .get14MonthsData(state.year, [], state)
+      .slice(state.currentMonthIndex, state.currentMonthIndex + 3)
+      .map(month => ({
+        year: month.year,
+        monthName: month.monthName,
+        days: month.days.map(day => ({
+          dayNum: day.dayNum,
+          dayName: day.dayName,
+          isValid: day.isValid
+        }))
+      }));
+
+    return {
+      dimensions: {
+        windowWidth: geo.bVisible * 10,
+        windowHeight: geo.hVisible * 10,
+        paperLength: geo.lTotal * 10
+      },
+      calendarPreview: {
+        monthLayout: state.monthLayout,
+        months
+      }
+    };
+  }
+
+  function publishCadSnapshot() {
+    const snapshot = getCadSnapshot();
+    const serialized = JSON.stringify(snapshot);
+    if (serialized === lastCadSnapshot) return;
+    lastCadSnapshot = serialized;
+    cadDimensionListeners.forEach(listener => listener(JSON.parse(serialized)));
+  }
+
+  window.CronoScrollCADBridge = Object.freeze({
+    getSnapshot() {
+      return getCadSnapshot();
+    },
+    subscribe(listener) {
+      if (typeof listener !== 'function') {
+        throw new TypeError('CAD-Bridge-Abonnenten müssen Funktionen sein.');
+      }
+      cadDimensionListeners.add(listener);
+      listener(getCadSnapshot());
+      return () => cadDimensionListeners.delete(listener);
+    }
+  });
 
   function getCoverageAdviceStateKey() {
     const adviceState = {
@@ -268,6 +320,7 @@
   function renderPreview() {
     updateNextYearLink();
     window.CronoCanvas.render(canvas, container, state);
+    publishCadSnapshot();
     updateCoverageStatus();
     invalidateStaleCoverageAdvice();
   }
@@ -610,8 +663,26 @@
     });
   }
 
+  function setAppMode(mode) {
+    const isCadMode = mode === 'cad';
+    const appContainer = document.getElementById('app-container');
+    appContainer.classList.toggle('cad-mode', isCadMode);
+    document.getElementById('cad-mode-root').setAttribute('aria-hidden', String(!isCadMode));
+
+    document.querySelectorAll('[data-app-mode]').forEach(button => {
+      const selected = button.getAttribute('data-app-mode') === mode;
+      button.classList.toggle('active', selected);
+      button.setAttribute('aria-pressed', String(selected));
+    });
+
+    if (!isCadMode) renderPreview();
+  }
+
   // --- EVENTS BINDEN ---
   function bindEvents() {
+    document.getElementById('btn-mode-calendar').addEventListener('click', () => setAppMode('calendar'));
+    document.getElementById('btn-mode-cad').addEventListener('click', () => setAppMode('cad'));
+
     // 1. Maße & Geometrie
     const bindNum = (id, prop) => {
       const el = document.getElementById(id);

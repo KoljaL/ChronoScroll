@@ -108,6 +108,7 @@ test('separator settings and next-year links update and restore before holidays 
       location: { search: '' },
       addEventListener(type, fn) { if (type === 'DOMContentLoaded') start = fn; },
       CronoHolidays: {
+        get14MonthsData: () => [],
         getDACHHolidays: (...args) => {
           holidayCalls.push(args);
           const year = args[0];
@@ -117,6 +118,7 @@ test('separator settings and next-year links update and restore before holidays 
           { id: `vacation-${year}`, title: 'Ferien', start: `${year}-07-01`, end: `${year}-07-07`, color: '#000000', type: 'vacation' }
         ]
       },
+      CronoGeometry: { calculate: () => ({ bVisible: 42, hVisible: 32, lTotal: 226 }) },
       CronoCanvas: { render(canvas, container, state) { latestState = structuredClone(state); } },
       CronoFonts: { hasCustomFont: () => false, loadStandardFonts: () => new Promise(() => {}) }
     }
@@ -126,6 +128,9 @@ test('separator settings and next-year links update and restore before holidays 
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/shareConfig.js'), 'utf8'), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/app.js'), 'utf8'), context);
   start();
+  assert.equal(context.window.CronoScrollCADBridge.getSnapshot().dimensions.windowWidth, 420);
+  assert.equal(context.window.CronoScrollCADBridge.getSnapshot().dimensions.windowHeight, 320);
+  assert.equal(context.window.CronoScrollCADBridge.getSnapshot().dimensions.paperLength, 2260);
   assert.equal(latestState.themeKey, 'sage');
   assert.equal(latestState.paperColor, '#fcfdfa');
   assert.equal(latestState.holidays.find(event => event.type === 'public').color, '#fef08a');
