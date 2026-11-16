@@ -96,36 +96,28 @@
 
           <div class="header-export-slot">
             <div id="calendar-export-group" class="header-export-group calendar-export-group">
-              <button type="button" id="btn-export-pdf" aria-label="Plotter-PDF exportieren" title="Plotter-PDF exportieren" class="header-export-primary">
+              <button type="button" id="btn-export-pdf" aria-label="PDF exportieren" title="PDF exportieren" class="header-export-primary">
                 <i class="fa-solid fa-file-pdf" aria-hidden="true"></i>
-                <span>Plotter-PDF</span>
+                <span>PDF</span>
               </button>
               <div class="export-dropdown">
                 <button type="button" id="calendar-export-menu-toggle" class="header-tool-button export-dropdown-toggle" aria-label="Weitere Kalender-Exportformate" title="Weitere Kalender-Exportformate" aria-haspopup="menu" aria-expanded="false" aria-controls="calendar-export-menu">
                   <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
                 </button>
                 <div id="calendar-export-menu" class="export-dropdown-menu" role="menu" aria-label="Kalender exportieren" hidden>
-                  <button type="button" id="btn-export-svg" class="export-dropdown-item" role="menuitem">
-                    <i class="fa-solid fa-vector-square text-sky-400" aria-hidden="true"></i> SVG
-                  </button>
-                  <button type="button" id="btn-export-png" class="export-dropdown-item" role="menuitem">
-                    <i class="fa-regular fa-image text-emerald-400" aria-hidden="true"></i> 300-DPI-PNG
-                  </button>
+                  <button type="button" id="btn-export-svg" class="export-dropdown-item" role="menuitem"><i class="fa-solid fa-vector-square text-sky-400" aria-hidden="true"></i> SVG</button>
+                  <button type="button" id="btn-export-png" class="export-dropdown-item" role="menuitem"><i class="fa-regular fa-image text-emerald-400" aria-hidden="true"></i> 300-DPI-PNG</button>
                 </div>
               </div>
             </div>
             <div id="cad-export-group" class="header-export-group">
-              <button type="button" id="cad-btn-export-pdf" class="header-export-primary" aria-label="CAD-Zeichnung als PDF exportieren" title="CAD-Zeichnung als PDF exportieren">
-                <i class="fa-solid fa-file-pdf" aria-hidden="true"></i> <span>PDF</span>
-              </button>
+              <button type="button" id="cad-btn-export-pdf" class="header-export-primary" aria-label="CAD-Zeichnung als PDF exportieren" title="CAD-Zeichnung als PDF exportieren"><i class="fa-solid fa-file-pdf" aria-hidden="true"></i> <span>PDF</span></button>
               <div class="export-dropdown">
                 <button type="button" id="cad-export-menu-toggle" class="header-tool-button export-dropdown-toggle" aria-label="Weitere CAD-Exportformate" title="Weitere CAD-Exportformate" aria-haspopup="menu" aria-expanded="false" aria-controls="cad-export-menu">
                   <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
                 </button>
                 <div id="cad-export-menu" class="export-dropdown-menu" role="menu" aria-label="CAD exportieren" hidden>
-                  <button type="button" id="cad-btn-export-svg" class="export-dropdown-item" role="menuitem">
-                    <i class="fa-solid fa-vector-square text-sky-400" aria-hidden="true"></i> SVG
-                  </button>
+                  <button type="button" id="cad-btn-export-svg" class="export-dropdown-item" role="menuitem"><i class="fa-solid fa-vector-square text-sky-400" aria-hidden="true"></i> SVG</button>
                 </div>
               </div>
             </div>
@@ -430,7 +422,7 @@
               <div>
                 <label for="input-font-file" class="text-xs text-slate-300 block mb-1">Eigene Schriftdatei (.ttf)</label>
                 <input id="input-font-file" type="file" accept=".ttf,font/ttf,application/x-font-ttf" class="w-full text-xs text-slate-300 file:mr-2 file:rounded file:border-0 file:bg-slate-800 file:px-2 file:py-1 file:text-slate-200 hover:file:bg-slate-700" />
-                <p id="font-file-status" class="mt-1 text-[10px] text-slate-500" role="status" aria-live="polite">Die Schrift wird nur lokal verarbeitet und in die Plotter-PDF eingebettet. Eine TTF-Datei wird für alle Schriftschnitte verwendet.</p>
+                <p id="font-file-status" class="mt-1 text-[10px] text-slate-500" role="status" aria-live="polite">Die Schrift wird nur lokal verarbeitet und in die PDF eingebettet. Eine TTF-Datei wird für alle Schriftschnitte verwendet.</p>
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
@@ -796,7 +788,7 @@
         </div>
         <div class="status-brand">
           <span class="build-label">Build: </span>
-          <span id="build-date"><!-- BUILD_DATE -->16.11.2026 18:58<!-- /BUILD_DATE --></span>
+          <span id="build-date"><!-- BUILD_DATE -->16.11.2026 19:06<!-- /BUILD_DATE --></span>
           <a class="status-logo-link" href="https://github.com/KoljaL/ChronoScroll" target="_blank" rel="noopener noreferrer" aria-label="ChronoScroll auf GitHub (öffnet einen neuen Tab)">
             <span class="sr-only">Code: </span>
             <img src="./img/logo.svg" alt="" width="18" height="18" />

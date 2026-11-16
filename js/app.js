@@ -3,13 +3,13 @@
  * Bindet UI, Canvas, Pan/Zoom, Vorlagen, Modals, DACH-Feiertage und Exporte zusammen.
  */
 
-(function() {
+(function () {
   'use strict';
 
   function defaultMonthSeparators() {
     return {
       single: { enabled: false, widthMm: 0.5, colorMode: 'custom', color: '#cbd5e1', header: false },
-      double: { enabled: false, widthMm: 0.5, colorMode: 'custom', color: '#cbd5e1', header: false }
+      double: { enabled: false, widthMm: 0.5, colorMode: 'custom', color: '#cbd5e1', header: false },
     };
   }
 
@@ -20,10 +20,10 @@
   // Zentraler App State
   const state = {
     year: 2027,
-    hVisible: 32.0,       // cm
-    bVisible: 42.0,       // cm
-    pufferLeft: 15.0,     // cm
-    pufferRight: 15.0,    // cm
+    hVisible: 32.0, // cm
+    bVisible: 42.0, // cm
+    pufferLeft: 15.0, // cm
+    pufferRight: 15.0, // cm
     pufferLeftContent: 'blank', // 'blank', 'title', 'year_overview', 'notes'
     pufferRightContent: 'blank', // 'blank', 'notes'
     bannerCustomTitle: 'CRONOSCROLL 2027',
@@ -32,8 +32,8 @@
     designStyle: 'classic',
     themeKey: null,
     monthSeparators: defaultMonthSeparators(),
-    subColumns: 1,        // 1 bis 4 Personen-Spalten pro Tag
-    guideLinesCount: 0,   // 0, 1, 2, 3 Schreiblinien
+    subColumns: 1, // 1 bis 4 Personen-Spalten pro Tag
+    guideLinesCount: 0, // 0, 1, 2, 3 Schreiblinien
     guideLinesStyle: 'dashed', // 'dashed', 'dotted', 'solid'
     showKW: true,
     showMoon: true,
@@ -44,8 +44,8 @@
     fontFamily: 'sans',
     fontHeaderScale: 1.0,
     fontDayScale: 1.0,
-    lineGrid: 0.2,        // mm
-    lineBorder: 0.6,      // mm
+    lineGrid: 0.2, // mm
+    lineBorder: 0.6, // mm
 
     paperColor: '#ffffff',
     colorHeaderBg: '#f1f5f9',
@@ -60,13 +60,13 @@
     colorWeekendText: '#e11d48',
     categoryColors: defaultCategoryColors(),
 
-    country: 'DE',        // 'DE', 'AT', 'CH'
+    country: 'DE', // 'DE', 'AT', 'CH'
     bundesland: 'NW',
     holidays: [],
     holidayFilter: 'all', // 'all', 'public', 'vacation', 'custom'
     holidaySearchQuery: '',
 
-    viewMode: 'plate',    // 'plate' oder 'banner'
+    viewMode: 'plate', // 'plate' oder 'banner'
     currentMonthIndex: 1, // 1 = Januar bis März des Zieljahres
     zoom: 1.0,
 
@@ -76,7 +76,7 @@
     panStartX: 0,
     panStartY: 0,
     scrollStartX: 0,
-    scrollStartY: 0
+    scrollStartY: 0,
   };
 
   const canvas = document.getElementById('preview-canvas');
@@ -87,29 +87,28 @@
 
   function getCadSnapshot() {
     const geo = window.CronoGeometry.calculate(state);
-    const months = window.CronoHolidays
-      .get14MonthsData(state.year, [], state)
+    const months = window.CronoHolidays.get14MonthsData(state.year, [], state)
       .slice(state.currentMonthIndex, state.currentMonthIndex + 3)
-      .map(month => ({
+      .map((month) => ({
         year: month.year,
         monthName: month.monthName,
-        days: month.days.map(day => ({
+        days: month.days.map((day) => ({
           dayNum: day.dayNum,
           dayName: day.dayName,
-          isValid: day.isValid
-        }))
+          isValid: day.isValid,
+        })),
       }));
 
     return {
       dimensions: {
         windowWidth: geo.bVisible * 10,
         windowHeight: geo.hVisible * 10,
-        paperLength: geo.lTotal * 10
+        paperLength: geo.lTotal * 10,
       },
       calendarPreview: {
         monthLayout: state.monthLayout,
-        months
-      }
+        months,
+      },
     };
   }
 
@@ -118,7 +117,7 @@
     const serialized = JSON.stringify(snapshot);
     if (serialized === lastCadSnapshot) return;
     lastCadSnapshot = serialized;
-    cadDimensionListeners.forEach(listener => listener(JSON.parse(serialized)));
+    cadDimensionListeners.forEach((listener) => listener(JSON.parse(serialized)));
   }
 
   window.CronoScrollCADBridge = Object.freeze({
@@ -132,7 +131,7 @@
       cadDimensionListeners.add(listener);
       listener(getCadSnapshot());
       return () => cadDimensionListeners.delete(listener);
-    }
+    },
   });
 
   function getCoverageAdviceStateKey() {
@@ -140,22 +139,21 @@
       ...state,
       viewMode: 'banner',
       currentMonthIndex: 0,
-      zoom: 0.25
+      zoom: 0.25,
     };
-    for (const key of ['isDraggingViewport', 'dragStartX', 'isPanning',
-      'panStartX', 'panStartY', 'scrollStartX', 'scrollStartY']) {
+    for (const key of ['isDraggingViewport', 'dragStartX', 'isPanning', 'panStartX', 'panStartY', 'scrollStartX', 'scrollStartY']) {
       delete adviceState[key];
     }
     return JSON.stringify({
       state: adviceState,
-      fontFamily: window.CronoFonts.getCanvasFamily(state.fontFamily)
+      fontFamily: window.CronoFonts.getCanvasFamily(state.fontFamily),
     });
   }
 
   function formatCoveragePercent(value, fractionDigits = 1) {
     return value.toLocaleString('de-DE', {
       minimumFractionDigits: fractionDigits,
-      maximumFractionDigits: fractionDigits
+      maximumFractionDigits: fractionDigits,
     });
   }
 
@@ -182,11 +180,13 @@
       return;
     }
 
-    const formatSignedPoints = value => {
-      const sign = value > 0 ? '+' : (value < 0 ? '−' : '');
+    const formatSignedPoints = (value) => {
+      const sign = value > 0 ? '+' : value < 0 ? '−' : '';
       return `${sign}${formatCoveragePercent(Math.abs(value), 2)}`;
     };
-    list.innerHTML = recommendations.map(recommendation => `
+    list.innerHTML = recommendations
+      .map(
+        (recommendation) => `
       <article class="rounded-lg border border-slate-800 bg-slate-950/70 p-2.5 space-y-1.5">
         <div class="flex items-start justify-between gap-2">
           <div class="min-w-0">
@@ -197,17 +197,16 @@
           <button type="button" data-coverage-action="${recommendation.id}" class="shrink-0 rounded bg-amber-500 px-2 py-1 text-[10px] font-semibold text-slate-950 hover:bg-amber-400 transition cursor-pointer">Anwenden</button>
         </div>
       </article>
-    `).join('');
+    `,
+      )
+      .join('');
   }
 
   function refreshCoverageAdvice() {
     const list = document.getElementById('coverage-recommendations');
     if (!list) return;
     try {
-      const recommendations = window.CronoCoverageAdvisor.analyze(
-        state,
-        window.CronoCanvas.calculateCoverage
-      );
+      const recommendations = window.CronoCoverageAdvisor.analyze(state, window.CronoCanvas.calculateCoverage);
       coverageAdviceStateKey = getCoverageAdviceStateKey();
       renderCoverageAdvice(recommendations);
     } catch (error) {
@@ -259,9 +258,9 @@
   function loadDefaultHolidays() {
     const pub = window.CronoHolidays.getDACHHolidays(state.year, state.country, state.bundesland);
     const vac = window.CronoHolidays.getSchoolVacations(state.year, state.country, state.bundesland);
-    state.holidays = [...pub, ...vac].map(event => ({
+    state.holidays = [...pub, ...vac].map((event) => ({
       ...event,
-      color: state.categoryColors[event.type] || event.color
+      color: state.categoryColors[event.type] || event.color,
     }));
   }
 
@@ -271,7 +270,7 @@
 
   function applyCategoryColor(category, color) {
     state.categoryColors[category] = color;
-    state.holidays.forEach(event => {
+    state.holidays.forEach((event) => {
       if (categoryForEvent(event) === category) event.color = color;
     });
     renderHolidaysList();
@@ -288,10 +287,10 @@
       bauhaus: 'Geometrische Akzente und klare Formen',
       gantt: 'Wochenraster für Projekt- und Zeitplanung',
       zen: 'Reduzierte Darstellung mit viel Weißraum',
-      kursbuch: 'Fortlaufende Tagesnummern wie im Fahrplan'
+      kursbuch: 'Fortlaufende Tagesnummern wie im Fahrplan',
     };
     container.innerHTML = '';
-    Array.from(select.options).forEach(option => {
+    Array.from(select.options).forEach((option) => {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'choice-card design-card';
@@ -310,7 +309,7 @@
   }
 
   function syncChoiceCards() {
-    document.querySelectorAll('.design-card').forEach(button => {
+    document.querySelectorAll('.design-card').forEach((button) => {
       const selected = button.getAttribute('data-design-style') === state.designStyle;
       button.classList.toggle('active', selected);
       button.setAttribute('aria-pressed', String(selected));
@@ -329,7 +328,7 @@
     const container = document.getElementById('theme-options');
     if (!container) return;
     container.innerHTML = '';
-    window.CronoThemes.keys.forEach(key => {
+    window.CronoThemes.keys.forEach((key) => {
       const theme = window.CronoThemes.themes[key];
       const button = document.createElement('button');
       button.type = 'button';
@@ -344,7 +343,7 @@
       description.textContent = theme.description;
       const swatches = document.createElement('span');
       swatches.className = 'theme-swatches';
-      [theme.paperColor, theme.colorHeaderBg, theme.colorSaturdayBg, theme.colorSundayBg].forEach(color => {
+      [theme.paperColor, theme.colorHeaderBg, theme.colorSaturdayBg, theme.colorSundayBg].forEach((color) => {
         const swatch = document.createElement('span');
         swatch.className = 'theme-swatch';
         swatch.style.backgroundColor = color;
@@ -378,8 +377,14 @@
   // --- UI INPUTS SYNCHRONISIEREN ---
   function syncInputsFromState() {
     // Maße
-    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
-    const setChecked = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
+    const setVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    };
+    const setChecked = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.checked = !!val;
+    };
 
     setVal('input-year', state.year);
     setVal('input-h-visible', state.hVisible);
@@ -412,7 +417,7 @@
     // Stil
     setVal('select-design-style', state.designStyle);
     syncChoiceCards();
-    document.querySelectorAll('.theme-pill').forEach(pill => {
+    document.querySelectorAll('.theme-pill').forEach((pill) => {
       const selected = pill.getAttribute('data-theme') === state.themeKey;
       pill.classList.toggle('active', selected);
       pill.setAttribute('aria-pressed', String(selected));
@@ -455,26 +460,48 @@
 
     if (state.country === 'DE') {
       const deRegions = [
-        ['NW', 'Nordrhein-Westfalen (NW)'], ['BW', 'Baden-Württemberg (BW)'], ['BY', 'Bayern (BY)'],
-        ['BE', 'Berlin (BE)'], ['BB', 'Brandenburg (BB)'], ['HB', 'Bremen (HB)'],
-        ['HH', 'Hamburg (HH)'], ['HE', 'Hessen (HE)'], ['MV', 'Mecklenburg-Vorpommern (MV)'],
-        ['NI', 'Niedersachsen (NI)'], ['RP', 'Rheinland-Pfalz (RP)'], ['SL', 'Saarland (SL)'],
-        ['SN', 'Sachsen (SN)'], ['ST', 'Sachsen-Anhalt (ST)'], ['SH', 'Schleswig-Holstein (SH)'],
-        ['TH', 'Thüringen (TH)']
+        ['NW', 'Nordrhein-Westfalen (NW)'],
+        ['BW', 'Baden-Württemberg (BW)'],
+        ['BY', 'Bayern (BY)'],
+        ['BE', 'Berlin (BE)'],
+        ['BB', 'Brandenburg (BB)'],
+        ['HB', 'Bremen (HB)'],
+        ['HH', 'Hamburg (HH)'],
+        ['HE', 'Hessen (HE)'],
+        ['MV', 'Mecklenburg-Vorpommern (MV)'],
+        ['NI', 'Niedersachsen (NI)'],
+        ['RP', 'Rheinland-Pfalz (RP)'],
+        ['SL', 'Saarland (SL)'],
+        ['SN', 'Sachsen (SN)'],
+        ['ST', 'Sachsen-Anhalt (ST)'],
+        ['SH', 'Schleswig-Holstein (SH)'],
+        ['TH', 'Thüringen (TH)'],
       ];
       deRegions.forEach(([k, n]) => sel.add(new Option(n, k)));
     } else if (state.country === 'AT') {
       const atRegions = [
-        ['W', 'Wien (W)'], ['B', 'Burgenland (B)'], ['K', 'Kärnten (K)'],
-        ['NOE', 'Niederösterreich (NÖ)'], ['OOE', 'Oberösterreich (OÖ)'], ['S', 'Salzburg (S)'],
-        ['ST', 'Steiermark (ST)'], ['T', 'Tirol (T)'], ['V', 'Vorarlberg (V)']
+        ['W', 'Wien (W)'],
+        ['B', 'Burgenland (B)'],
+        ['K', 'Kärnten (K)'],
+        ['NOE', 'Niederösterreich (NÖ)'],
+        ['OOE', 'Oberösterreich (OÖ)'],
+        ['S', 'Salzburg (S)'],
+        ['ST', 'Steiermark (ST)'],
+        ['T', 'Tirol (T)'],
+        ['V', 'Vorarlberg (V)'],
       ];
       atRegions.forEach(([k, n]) => sel.add(new Option(n, k)));
     } else if (state.country === 'CH') {
       const chRegions = [
-        ['ZH', 'Zürich (ZH)'], ['BE', 'Bern (BE)'], ['LU', 'Luzern (LU)'],
-        ['BS', 'Basel-Stadt (BS)'], ['BL', 'Basel-Landschaft (BL)'], ['SG', 'St. Gallen (SG)'],
-        ['GR', 'Graubünden (GR)'], ['AG', 'Aargau (AG)'], ['GE', 'Genf (GE)']
+        ['ZH', 'Zürich (ZH)'],
+        ['BE', 'Bern (BE)'],
+        ['LU', 'Luzern (LU)'],
+        ['BS', 'Basel-Stadt (BS)'],
+        ['BL', 'Basel-Landschaft (BL)'],
+        ['SG', 'St. Gallen (SG)'],
+        ['GR', 'Graubünden (GR)'],
+        ['AG', 'Aargau (AG)'],
+        ['GE', 'Genf (GE)'],
       ];
       chRegions.forEach(([k, n]) => sel.add(new Option(n, k)));
     }
@@ -487,7 +514,7 @@
     listEl.innerHTML = '';
 
     const q = state.holidaySearchQuery.toLowerCase();
-    const filtered = state.holidays.filter(h => {
+    const filtered = state.holidays.filter((h) => {
       if (state.holidayFilter === 'public' && h.type !== 'public') return false;
       if (state.holidayFilter === 'vacation' && h.type !== 'vacation') return false;
       if (state.holidayFilter === 'custom' && (h.type === 'public' || h.type === 'vacation')) return false;
@@ -500,7 +527,7 @@
       return;
     }
 
-    filtered.forEach(h => {
+    filtered.forEach((h) => {
       const item = document.createElement('div');
       item.className = 'bg-slate-950 border border-slate-800 rounded-lg p-2.5 space-y-2 text-xs transition hover:border-slate-700';
       item.innerHTML = `
@@ -526,17 +553,17 @@
         <div class="flex items-center space-x-2 pt-0.5">
           <input type="color" value="${h.color}" data-id="${h.id}" data-field="color" aria-label="Farbe dieses Termins" class="holiday-input w-5 h-5 rounded cursor-pointer bg-transparent">
           <span class="text-[10px] text-slate-400">Farbe im Kalender</span>
-          <span class="text-[9px] px-1.5 py-0.5 rounded ml-auto font-mono ${h.type === 'public' ? 'bg-amber-500/20 text-amber-400' : (h.type === 'vacation' ? 'bg-sky-500/20 text-sky-400' : 'bg-slate-800 text-slate-300')}">${h.type === 'public' ? 'Feiertag' : (h.type === 'vacation' ? 'Ferien' : 'Eigener Termin')}</span>
+          <span class="text-[9px] px-1.5 py-0.5 rounded ml-auto font-mono ${h.type === 'public' ? 'bg-amber-500/20 text-amber-400' : h.type === 'vacation' ? 'bg-sky-500/20 text-sky-400' : 'bg-slate-800 text-slate-300'}">${h.type === 'public' ? 'Feiertag' : h.type === 'vacation' ? 'Ferien' : 'Eigener Termin'}</span>
         </div>
       `;
       listEl.appendChild(item);
     });
 
-    listEl.querySelectorAll('.holiday-input').forEach(input => {
+    listEl.querySelectorAll('.holiday-input').forEach((input) => {
       input.addEventListener('input', (e) => {
         const id = e.target.getAttribute('data-id');
         const field = e.target.getAttribute('data-field');
-        const item = state.holidays.find(x => x.id === id);
+        const item = state.holidays.find((x) => x.id === id);
         if (item) {
           item[field] = e.target.value;
           renderPreview();
@@ -544,10 +571,10 @@
       });
     });
 
-    listEl.querySelectorAll('.btn-delete-holiday').forEach(btn => {
+    listEl.querySelectorAll('.btn-delete-holiday').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const id = e.currentTarget.getAttribute('data-id');
-        state.holidays = state.holidays.filter(x => x.id !== id);
+        state.holidays = state.holidays.filter((x) => x.id !== id);
         renderHolidaysList();
         renderPreview();
       });
@@ -580,7 +607,7 @@
     document.getElementById('cutlist-rail-len').textContent = `${geo.woodRailLengthCm.toFixed(1)} cm`;
     document.getElementById('cutlist-dowel-len').textContent = `${geo.roundDowelLengthCm.toFixed(1)} cm`;
     document.getElementById('cutlist-plate-size').textContent = `${geo.backingBoardCm.width.toFixed(1)} cm × ${geo.backingBoardCm.height.toFixed(1)} cm`;
-    document.getElementById('cutlist-paper-roll').textContent = `Breite ${geo.hVisible.toFixed(1)} cm × Gesamtlänge ${(geo.lTotal/100).toFixed(2)} m`;
+    document.getElementById('cutlist-paper-roll').textContent = `Breite ${geo.hVisible.toFixed(1)} cm × Gesamtlänge ${(geo.lTotal / 100).toFixed(2)} m`;
     document.getElementById('cutlist-day-height').textContent = `${(geo.hDay * 10).toFixed(1)} mm`;
 
     modal.classList.remove('hidden');
@@ -609,7 +636,7 @@
       container.innerHTML = '<p class="text-xs text-slate-500 italic p-2">Noch keine Vorlagen gespeichert.</p>';
       return;
     }
-    keys.forEach(name => {
+    keys.forEach((name) => {
       const item = document.createElement('div');
       item.className = 'bg-slate-950 border border-slate-800 rounded-lg p-2.5 flex items-center justify-between text-xs';
       item.innerHTML = `
@@ -622,29 +649,31 @@
       container.appendChild(item);
     });
 
-    container.querySelectorAll('.btn-load-preset').forEach(btn => {
+    container.querySelectorAll('.btn-load-preset').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const name = e.currentTarget.getAttribute('data-name');
         const data = presets[name];
         if (data) {
-          const preset = data.fontFamily === 'custom' && !window.CronoFonts.hasCustomFont()
-            ? { ...data, fontFamily: 'sans' }
-            : data;
+          const preset = data.fontFamily === 'custom' && !window.CronoFonts.hasCustomFont() ? { ...data, fontFamily: 'sans' } : data;
           if (preset !== data) {
             setFontStatus('Diese Vorlage verwendet eine eigene Schrift. Bitte lade die TTF-Datei erneut hoch.', true);
           }
-          Object.assign(state, {
-            designStyle: 'classic',
-            themeKey: null,
-            categoryColors: defaultCategoryColors()
-          }, preset);
+          Object.assign(
+            state,
+            {
+              designStyle: 'classic',
+              themeKey: null,
+              categoryColors: defaultCategoryColors(),
+            },
+            preset,
+          );
           state.categoryColors = { ...defaultCategoryColors(), ...preset.categoryColors };
           localStorage.setItem('cronoscroll_design_style', state.designStyle);
           localStorage.setItem('cronoscroll_theme', state.themeKey || '');
           const defaults = defaultMonthSeparators();
           state.monthSeparators = {
             single: { ...defaults.single, ...(preset.monthSeparators && preset.monthSeparators.single) },
-            double: { ...defaults.double, ...(preset.monthSeparators && preset.monthSeparators.double) }
+            double: { ...defaults.double, ...(preset.monthSeparators && preset.monthSeparators.double) },
           };
           syncInputsFromState();
           renderHolidaysList();
@@ -653,7 +682,7 @@
       });
     });
 
-    container.querySelectorAll('.btn-delete-preset').forEach(btn => {
+    container.querySelectorAll('.btn-delete-preset').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const name = e.currentTarget.getAttribute('data-name');
         delete presets[name];
@@ -670,7 +699,7 @@
     document.getElementById('cad-mode-root').setAttribute('aria-hidden', String(!isCadMode));
     window.dispatchEvent(new Event('cronoscroll:modechange'));
 
-    document.querySelectorAll('[data-app-mode]').forEach(button => {
+    document.querySelectorAll('[data-app-mode]').forEach((button) => {
       const selected = button.getAttribute('data-app-mode') === mode;
       button.classList.toggle('active', selected);
       button.setAttribute('aria-pressed', String(selected));
@@ -702,7 +731,7 @@
       if (menu.hidden) open();
       else close();
     });
-    toggle.addEventListener('keydown', event => {
+    toggle.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && !menu.hidden) {
         event.preventDefault();
         close(true);
@@ -711,7 +740,7 @@
         open(event.key === 'ArrowUp' ? items.length - 1 : 0);
       }
     });
-    menu.addEventListener('keydown', event => {
+    menu.addEventListener('keydown', (event) => {
       const currentIndex = items.indexOf(document.activeElement);
       let nextIndex = currentIndex;
       if (event.key === 'Escape') {
@@ -731,7 +760,7 @@
       event.preventDefault();
       items[nextIndex].focus();
     });
-    menu.addEventListener('click', event => {
+    menu.addEventListener('click', (event) => {
       if (event.target.closest('[role="menuitem"]')) close(true);
     });
     container.addEventListener('focusout', () => {
@@ -739,7 +768,7 @@
         if (!container.contains(document.activeElement)) close();
       });
     });
-    document.addEventListener('pointerdown', event => {
+    document.addEventListener('pointerdown', (event) => {
       if (!container.contains(event.target)) close();
     });
   }
@@ -748,19 +777,16 @@
   function bindEvents() {
     document.getElementById('btn-mode-calendar').addEventListener('click', () => setAppMode('calendar'));
     document.getElementById('btn-mode-cad').addEventListener('click', () => setAppMode('cad'));
-    bindExportMenu(
-      document.getElementById('calendar-export-group'),
-      document.getElementById('calendar-export-menu-toggle'),
-      document.getElementById('calendar-export-menu')
-    );
+    bindExportMenu(document.getElementById('calendar-export-group'), document.getElementById('calendar-export-menu-toggle'), document.getElementById('calendar-export-menu'));
 
     // 1. Maße & Geometrie
     const bindNum = (id, prop) => {
       const el = document.getElementById(id);
-      if (el) el.addEventListener('input', (e) => {
-        state[prop] = parseFloat(e.target.value) || 0;
-        renderPreview();
-      });
+      if (el)
+        el.addEventListener('input', (e) => {
+          state[prop] = parseFloat(e.target.value) || 0;
+          renderPreview();
+        });
     };
     bindNum('input-h-visible', 'hVisible');
     bindNum('input-b-visible', 'bVisible');
@@ -868,7 +894,7 @@
       syncChoiceCards();
       renderPreview();
     });
-    document.querySelectorAll('.design-card').forEach(button => {
+    document.querySelectorAll('.design-card').forEach((button) => {
       button.addEventListener('click', () => {
         state.designStyle = button.getAttribute('data-design-style');
         document.getElementById('select-design-style').value = state.designStyle;
@@ -894,23 +920,19 @@
 
       state.fontFamily = 'custom';
       syncInputsFromState();
-      const message = `„${file.name}“ ist geladen und wird in die Plotter-PDF eingebettet.`;
-      setFontStatus(
-        result.hasOversizedKernTable
-          ? `${message} Die Kerning-Tabelle ist zu groß und wird möglicherweise vom Browser verworfen.`
-          : message,
-        false, !result.hasOversizedKernTable, result.hasOversizedKernTable
-      );
+      const message = `„${file.name}“ ist geladen und wird in die PDF eingebettet.`;
+      setFontStatus(result.hasOversizedKernTable ? `${message} Die Kerning-Tabelle ist zu groß und wird möglicherweise vom Browser verworfen.` : message, false, !result.hasOversizedKernTable, result.hasOversizedKernTable);
       renderPreview();
     });
 
     // 2. Farben
     const bindColor = (id, prop) => {
       const el = document.getElementById(id);
-      if (el) el.addEventListener('input', (e) => {
-        state[prop] = e.target.value;
-        renderPreview();
-      });
+      if (el)
+        el.addEventListener('input', (e) => {
+          state[prop] = e.target.value;
+          renderPreview();
+        });
     };
     bindColor('color-paper', 'paperColor');
     bindColor('color-grid', 'colorGrid');
@@ -922,15 +944,15 @@
     [
       ['color-category-public', 'public'],
       ['color-category-vacation', 'vacation'],
-      ['color-category-custom', 'custom']
+      ['color-category-custom', 'custom'],
     ].forEach(([id, category]) => {
-      document.getElementById(id).addEventListener('input', event => {
+      document.getElementById(id).addEventListener('input', (event) => {
         applyCategoryColor(category, event.target.value);
       });
     });
 
     // 3. 1-Klick Theme Buttons
-    document.querySelectorAll('.theme-pill').forEach(pill => {
+    document.querySelectorAll('.theme-pill').forEach((pill) => {
       pill.addEventListener('click', () => {
         const key = pill.getAttribute('data-theme');
         if (window.CronoThemes.apply(state, key)) {
@@ -965,10 +987,10 @@
     });
 
     // 5. Terminfilter & Suche
-    document.querySelectorAll('.btn-filter-holiday').forEach(btn => {
+    document.querySelectorAll('.btn-filter-holiday').forEach((btn) => {
       btn.addEventListener('click', () => {
         state.holidayFilter = btn.getAttribute('data-filter');
-        document.querySelectorAll('.btn-filter-holiday').forEach(b => {
+        document.querySelectorAll('.btn-filter-holiday').forEach((b) => {
           b.setAttribute('aria-pressed', String(b === btn));
           b.classList.remove('bg-amber-500', 'text-slate-950', 'font-bold');
           b.classList.add('bg-slate-800', 'text-slate-300');
@@ -997,10 +1019,13 @@
       reader.onload = (re) => {
         const events = window.CronoICS.parseICS(re.target.result);
         if (events.length > 0) {
-          state.holidays = [...state.holidays, ...events.map(event => ({
-            ...event,
-            color: state.categoryColors.custom
-          }))];
+          state.holidays = [
+            ...state.holidays,
+            ...events.map((event) => ({
+              ...event,
+              color: state.categoryColors.custom,
+            })),
+          ];
           renderHolidaysList();
           renderPreview();
           alert(`${events.length} Termine erfolgreich aus iCal importiert!`);
@@ -1033,7 +1058,7 @@
         start,
         end,
         color,
-        type: 'custom'
+        type: 'custom',
       });
       closeEventModal();
       renderHolidaysList();
@@ -1077,12 +1102,7 @@
     document.getElementById('btn-close-cutlist').addEventListener('click', closeCutListModal);
     document.getElementById('btn-copy-cutlist').addEventListener('click', () => {
       const geo = window.CronoGeometry.calculate(state);
-      const text = `CRONOSCROLL — HOLZ- & ZUSCHNITTLISTE (${state.year})\n\n` +
-        `1. Obere & untere Holz-Tragleiste: 2x Länge ${geo.woodRailLengthCm.toFixed(1)} cm (z.B. 25x45 mm Eiche/Buche)\n` +
-        `2. Rundstäbe (Walzen): 2x Länge ${geo.roundDowelLengthCm.toFixed(1)} cm (Durchmesser 22-25 mm)\n` +
-        `3. Schreibplatte (Rückwand): 1x ${geo.backingBoardCm.width.toFixed(1)} cm × ${geo.backingBoardCm.height.toFixed(1)} cm (5 mm Multiplex/MDF)\n` +
-        `4. Papierbahn: Breite ${geo.hVisible.toFixed(1)} cm × Gesamtlänge ${(geo.lTotal/100).toFixed(2)} m (90-120 g/m² CAD-Papier)\n` +
-        `5. Tageszeilenhöhe: ${(geo.hDay * 10).toFixed(1)} mm\n`;
+      const text = `CRONOSCROLL — HOLZ- & ZUSCHNITTLISTE (${state.year})\n\n` + `1. Obere & untere Holz-Tragleiste: 2x Länge ${geo.woodRailLengthCm.toFixed(1)} cm (z.B. 25x45 mm Eiche/Buche)\n` + `2. Rundstäbe (Walzen): 2x Länge ${geo.roundDowelLengthCm.toFixed(1)} cm (Durchmesser 22-25 mm)\n` + `3. Schreibplatte (Rückwand): 1x ${geo.backingBoardCm.width.toFixed(1)} cm × ${geo.backingBoardCm.height.toFixed(1)} cm (5 mm Multiplex/MDF)\n` + `4. Papierbahn: Breite ${geo.hVisible.toFixed(1)} cm × Gesamtlänge ${(geo.lTotal / 100).toFixed(2)} m (90-120 g/m² CAD-Papier)\n` + `5. Tageszeilenhöhe: ${(geo.hDay * 10).toFixed(1)} mm\n`;
       navigator.clipboard.writeText(text).then(() => alert('Zuschnittliste in die Zwischenablage kopiert!'));
     });
 
@@ -1103,29 +1123,26 @@
 
     // 12. Reiter-Umschaltung
     const activateTab = (btn, focus = false) => {
-        const tabId = btn.getAttribute('data-tab');
-        document.querySelectorAll('.tab-btn').forEach(b => {
-          const selected = b === btn;
-          b.classList.remove('text-amber-400', 'border-b-2', 'border-amber-400', 'font-semibold');
-          b.classList.add('text-slate-400');
-          b.setAttribute('aria-selected', String(selected));
-          b.tabIndex = selected ? 0 : -1;
-        });
-        btn.classList.add('text-amber-400', 'border-b-2', 'border-amber-400', 'font-semibold');
-        btn.classList.remove('text-slate-400');
+      const tabId = btn.getAttribute('data-tab');
+      document.querySelectorAll('.tab-btn').forEach((b) => {
+        const selected = b === btn;
+        b.classList.remove('text-amber-400', 'border-b-2', 'border-amber-400', 'font-semibold');
+        b.classList.add('text-slate-400');
+        b.setAttribute('aria-selected', String(selected));
+        b.tabIndex = selected ? 0 : -1;
+      });
+      btn.classList.add('text-amber-400', 'border-b-2', 'border-amber-400', 'font-semibold');
+      btn.classList.remove('text-slate-400');
 
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-        document.getElementById(tabId).classList.remove('hidden');
-        if (focus && btn.focus) btn.focus();
+      document.querySelectorAll('.tab-content').forEach((c) => c.classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
+      if (focus && btn.focus) btn.focus();
     };
     document.querySelectorAll('.tab-btn').forEach((btn, index, buttons) => {
       btn.addEventListener('click', () => activateTab(btn));
-      btn.addEventListener('keydown', event => {
+      btn.addEventListener('keydown', (event) => {
         const lastIndex = buttons.length - 1;
-        const nextIndex = event.key === 'ArrowRight' ? (index + 1) % buttons.length
-          : event.key === 'ArrowLeft' ? (index + lastIndex) % buttons.length
-            : event.key === 'Home' ? 0
-              : event.key === 'End' ? lastIndex : -1;
+        const nextIndex = event.key === 'ArrowRight' ? (index + 1) % buttons.length : event.key === 'ArrowLeft' ? (index + lastIndex) % buttons.length : event.key === 'Home' ? 0 : event.key === 'End' ? lastIndex : -1;
         if (nextIndex < 0) return;
         event.preventDefault();
         activateTab(buttons[nextIndex], true);
@@ -1207,14 +1224,18 @@
     });
 
     // Zoom per Mausrad
-    container.addEventListener('wheel', (e) => {
-      if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-        const delta = e.deltaY < 0 ? 0.1 : -0.1;
-        state.zoom = Math.max(0.15, Math.min(3.5, state.zoom + delta));
-        renderPreview();
-      }
-    }, { passive: false });
+    container.addEventListener(
+      'wheel',
+      (e) => {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          const delta = e.deltaY < 0 ? 0.1 : -0.1;
+          state.zoom = Math.max(0.15, Math.min(3.5, state.zoom + delta));
+          renderPreview();
+        }
+      },
+      { passive: false },
+    );
 
     // Dragging des roten 3-Monats-Fensters im Bannermodus
     canvas.addEventListener('mousedown', (e) => {
@@ -1223,11 +1244,11 @@
       const pxPerCm = 20 * state.zoom;
       const clickXCm = (e.clientX - rect.left) / pxPerCm;
       const geo = window.CronoGeometry.calculate(state);
-      const viewportXCm = geo.pufferLeft + (state.currentMonthIndex * geo.bMonth);
+      const viewportXCm = geo.pufferLeft + state.currentMonthIndex * geo.bMonth;
 
       if (clickXCm >= viewportXCm && clickXCm <= viewportXCm + state.bVisible) {
         state.isDraggingViewport = true;
-        state.dragStartX = clickXCm - (state.currentMonthIndex * geo.bMonth);
+        state.dragStartX = clickXCm - state.currentMonthIndex * geo.bMonth;
       }
     });
 
@@ -1276,9 +1297,7 @@
     const requestedMode = params.get('mode');
     const initialMode = ['calendar', 'cad'].includes(requestedMode) ? requestedMode : null;
     const requestedTab = params.get('tab');
-    const initialTab = ['geometry', 'layout', 'style', 'holidays', 'presets'].includes(requestedTab)
-      ? requestedTab
-      : null;
+    const initialTab = ['geometry', 'layout', 'style', 'holidays', 'presets'].includes(requestedTab) ? requestedTab : null;
     const savedDesign = localStorage.getItem('cronoscroll_design_style');
     if (['classic', 'midcentury', 'bauhaus', 'gantt', 'zen', 'kursbuch'].includes(savedDesign)) {
       state.designStyle = savedDesign;
@@ -1301,16 +1320,12 @@
     const activateTab = bindEvents();
     if (initialMode) setAppMode(initialMode);
     if ((initialMode || 'calendar') === 'calendar' && initialTab) {
-      const tabButton = Array.from(document.querySelectorAll('.tab-btn'))
-        .find(button => button.getAttribute('data-tab') === `tab-${initialTab}`);
+      const tabButton = Array.from(document.querySelectorAll('.tab-btn')).find((button) => button.getAttribute('data-tab') === `tab-${initialTab}`);
       if (tabButton) activateTab(tabButton);
     }
     renderPreview();
-    window.CronoFonts.loadStandardFonts().then(
-      renderPreview,
-      (error) => {
-        setFontStatus(`Standardschriften konnten nicht für die Vorschau geladen werden: ${error.message}`, true);
-      }
-    );
+    window.CronoFonts.loadStandardFonts().then(renderPreview, (error) => {
+      setFontStatus(`Standardschriften konnten nicht für die Vorschau geladen werden: ${error.message}`, true);
+    });
   });
 })();
