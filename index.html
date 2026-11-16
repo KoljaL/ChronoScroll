@@ -140,20 +140,22 @@
       </header>
 
       <!-- 2. LINKE SIDEBAR: TABS & EINSTELLUNGEN -->
-      <aside id="app-sidebar" class="bg-slate-900 border-r border-slate-800 flex flex-col">
+      <aside id="app-sidebar" class="workspace-sidebar calendar-sidebar" aria-label="Kalender-Parameter">
         <!-- REITER-NAVIGATION -->
-        <div role="tablist" aria-label="Kalendereinstellungen" class="flex border-b border-slate-800 bg-slate-950/70 text-xs font-medium shrink-0 overflow-x-auto">
-          <button type="button" role="tab" id="tab-button-geometry" aria-controls="tab-geometry" aria-selected="true" tabindex="0" data-tab="tab-geometry" class="tab-btn flex-1 py-3 px-2 text-center text-amber-400 border-b-2 border-amber-400 font-semibold transition whitespace-nowrap"><i class="fa-solid fa-ruler-combined mr-1"></i>Maße</button>
-          <button type="button" role="tab" id="tab-button-layout" aria-controls="tab-layout" aria-selected="false" tabindex="-1" data-tab="tab-layout" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-table-columns mr-1"></i>Struktur</button>
-          <button type="button" role="tab" id="tab-button-style" aria-controls="tab-style" aria-selected="false" tabindex="-1" data-tab="tab-style" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-palette mr-1"></i>Style</button>
-          <button type="button" role="tab" id="tab-button-holidays" aria-controls="tab-holidays" aria-selected="false" tabindex="-1" data-tab="tab-holidays" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-calendar-check mr-1"></i>Termine</button>
-          <button type="button" role="tab" id="tab-button-presets" aria-controls="tab-presets" aria-selected="false" tabindex="-1" data-tab="tab-presets" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-bookmark mr-1"></i>Vorlagen</button>
+        <div class="card calendar-tabs-card">
+          <div role="tablist" aria-label="Kalendereinstellungen" class="calendar-tablist flex text-xs font-medium shrink-0 overflow-x-auto">
+            <button type="button" role="tab" id="tab-button-geometry" aria-controls="tab-geometry" aria-selected="true" tabindex="0" data-tab="tab-geometry" class="tab-btn flex-1 py-3 px-2 text-center text-amber-400 border-b-2 border-amber-400 font-semibold transition whitespace-nowrap"><i class="fa-solid fa-ruler-combined mr-1"></i>Maße</button>
+            <button type="button" role="tab" id="tab-button-layout" aria-controls="tab-layout" aria-selected="false" tabindex="-1" data-tab="tab-layout" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-table-columns mr-1"></i>Struktur</button>
+            <button type="button" role="tab" id="tab-button-style" aria-controls="tab-style" aria-selected="false" tabindex="-1" data-tab="tab-style" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-palette mr-1"></i>Style</button>
+            <button type="button" role="tab" id="tab-button-holidays" aria-controls="tab-holidays" aria-selected="false" tabindex="-1" data-tab="tab-holidays" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-calendar-check mr-1"></i>Termine</button>
+            <button type="button" role="tab" id="tab-button-presets" aria-controls="tab-presets" aria-selected="false" tabindex="-1" data-tab="tab-presets" class="tab-btn flex-1 py-3 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-bookmark mr-1"></i>Vorlagen</button>
+          </div>
         </div>
 
         <!-- INHALT DER REITER -->
-        <div class="flex-1 overflow-y-auto p-4 space-y-5">
+        <div class="calendar-tabpanels">
           <!-- TAB 1: MAßE & GEOMETRIE -->
-          <div id="tab-geometry" role="tabpanel" aria-labelledby="tab-button-geometry" tabindex="0" class="tab-content space-y-4">
+          <div id="tab-geometry" role="tabpanel" aria-labelledby="tab-button-geometry" tabindex="0" class="tab-content calendar-tabpanel space-y-4">
             <!-- Kalender-Zieljahr -->
             <div class="space-y-1.5">
               <label for="input-year" class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex justify-between">
@@ -259,7 +261,7 @@
           </div>
 
           <!-- TAB 2: LAYOUT & ZEILEN -->
-          <div id="tab-layout" role="tabpanel" aria-labelledby="tab-button-layout" tabindex="0" class="tab-content hidden space-y-4">
+          <div id="tab-layout" role="tabpanel" aria-labelledby="tab-button-layout" tabindex="0" class="tab-content calendar-tabpanel hidden space-y-4">
             <div class="space-y-3">
               <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Tagesfelder und Schreibfläche</h3>
 
@@ -382,7 +384,7 @@
           </div>
 
           <!-- TAB 3: ERSCHEINUNGSBILD -->
-          <div id="tab-style" role="tabpanel" aria-labelledby="tab-button-style" tabindex="0" class="tab-content hidden space-y-4">
+          <div id="tab-style" role="tabpanel" aria-labelledby="tab-button-style" tabindex="0" class="tab-content calendar-tabpanel hidden space-y-4">
             <section class="choice-section space-y-2" aria-labelledby="design-style-heading">
               <div>
                 <h3 id="design-style-heading" class="text-xs font-bold uppercase tracking-wider text-amber-400">Kalenderdarstellung</h3>
@@ -533,7 +535,7 @@
           </div>
 
           <!-- TAB 4: FEIERTAGS- & TERMIN-ENGINE -->
-          <div id="tab-holidays" role="tabpanel" aria-labelledby="tab-button-holidays" tabindex="0" class="tab-content hidden space-y-4">
+          <div id="tab-holidays" role="tabpanel" aria-labelledby="tab-button-holidays" tabindex="0" class="tab-content calendar-tabpanel hidden space-y-4">
             <div class="space-y-1">
               <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Termine verwalten</h3>
               <p class="text-[11px] text-slate-400">Regionale Feiertage und Ferien laden, eigene Termine pflegen oder einen .ics-Kalender importieren. Farben werden im Tab „Erscheinung“ festgelegt.</p>
@@ -610,7 +612,7 @@
           </div>
 
           <!-- TAB 5: VORLAGEN -->
-          <div id="tab-presets" role="tabpanel" aria-labelledby="tab-button-presets" tabindex="0" class="tab-content hidden space-y-4">
+          <div id="tab-presets" role="tabpanel" aria-labelledby="tab-button-presets" tabindex="0" class="tab-content calendar-tabpanel hidden space-y-4">
             <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Vorlagen und Teilen</h3>
 
             <div class="space-y-2">
@@ -640,16 +642,18 @@
       </aside>
 
       <!-- 3. RECHTER ARBEITSBEREICH -->
-      <main id="app-workspace" class="bg-slate-950">
+      <main id="app-workspace" class="workspace-stage calendar-stage">
         <!-- TOOLBAR (VIEW-MODUS, MONATS-ROLLEN & ZOOM) -->
         <!-- CANVASHÖLLE MIT ZENTRIERUNG, SCROLLUNG & CLICK-TO-EVENT -->
-        <div id="canvas-container" class="w-full h-full overflow-auto flex items-center justify-center p-8 bg-slate-950">
-          <canvas id="preview-canvas" class="shadow-2xl rounded bg-white transition-transform duration-75"></canvas>
-        </div>
+        <section class="card calendar-preview-card" aria-label="Kalender-Vorschau">
+          <div id="canvas-container" class="calendar-preview-viewport">
+            <canvas id="preview-canvas" class="bg-white transition-transform duration-75"></canvas>
+          </div>
+        </section>
       </main>
 
       <div id="cad-mode-root" class="cad-scope" aria-hidden="true">
-        <aside id="cad-sidebar" class="sidebar" aria-label="CAD-Parameter">
+        <aside id="cad-sidebar" class="workspace-sidebar" aria-label="CAD-Parameter">
           <section class="card" aria-label="Modellverwaltung">
             <div class="card-header">
               <h2 class="card-title"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Modellverwaltung &amp; Presets</h2>
@@ -728,7 +732,7 @@
           <section id="cad-parameter-groups-container" class="card" aria-label="Konstruktionsparameter"></section>
         </aside>
 
-        <section id="cad-stage" class="main-stage" aria-label="CAD-Zeichenblatt und Stückliste">
+        <section id="cad-stage" class="workspace-stage" aria-label="CAD-Zeichenblatt und Stückliste">
           <section id="cad-drawing-card" class="card cad-drawing-card" aria-label="Technische Mehrtafelzeichnung">
             <div id="cad-viewport-wrapper" class="viewport-wrapper">
               <svg id="cad-drawing-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Technische CAD-Zeichnung"></svg>
@@ -788,7 +792,7 @@
         </div>
         <div class="status-brand">
           <span class="build-label">Build: </span>
-          <span id="build-date"><!-- BUILD_DATE -->16.11.2026 20:05<!-- /BUILD_DATE --></span>
+          <span id="build-date"><!-- BUILD_DATE -->16.11.2026 21:19<!-- /BUILD_DATE --></span>
           <a class="status-logo-link" href="https://github.com/KoljaL/ChronoScroll" target="_blank" rel="noopener noreferrer" aria-label="ChronoScroll auf GitHub (öffnet einen neuen Tab)">
             <span class="sr-only">Code: </span>
             <img src="./img/logo.svg" alt="" width="18" height="18" />

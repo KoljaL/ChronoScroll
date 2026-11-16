@@ -219,76 +219,6 @@
       color: var(--text-muted);
     }
 
-    /* Haupt-Grid */
-    .workspace {
-      max-width: 1760px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 1rem 1.25rem 2rem;
-      display: grid;
-      grid-template-columns: 370px minmax(0, 1fr);
-      gap: 1rem;
-      align-items: start;
-    }
-
-    @media (max-width: 960px) {
-      .workspace {
-        grid-template-columns: 1fr;
-        padding: 0.75rem;
-      }
-    }
-
-    /* Seitenleiste */
-    .sidebar {
-      display: flex;
-      flex-direction: column;
-      gap: 0.9rem;
-    }
-
-    @media (min-width: 961px) {
-      .sidebar {
-        position: sticky;
-        top: 4.6rem;
-        max-height: calc(100vh - 5.4rem);
-        overflow-y: auto;
-        padding-right: 0.2rem;
-      }
-    }
-
-    .card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-medium);
-      border-radius: var(--radius-md);
-      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-    }
-
-    .card-header {
-      padding: 0.65rem 0.9rem;
-      border-bottom: 1px solid var(--border-light);
-      background: var(--bg-subtle);
-      border-top-left-radius: var(--radius-md);
-      border-top-right-radius: var(--radius-md);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .card-title {
-      margin: 0;
-      font-size: 0.74rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-secondary);
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .card-body {
-      padding: 0.85rem 0.9rem;
-    }
-
     /* Preset-Card Layout */
     .preset-stack {
       display: flex;
@@ -400,13 +330,6 @@
       font-size: 0.72rem;
       color: var(--text-muted);
       width: 1.4rem;
-    }
-
-    /* Rechte Hauptspalte */
-    .main-stage {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
     }
 
     /* Kennzahlen-Leiste */
@@ -620,24 +543,6 @@
     gap: 0.5rem;
   }
 
-  #cad-sidebar {
-    position: static;
-    top: auto;
-    min-height: 0;
-    max-height: 100%;
-    padding: 1rem;
-    overflow-y: auto;
-    background: var(--bg-canvas);
-  }
-
-  #cad-stage {
-    min-width: 0;
-    min-height: 0;
-    padding: 1rem;
-    overflow-y: auto;
-    background: var(--bg-canvas);
-  }
-
   #cad-stage.cad-validation-error #cad-validation-box {
     order: -1;
   }
@@ -651,14 +556,4 @@
     background: #ffffff;
   }
 
-  @media (max-width: 960px) {
-    #cad-sidebar {
-      position: static;
-      max-height: 100%;
-    }
-
-    .main-stage {
-      min-width: 0;
-    }
-  }
 }
