@@ -33,7 +33,6 @@
   const records = new Map();
   let observer = null;
   let ready = false;
-  let inputEventSequence = 0;
 
   function blossomApi() {
     const api = window.BlossomColorPicker;
@@ -165,7 +164,6 @@
   function completePickerChange(record, color) {
     const value = color && color.hex ? normalizeHex(color.hex) : '';
     if (value && value !== record.input.value) updateInputFromPicker(record, { hex: value });
-    record.changeSequence = inputEventSequence++;
     dispatchColorEvent(record, 'change');
   }
 
@@ -182,7 +180,7 @@
     record.placeholder.style.setProperty('--blossom-picker-size', `${record.size}px`);
     record.syncing = true;
     record.picker.setValue(pickerValue(value));
-    record.picker.setOptions({ disabled: !!record.input.disabled });
+    record.picker.setOptions({ value: undefined, disabled: !!record.input.disabled });
     record.syncing = false;
     const trigger = record.host.querySelector('.bcp-trigger-btn');
     if (trigger) {
@@ -225,12 +223,9 @@
       label: labelFor(input),
       syncing: false,
       portaled: false,
-      changeSequence: 0,
       nativeInput: null,
       nativeClick: null,
       nativeKeydown: null,
-      hostPointer: null,
-      hostActivate: null,
       hostClick: null,
     };
 
@@ -249,11 +244,10 @@
       openPortal(record);
       record.picker.toggle();
     };
-    record.hostPointer = () => {
-      openPortal(record);
-    };
-    record.hostActivate = () => openPortal(record);
     record.hostClick = (event) => {
+      const trigger = host.querySelector('.bcp-trigger-btn');
+      if (trigger && trigger.getAttribute('aria-expanded') === 'true') openPortal(record);
+      else closePortal(record);
       event.preventDefault();
       event.stopPropagation();
     };
@@ -277,8 +271,6 @@
     input.addEventListener('input', record.nativeInput);
     input.addEventListener('click', record.nativeClick);
     input.addEventListener('keydown', record.nativeKeydown);
-    host.addEventListener('pointerdown', record.hostPointer, true);
-    host.addEventListener('click', record.hostActivate, true);
     host.addEventListener('click', record.hostClick);
     syncRecord(record);
     return record;
@@ -303,8 +295,6 @@
     input.removeEventListener('input', record.nativeInput);
     input.removeEventListener('click', record.nativeClick);
     input.removeEventListener('keydown', record.nativeKeydown);
-    record.host.removeEventListener('pointerdown', record.hostPointer, true);
-    record.host.removeEventListener('click', record.hostActivate, true);
     record.host.removeEventListener('click', record.hostClick);
     delete input.dataset.blossomPicker;
     input.classList.remove('cronoscroll-color-input-native');

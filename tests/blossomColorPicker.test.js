@@ -184,6 +184,7 @@ function setup(populateDocument) {
       this.optionUpdates = [];
       this.destroyCalls = 0;
       this.toggleCalls = 0;
+      this.controlledValue = options.value;
       const trigger = document.createElement('button');
       trigger.className = 'bcp-trigger-btn';
       container.appendChild(trigger);
@@ -192,10 +193,12 @@ function setup(populateDocument) {
 
     setValue(value) {
       this.values.push(value);
+      this.controlledValue = value;
     }
 
     setOptions(options) {
       this.optionUpdates.push(options);
+      if (Object.hasOwn(options, 'value')) this.controlledValue = options.value;
     }
 
     destroy() {
@@ -275,6 +278,8 @@ test('Blossom adapter initializes existing inputs and forwards picker changes', 
   assert.equal(picker.options.showAlphaSlider, false);
   assert.equal(picker.options.showShadeSlider, true);
   assert.equal(input.classList.contains('cronoscroll-color-input-native'), true);
+  assert.equal(picker.container.listeners.pointerdown, undefined);
+  picker.container.children[0].setAttribute('aria-expanded', 'true');
   picker.container.dispatchEvent(new ui.window.Event('click', { bubbles: true }));
   assert.equal(picker.container.classList.contains('is-portaled'), true);
   assert.equal(picker.container.parentNode, ui.document.body);
@@ -302,6 +307,9 @@ test('Blossom adapter synchronizes external state and disabled inputs', () => {
 
   assert.equal(picker.values.at(-1).alpha, 100);
   assert.equal(picker.optionUpdates.at(-1).disabled, true);
+  assert.equal(Object.hasOwn(picker.optionUpdates.at(-1), 'value'), true);
+  assert.equal(picker.optionUpdates.at(-1).value, undefined);
+  assert.equal(picker.controlledValue, undefined);
   assert.equal(picker.values.at(-1).lightness > 0, true);
 });
 
