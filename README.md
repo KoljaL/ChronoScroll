@@ -95,14 +95,14 @@ flowchart LR
 
 Alle Abmessungen leiten sich dynamisch von der montierten Schreibplatte ab:
 
-| Parameter                       | Symbol               | Formel / Erklärung                                                           | Standardwert          |
-| :------------------------------ | :------------------- | :--------------------------------------------------------------------------- | :-------------------- |
-| **Plattenbreite (Sichtbreite)** | $B_{\text{visible}}$ | Lichte Weite der 3 sichtbaren Monate                                         | $42{,}0\text{ cm}$    |
-| **Monatsspalten-Breite**        | $B_{\text{month}}$   | $B_{\text{month}} = \frac{B_{\text{visible}}}{3}$                            | $14{,}00\text{ cm}$   |
-| **Plattenhöhe (Sichthöhe)**     | $H_{\text{visible}}$ | Papierbahnbreite (Zeilenraum)                                                | $32{,}0\text{ cm}$    |
-| **Tagesfeld-Höhe**               | $H_{\text{day}}$     | Einspaltig: $\frac{H_{\text{visible}}}{32}$; zweispaltig: $\frac{H_{\text{visible}}}{17}$ *(1 Kopfzeile + 16 Tageszeilen je Liste)* | $1{,}00\text{ cm}$ / $1{,}88\text{ cm}$ |
-| **Wickel-Puffer**               | $\text{Puffer}$      | Freiraum für Befestigung an den Rundstäben                                   | je $15{,}0\text{ cm}$ |
-| **Gesamte Bannerlänge**         | $L_{\text{total}}$   | $L_{\text{total}} = (14 \times B_{\text{month}}) + (2 \times \text{Puffer})$ | $226{,}00\text{ cm}$  |
+| Parameter                       | Symbol               | Formel / Erklärung                                                                                                                  | Standardwert                            |
+| :------------------------------ | :------------------- | :---------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------- |
+| **Plattenbreite (Sichtbreite)** | $B_{\text{visible}}$ | Lichte Weite der 3 sichtbaren Monate                                                                                                | $42{,}0\text{ cm}$                      |
+| **Monatsspalten-Breite**        | $B_{\text{month}}$   | $B_{\text{month}} = \frac{B_{\text{visible}}}{3}$                                                                                   | $14{,}00\text{ cm}$                     |
+| **Plattenhöhe (Sichthöhe)**     | $H_{\text{visible}}$ | Papierbahnbreite (Zeilenraum)                                                                                                       | $32{,}0\text{ cm}$                      |
+| **Tagesfeld-Höhe**              | $H_{\text{day}}$     | Einspaltig: $\frac{H_{\text{visible}}}{32}$; zweispaltig: $\frac{H_{\text{visible}}}{17}$ *(1 Kopfzeile + 16 Tageszeilen je Liste)* | $1{,}00\text{ cm}$ / $1{,}88\text{ cm}$ |
+| **Wickel-Puffer**               | $\text{Puffer}$      | Freiraum für Befestigung an den Rundstäben                                                                                          | je $15{,}0\text{ cm}$                   |
+| **Gesamte Bannerlänge**         | $L_{\text{total}}$   | $L_{\text{total}} = (14 \times B_{\text{month}}) + (2 \times \text{Puffer})$                                                        | $226{,}00\text{ cm}$                    |
 
 > [!TIP]
 > **Zwei Monatslayouts:** Im klassischen Layout steht jeder Tag in einer Zeile. Alternativ verteilen sich die Tage **1–15 links** und **16–31 rechts**; ein Tagesfeld wird dann bei 32 cm Sichthöhe etwa **1,88 cm hoch**. Beide Layouts verwenden dieselbe Monatsbreite von 14 cm, Sichthöhe von 32 cm und Bannerlänge.
@@ -139,10 +139,10 @@ Alle Abmessungen leiten sich dynamisch von der montierten Schreibplatte ab:
 * **Vorlagen und Teilen:**
   * Layout-Presets können mit Namen im Browser (`localStorage`) gespeichert, geladen oder gelöscht werden.
   * Ein teilbarer Link öffnet die aktuellen Gestaltungseinstellungen einschließlich Kalenderdarstellung, Farbwelt und Kategorie-Farben für das Folgejahr. Individuelle und importierte Termine werden nicht übertragen; Feiertage und Ferien werden für das neue Jahr und die gewählte Region neu berechnet. Eigene Schriftdateien müssen erneut geladen werden.
-* **Vektor-PDF-Export für Endlosplotter auf Deutsch:**
-  * Generiert über **jsPDF** eine millimetergenaue Vektor-PDF (`Rollkalender-[Jahr].pdf`) mit eingebetteten TrueType-Schriften, deutschen Monatsnamen (`Januar` bis `Dezember`), deutschen Tageskürzeln (`Mo` bis `So`) und Randbeschriftungen.
-  * Im rechten Montagepuffer steht ein QR-Code mit demselben Folgejahres-Link wie im Tab „Vorlagen & Teilen“. Die Rollenmaße ändern sich nicht; bei zu schmalem Puffer meldet der Export einen Fehler.
-  * 100 % verlustfrei und gestochen scharf auf jedem Großformat-Plotter druckbar.
+* **RGB-Plotter-PDF für Endlosplotter:**
+  * Generiert über **jsPDF** eine millimetergenaue Vektor-PDF (`Rollkalender-[Jahr].pdf`) mit exakt einer Seite, eingebetteten TrueType-Schnitten (normal, fett, kursiv), deutschen Monatsnamen (`Januar` bis `Dezember`), deutschen Tageskürzeln (`Mo` bis `So`) und Randbeschriftungen.
+  * Im rechten Montagepuffer steht ein vektorieller QR-Code mit demselben Folgejahres-Link wie im Tab „Vorlagen & Teilen“. Die Rollenmaße ändern sich nicht; bei zu schmalem Puffer, unvollständigem Inhalt, nicht verfügbarem Schriftschnitt oder nicht platzierbarem Titel meldet der Export einen Fehler statt eine unvollständige Datei zu speichern.
+  * Die Datei enthält sachliche Basis-Metadaten und bleibt ein RGB-Plotterexport ohne PDF/X-, ICC-, CMYK- oder Sonderfarbenzusage. Die Drucksoftware beziehungsweise der Druckdienstleister führt die Ausgabe-Farbkonvertierung aus.
 * **Druckflächen-Schätzung und Spartipps:** Die Statusleiste zeigt für die gesamte 14-Monats-Rolle den geschätzten mittleren Schwarzauftrag (K) und den summierten Farbauftrag (C+M+Y). Im Tab „Erscheinung“ lassen sich passende Änderungsvorschläge vergleichen und einzeln anwenden, zum Beispiel Papier- oder Wochenendhintergründe auf Weiß/Papierfarbe setzen oder Terminfarben entsättigen. Die Werte werden aus einer verkleinerten RGB-Renderung abgeleitet, nicht aus einer druckerspezifischen CMYK-Separation; sie sind daher weder eine Verbrauchs- noch eine Preiszusage. Der summierte Farbwert kann bis zu 300 % betragen.
 
 ---
@@ -179,3 +179,7 @@ Für eine eigene Schrift im Bereich **Erscheinung → Typografie** eine TTF-Date
 Der QR-Code wird lokal mit [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) ([MIT-Lizenz](./js/qrcode.LICENSE.txt), Copyright Kazuhiko Arase) erzeugt; die Konfiguration wird nicht an einen QR-Dienst gesendet. Der Folgejahres-Link öffnet die öffentliche Anwendung und überträgt keine individuellen oder importierten Termine. Ein zum Kalenderjahr passender Jahresbestandteil im individuellen Titel wird auf das Folgejahr gesetzt. Die Jahresauswahl reicht bis 2100; für 2100 ist deshalb kein Folgejahres-Link verfügbar.
 
 Die eingebetteten PT-Serif-Dateien stammen aus der Google-Fonts-Auslieferung (Version 19: [normal](https://fonts.gstatic.com/s/ptserif/v19/EJRVQgYoZZY2vCFuvDFR.ttf), [fett](https://fonts.gstatic.com/s/ptserif/v19/EJRSQgYoZZY2vCFuvAnt65qV.ttf), [kursiv](https://fonts.gstatic.com/s/ptserif/v19/EJRTQgYoZZY2vCFuvAFTzro.ttf)). Sie enthalten GPOS-Kerning ohne die zu große ältere `kern`-Tabelle. Bei eigenen TTF-Dateien weist CronoScroll auf erkennbar übergroße Kerning-Untertabellen hin; die Datei wird nicht verändert und andere Font-Probleme lassen sich nicht vollständig vorab erkennen.
+
+
+
+

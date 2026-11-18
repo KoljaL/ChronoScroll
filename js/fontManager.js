@@ -142,11 +142,25 @@ window.CronoFonts = (function() {
       : window.CronoEmbeddedFonts[getStandardFontKey(fontKey)];
     if (!font) throw new Error('Die ausgewählte Schrift ist nicht verfügbar. Bitte erneut auswählen.');
 
+    if (!doc || typeof doc.addFileToVFS !== 'function' || typeof doc.addFont !== 'function') {
+      throw new Error('Die PDF-Schrift kann in dieser Exportumgebung nicht registriert werden.');
+    }
     Object.keys(styles).forEach((styleName) => {
+      const fontData = font.styles[styleName];
+      if (typeof fontData !== 'string' || !fontData) {
+        throw new Error(`Der Schriftschnitt „${styleName}“ ist nicht verfügbar.`);
+      }
       const fileName = `${font.pdfName}-${styleName}.ttf`;
-      doc.addFileToVFS(fileName, font.styles[styleName]);
+      doc.addFileToVFS(fileName, fontData);
       doc.addFont(fileName, font.pdfName, styleName);
     });
+    if (typeof doc.getFontList === 'function') {
+      const registered = doc.getFontList();
+      const familyStyles = registered && registered[font.pdfName];
+      if (!familyStyles || Object.keys(styles).some(style => !familyStyles.includes(style))) {
+        throw new Error('Nicht alle Schriftschnitte konnten in die PDF eingebettet werden.');
+      }
+    }
     return font.pdfName;
   }
 

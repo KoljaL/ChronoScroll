@@ -1,0 +1,10 @@
+{
+  "name": "chronoscroll",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  },
+  "devDependencies": {
+    "jspdf": "2.5.1"
+  }
+}

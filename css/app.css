@@ -672,6 +672,20 @@ html, body {
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
+.export-dropdown-note {
+  margin: 0.1rem 0.25rem 0.55rem;
+  padding: 0.25rem 0.25rem 0.65rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+.export-dropdown-note strong {
+  color: var(--text-main);
+}
+
 .export-dropdown-item:hover,
 .export-dropdown-item:focus-visible {
   background: var(--bg-muted);

@@ -7,6 +7,60 @@
 window.CronoPDF = (function() {
   'use strict';
 
+  const JSPDF_VERSION = '2.5.1';
+  const PDF_PRODUCER = `jsPDF ${JSPDF_VERSION} via ChronoScroll`;
+  const RGB_EXPORT_DESCRIPTION =
+    'RGB-Plotter-PDF. Die Drucksoftware beziehungsweise der Druckdienstleister führt die Ausgabe-Farbkonvertierung aus.';
+
+  function formatMm(value) {
+    return Number(value.toFixed(3)).toString().replace('.', ',');
+  }
+
+  function pdfProperties(state, geo) {
+    const year = String(state.year);
+    const customTitle = typeof state.bannerCustomTitle === 'string'
+      ? state.bannerCustomTitle.trim()
+      : '';
+    const title = customTitle
+      ? `${customTitle}${customTitle.includes(year) ? '' : ` ${year}`} – ChronoScroll`
+      : `ChronoScroll Rollkalender ${year}`;
+    return {
+      title,
+      subject: `14-Monate-Rollkalender; RGB-Plotterexport; ${formatMm(geo.lTotalMm)} × ${formatMm(geo.hVisibleMm)} mm; 1 Seite`,
+      creator: 'ChronoScroll',
+      keywords: 'Rollkalender, RGB, Vektor, Plotter, 14 Monate'
+    };
+  }
+
+  function assertPageSize(doc, widthMm, heightMm) {
+    const pageSize = doc && doc.internal && doc.internal.pageSize;
+    if (!pageSize ||
+        typeof pageSize.getWidth !== 'function' ||
+        typeof pageSize.getHeight !== 'function') {
+      throw new Error('Die PDF-Seitengröße konnte nicht überprüft werden.');
+    }
+    const tolerance = 0.001;
+    if (Math.abs(pageSize.getWidth() - widthMm) > tolerance ||
+        Math.abs(pageSize.getHeight() - heightMm) > tolerance) {
+      throw new Error('Die erzeugte PDF-Seite entspricht nicht den berechneten Rollenmaßen.');
+    }
+  }
+
+  function fitFontSize(doc, text, maxWidthMm, preferredSize) {
+    if (!text || maxWidthMm <= 0) return preferredSize;
+    let size = preferredSize;
+    doc.setFontSize(size);
+    const width = doc.getTextWidth(text);
+    if (width > maxWidthMm) {
+      size = Math.max(4, size * maxWidthMm / width);
+      doc.setFontSize(size);
+    }
+    if (doc.getTextWidth(text) > maxWidthMm) {
+      throw new Error('Der eigene Kalendertitel passt nicht in den linken Montagepuffer. Kürze den Titel oder vergrößere den Puffer.');
+    }
+    return size;
+  }
+
   function hexToRgb(hex) {
     if (!hex) return [0, 0, 0];
     let c = hex.replace('#', '');
@@ -30,15 +84,21 @@ window.CronoPDF = (function() {
 
   function exportPlotterPDF(state) {
     if (!window.jspdf || !window.jspdf.jsPDF) {
-      alert('jsPDF-Bibliothek ist nicht geladen.');
-      return;
+      throw new Error('jsPDF-Bibliothek ist nicht geladen.');
     }
 
     const { jsPDF } = window.jspdf;
+    if (jsPDF.version && String(jsPDF.version) !== JSPDF_VERSION) {
+      throw new Error(`Die jsPDF-Version stimmt nicht mit dem erwarteten Plotterexport überein (${JSPDF_VERSION}).`);
+    }
     const geo = window.CronoGeometry.calculate(state);
     const design = window.CronoDesigns && window.CronoDesigns.active(state);
     if (typeof window.qrcode !== 'function') {
       throw new Error('Die QR-Code-Bibliothek ist nicht geladen.');
+    }
+    if (!Number.isFinite(geo.lTotalMm) || geo.lTotalMm <= 0 ||
+        !Number.isFinite(geo.hVisibleMm) || geo.hVisibleMm <= 0) {
+      throw new Error('Die berechneten Rollenmaße sind ungültig.');
     }
     const url = window.CronoShare.createNextYearUrl(state);
     const qr = window.qrcode(0, 'L');
@@ -51,10 +111,14 @@ window.CronoPDF = (function() {
     const moduleCount = qr.getModuleCount();
     const qrSizeMm = Math.min(state.pufferRight * 10 - 10, geo.hVisibleMm - 10, 100);
     const moduleSizeMm = qrSizeMm / (moduleCount + 8);
-    if (moduleSizeMm < 0.25) {
+    if (!Number.isFinite(moduleCount) || moduleCount <= 0 ||
+        !Number.isFinite(qrSizeMm) || moduleSizeMm < 0.25) {
       throw new Error('Der rechte Montagepuffer ist für den QR-Code zu schmal. Bitte den Puffer vergrößern.');
     }
     const monthsData = window.CronoHolidays.get14MonthsData(state.year, state.holidays, state);
+    if (!Array.isArray(monthsData) || monthsData.length !== 14) {
+      throw new Error('Der Kalender konnte nicht vollständig mit 14 Monaten erzeugt werden.');
+    }
 
     // PDF im exakten Rollenmaß (in mm)
     const doc = new jsPDF({
@@ -63,6 +127,12 @@ window.CronoPDF = (function() {
       format: [geo.lTotalMm, geo.hVisibleMm],
       compress: true
     });
+
+    if (typeof doc.setProperties !== 'function') {
+      throw new Error('PDF-Metadaten können in dieser Exportumgebung nicht gesetzt werden.');
+    }
+    doc.setProperties(pdfProperties(state, geo));
+    assertPageSize(doc, geo.lTotalMm, geo.hVisibleMm);
 
     const baseFont = window.CronoFonts.registerPdfFont(doc, design ? window.CronoDesigns.fontKey(state) : state.fontFamily);
 
@@ -83,13 +153,15 @@ window.CronoPDF = (function() {
     if (state.pufferLeftContent === 'title') {
       doc.setTextColor(textRgb[0], textRgb[1], textRgb[2]);
       doc.setFont(baseFont, 'bold');
-      doc.setFontSize(16);
-      doc.text(state.bannerCustomTitle || `CRONOSCROLL ${state.year}`, leadInMm / 2, geo.hVisibleMm / 2 - 4, { align: 'center' });
+      const title = state.bannerCustomTitle || `CRONOSCROLL ${state.year}`;
+      fitFontSize(doc, title, Math.max(0, leadInMm - 12), 16);
+      doc.text(title, leadInMm / 2, geo.hVisibleMm / 2 - 4, { align: 'center' });
       doc.setFont(baseFont, 'normal');
-      doc.setFontSize(9);
       doc.setTextColor(...(design ? hexToRgb(state.colorHeaderText || state.colorText) : [100, 116, 139]));
-      doc.text('14-Monate-Endlosbanner für Holz-Rollkalender', leadInMm / 2, geo.hVisibleMm / 2 + 4, { align: 'center' });
-    } else {
+      const subtitle = '14-Monate-Endlosbanner für Holz-Rollkalender';
+      fitFontSize(doc, subtitle, Math.max(0, leadInMm - 12), 9);
+      doc.text(subtitle, leadInMm / 2, geo.hVisibleMm / 2 + 4, { align: 'center' });
+    } else if (leadInMm > 0) {
       doc.setTextColor(...(design ? textRgb : [148, 163, 184]));
       doc.setFont(baseFont, 'normal');
       doc.setFontSize(8);
@@ -290,10 +362,19 @@ window.CronoPDF = (function() {
       drawPdfCropMark(doc, viewportEndMm, geo.hVisibleMm, 4, 1.5, cropColor);
     }
 
-    doc.save(`Rollkalender-${state.year}.pdf`);
+    const originalVersion = jsPDF.version;
+    try {
+      if (originalVersion) jsPDF.version = `${JSPDF_VERSION} via ChronoScroll`;
+      doc.save(`Rollkalender-${state.year}.pdf`);
+    } finally {
+      if (originalVersion) jsPDF.version = originalVersion;
+    }
   }
 
   return {
+    PDF_PRODUCER,
+    RGB_EXPORT_DESCRIPTION,
+    JSPDF_VERSION,
     exportPlotterPDF
   };
 })();

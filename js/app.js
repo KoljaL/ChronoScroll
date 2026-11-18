@@ -1118,7 +1118,7 @@
       try {
         window.CronoPDF.exportPlotterPDF(state);
       } catch (error) {
-        alert(`PDF konnte nicht erstellt werden: ${error.message}`);
+        alert(`RGB-Plotter-PDF konnte nicht erstellt werden: ${error.message}`);
       }
     });
     document.getElementById('btn-export-svg').addEventListener('click', () => {

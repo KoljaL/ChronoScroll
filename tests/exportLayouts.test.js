@@ -79,9 +79,12 @@ test('PDF export places day 16 in the second half without changing the roll size
     constructor(options) {
       this.options = options;
       this.rects = [];
+      this.properties = {};
+      this.internal = { pageSize: { getWidth: () => 2260, getHeight: () => 320 } };
       exportedDoc = this;
     }
 
+    setProperties(properties) { this.properties = properties; }
     rect(...args) { this.rects.push(args); }
     getTextWidth(text) { return String(text).length; }
     save() {}
@@ -128,9 +131,11 @@ test('PDF crop marks are limited to the visible window edges', () => {
   class JsPdf {
     constructor() {
       this.lines = [];
+      this.internal = { pageSize: { getWidth: () => 2260, getHeight: () => 320 } };
       exportedDoc = this;
     }
 
+    setProperties() {}
     line(...args) { this.lines.push(args); }
     rect() {}
     getTextWidth(text) { return String(text).length; }
@@ -220,7 +225,12 @@ test('PDF and SVG reserve and paint the same separators for both layouts', () =>
       let exportedDoc;
       let exportedBlob;
       class JsPdf {
-        constructor() { this.rects = []; exportedDoc = this; }
+        constructor() {
+          this.rects = [];
+          this.internal = { pageSize: { getWidth: () => 2260, getHeight: () => 320 } };
+          exportedDoc = this;
+        }
+        setProperties() {}
         rect(...args) { this.rects.push({ args, color: this.fillColor }); }
         setFillColor(...color) { this.fillColor = color; }
         getTextWidth(text) { return String(text).length; }
@@ -280,7 +290,13 @@ test('PDF encodes the shared URL as vector modules within the right buffer', () 
   let encodedUrl;
   let qr;
   class JsPdf {
-    constructor(options) { this.options = options; this.rects = []; exportedDoc = this; }
+    constructor(options) {
+      this.options = options;
+      this.rects = [];
+      this.internal = { pageSize: { getWidth: () => 2260, getHeight: () => 320 } };
+      exportedDoc = this;
+    }
+    setProperties() {}
     rect(...args) { this.rects.push({ args, color: this.fillColor }); }
     setFillColor(...color) { this.fillColor = color; }
     getTextWidth(text) { return String(text).length; }
@@ -354,8 +370,10 @@ test('all special-design and theme combinations keep palette and font in PDF and
       this.drawColors = [];
       this.textColors = [];
       this.fillColors = [];
+      this.internal = { pageSize: { getWidth: () => 2260, getHeight: () => 320 } };
       exportedDoc = this;
     }
+    setProperties() {}
     rect() {}
     getTextWidth(text) { return String(text).length; }
     save() {}
