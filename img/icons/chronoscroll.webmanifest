@@ -1,0 +1,23 @@
+{
+  "name": "ChronoScroll",
+  "short_name": "ChronoScroll",
+  "icons": [
+    {
+      "src": "chronoscroll-pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "chronoscroll-pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "start_url": "../../",
+  "scope": "../../",
+  "theme_color": "#0f172a",
+  "background_color": "#0b1220",
+  "display": "standalone"
+}

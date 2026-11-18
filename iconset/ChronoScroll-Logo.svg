@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 230" width="300" height="230">
+  <defs>
+    <!-- Holz-Gradient für 3D-Wölbung der Leisten -->
+    <linearGradient id="wood-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#C88A4B" />
+      <stop offset="18%" stop-color="#A66829" />
+      <stop offset="82%" stop-color="#7D4916" />
+      <stop offset="100%" stop-color="#522E0B" />
+    </linearGradient>
+
+    <!-- Zylindrischer Verlauf für die Papierrollen -->
+    <linearGradient id="roll-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#A8AEB5" />
+      <stop offset="22%" stop-color="#F2F4F7" />
+      <stop offset="45%" stop-color="#FFFFFF" />
+      <stop offset="75%" stop-color="#CBD1D8" />
+      <stop offset="100%" stop-color="#8A9199" />
+    </linearGradient>
+
+    <!-- Leichter Schattenverlauf für das gespannte Papier in der Mitte -->
+    <linearGradient id="paper-sheet-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#B8BFC7" />
+      <stop offset="6%" stop-color="#EBEEF2" />
+      <stop offset="20%" stop-color="#FAFBFD" />
+      <stop offset="80%" stop-color="#FAFBFD" />
+      <stop offset="94%" stop-color="#EBEEF2" />
+      <stop offset="100%" stop-color="#B8BFC7" />
+    </linearGradient>
+
+    <!-- Vertikaler Schattenwurf der oberen Holzleiste auf das Papier -->
+    <linearGradient id="top-shadow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0.28" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Metall/Kunststoff-Gradient für die Füße -->
+    <linearGradient id="foot-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1E242B" />
+      <stop offset="50%" stop-color="#2F3842" />
+      <stop offset="100%" stop-color="#14181D" />
+    </linearGradient>
+  </defs>
+
+  <!-- 1. STANDFÜSSE (Exakt in Flucht mit den Rollen: x=26 und x=238, Breite=36) -->
+  <g id="feet">
+    <!-- Linker Fuß -->
+    <rect x="34" y="210" width="19" height="9" rx="2.5" fill="url(#foot-grad)" stroke="#12161A" stroke-width="1.2" />
+    <!-- Rechter Fuß -->
+    <rect x="246" y="210" width="19" height="9" rx="2.5" fill="url(#foot-grad)" stroke="#12161A" stroke-width="1.2" />
+  </g>
+
+  <!-- 2. GESPANNTES PAPIER IN DER MITTE -->
+  <g id="paper-center">
+    <!-- Hauptfläche -->
+    <rect x="60" y="34" width="180" height="152" fill="url(#paper-sheet-grad)" />
+    <!-- Schatten unter der oberen Holzleiste -->
+    <rect x="60" y="34" width="180" height="12" fill="url(#top-shadow)" />
+    <!-- Dezenter Schatten über der unteren Holzleiste -->
+    <rect x="60" y="180" width="180" height="6" fill="#000000" opacity="0.08" />
+  </g>
+
+  <!-- 3. VERTIKALE PAPIERROLLEN (Links & Rechts, Breite jeweils 36px) -->
+  <g id="paper-rolls">
+    <!-- Linke Rolle (x=26 bis 62) -->
+    <rect x="26" y="34" width="36" height="152" fill="url(#roll-grad)" stroke="#4A5058" stroke-width="1.2" />
+    <!-- Schattenkante rechts an der linken Rolle (Übergang zum Blatt) -->
+    <line x1="62" y1="34" x2="62" y2="186" stroke="#6E757D" stroke-width="1" />
+
+    <!-- Rechte Rolle (x=238 bis 274) -->
+    <rect x="238" y="34" width="36" height="152" fill="url(#roll-grad)" stroke="#4A5058" stroke-width="1.2" />
+    <!-- Schattenkante links an der rechten Rolle (Übergang zum Blatt) -->
+    <line x1="238" y1="34" x2="238" y2="186" stroke="#6E757D" stroke-width="1" />
+  </g>
+
+  <!-- 4. HORIZONTALE HOLZLEISTEN (Verhältnis 282px Breite zu 200px Gesamthöhe = 1,41 : 1) -->
+  <g id="wood-bars">
+    <!-- Obere Leiste (y=10 bis y=34) -->
+    <rect x="9" y="10" width="282" height="24" rx="5" fill="url(#wood-grad)" stroke="#3D2006" stroke-width="1.5" />
+    <!-- Feine Lichtkante oben für 3D-Effekt -->
+    <line x1="14" y1="12" x2="286" y2="12" stroke="#E8B882" stroke-width="1.2" stroke-linecap="round" opacity="0.7" />
+
+    <!-- Untere Leiste (y=186 bis y=210 -> 210 - 10 = 200px Außenabstand) -->
+    <rect x="9" y="186" width="282" height="24" rx="5" fill="url(#wood-grad)" stroke="#3D2006" stroke-width="1.5" />
+    <!-- Feine Lichtkante oben für 3D-Effekt -->
+    <line x1="14" y1="188" x2="286" y2="188" stroke="#E8B882" stroke-width="1.2" stroke-linecap="round" opacity="0.7" />
+  </g>
+</svg>
