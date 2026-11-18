@@ -957,6 +957,60 @@ html, body {
   outline-offset: 2px;
 }
 
+.cronoscroll-color-picker {
+  position: relative;
+  display: inline-flex;
+  width: var(--blossom-picker-size, 28px);
+  height: var(--blossom-picker-size, 28px);
+  flex: 0 0 var(--blossom-picker-size, 28px);
+  align-items: center;
+  justify-content: center;
+}
+
+.cronoscroll-color-input-native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.cronoscroll-blossom-host {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+}
+
+.cronoscroll-blossom-host.is-portaled {
+  position: fixed;
+  z-index: 10000;
+}
+
+.cronoscroll-color-picker:focus-within {
+  border-radius: 9999px;
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.cronoscroll-blossom-host {
+  --bcp-focus-ring: var(--accent);
+  --bcp-focus-ring-gap: var(--bg-surface);
+  --bcp-trigger-shadow: 0 0 0 1px var(--border-medium), 0 2px 8px rgb(15 23 42 / 0.18);
+  --bcp-trigger-shadow-hover: 0 0 0 1px var(--accent), 0 4px 14px rgb(15 23 42 / 0.28);
+}
+
+.cronoscroll-blossom-host .bcp-trigger-btn {
+  display: block;
+}
+
 @media (max-width: 350px) {
   .choice-grid {
     grid-template-columns: 1fr;

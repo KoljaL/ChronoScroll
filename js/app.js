@@ -451,6 +451,7 @@
     setVal('select-country', state.country);
     updateRegionDropdown();
     setVal('select-bundesland', state.bundesland);
+    if (window.CronoBlossomColorPicker) window.CronoBlossomColorPicker.sync();
   }
 
   function updateRegionDropdown() {
@@ -579,6 +580,7 @@
         renderPreview();
       });
     });
+    if (window.CronoBlossomColorPicker) window.CronoBlossomColorPicker.sync(listEl);
   }
 
   // --- MODAL: TERMIN DIREKT AM KALENDER ANLEGEN/EDITIEREN ---
@@ -589,6 +591,9 @@
     document.getElementById('modal-event-date-end').value = dateStr;
     document.getElementById('modal-event-title').value = title;
     document.getElementById('modal-event-color').value = state.categoryColors.custom;
+    if (window.CronoBlossomColorPicker) {
+      window.CronoBlossomColorPicker.sync(document.getElementById('modal-event-color'));
+    }
     document.getElementById('modal-event-title').focus();
     modal.classList.remove('hidden');
   }
