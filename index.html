@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CronoScroll v2.2 — Endlos-Rollkalender Generator</title>
+    <title>ChronoScroll — Endlos-Rollkalender Generator</title>
 
     <script src="js/uiTheme.js"></script>
 
@@ -39,19 +39,13 @@
     <div id="app-container">
       <!-- 1. HEADER (KOPFZEILE) -->
       <header id="app-header" class="bg-slate-900 border-b border-slate-800 px-4 shadow-md">
-        <!-- Brand & Sidebar Toggle -->
-        <div class="header-brand flex items-center space-x-3">
-          <button id="btn-toggle-sidebar" class="text-slate-400 hover:text-slate-100 p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer" type="button" aria-label="Seitenleiste ein-/ausklappen" aria-controls="app-sidebar cad-sidebar" aria-expanded="true" title="Seitenleiste ein-/ausklappen">
-            <i class="fa-solid fa-bars-staggered text-sm"></i>
-          </button>
+        <button id="btn-toggle-sidebar" class="header-sidebar-toggle" type="button" aria-label="Seitenleiste ein-/ausklappen" aria-controls="app-sidebar cad-sidebar" aria-expanded="true" title="Seitenleiste ein-/ausklappen">
+          <i class="fa-solid fa-bars-staggered" aria-hidden="true"></i>
+        </button>
+
+        <div class="header-brand">
           <img class="header-logo" src="img/icons/chronoscroll-logo.svg" alt="ChronoScroll-Logo" width="300" height="230" />
-          <div>
-            <div class="flex items-center space-x-2">
-              <h1 class="font-bold text-slate-100 text-sm md:text-base leading-tight">CronoScroll v2.2</h1>
-              <span class="bg-amber-500/20 text-amber-400 text-[10px] font-mono px-1.5 py-0.5 rounded font-semibold border border-amber-500/30">PRO</span>
-            </div>
-            <p class="text-[11px] text-slate-400 hidden sm:block">14-Monate-Endlosbanner für Holz-Rollkalender & Plotter</p>
-          </div>
+          <h1 class="header-title">ChronoScroll</h1>
         </div>
 
         <div class="mode-switch" role="group" aria-label="Arbeitsmodus">
@@ -105,7 +99,7 @@
             <div id="calendar-export-group" class="header-export-group calendar-export-group">
               <button type="button" id="btn-export-pdf" aria-label="RGB-Plotter-PDF exportieren" title="RGB-Plotter-PDF exportieren. Die Drucksoftware beziehungsweise der Druckdienstleister führt die Ausgabe-Farbkonvertierung aus." class="header-export-primary">
                 <i class="fa-solid fa-file-pdf" aria-hidden="true"></i>
-                <span>RGB-PDF</span>
+                <span>PDF</span>
               </button>
               <div class="export-dropdown">
                 <button type="button" id="calendar-export-menu-toggle" class="header-tool-button export-dropdown-toggle" aria-label="Weitere Kalender-Exportformate" title="Weitere Kalender-Exportformate" aria-haspopup="menu" aria-expanded="false" aria-controls="calendar-export-menu">
@@ -799,7 +793,7 @@
         </div>
         <div class="status-brand">
           <span class="build-label">Build: </span>
-          <span id="build-date"><!-- BUILD_DATE -->18.11.2026 22:54<!-- /BUILD_DATE --></span>
+          <span id="build-date"><!-- BUILD_DATE -->18.11.2026 23:08<!-- /BUILD_DATE --></span>
           <a class="status-logo-link" href="https://github.com/KoljaL/ChronoScroll" target="_blank" rel="noopener noreferrer" aria-label="ChronoScroll auf GitHub (öffnet einen neuen Tab)">
             <span class="sr-only">Code: </span>
             <img src="./img/logo.svg" alt="" width="18" height="18" />
