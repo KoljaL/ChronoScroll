@@ -37,7 +37,7 @@
   --workspace-module-gap: 0.9rem;
 }
 
-:root[data-ui-theme="dark"] {
+:root[data-ui-theme='dark'] {
   color-scheme: dark;
   --bg-canvas: #0b1220;
   --bg-surface: #172235;
@@ -72,10 +72,14 @@
 .theme-transitioning .btn,
 .theme-transitioning .kpi-box,
 .theme-transitioning .validation-card {
-  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   width: 100%;
   margin: 0;
@@ -87,7 +91,9 @@ html, body {
   box-sizing: border-box;
 }
 
-*, *:before, *:after {
+*,
+*:before,
+*:after {
   box-sizing: inherit;
 }
 
@@ -118,7 +124,7 @@ html, body {
   z-index: 30;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr) auto;
-  grid-template-areas: "sidebar brand mode controls theme";
+  grid-template-areas: 'sidebar brand mode controls theme';
   align-items: center;
   gap: 0.6rem;
   padding-block: 0.25rem;
@@ -148,7 +154,9 @@ html, body {
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .header-sidebar-toggle:hover {
@@ -167,7 +175,10 @@ html, body {
   height: var(--header-logo-size);
   flex: 0 0 auto;
   object-fit: contain;
-  transition: background-color 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+  transition:
+    background-color 180ms ease,
+    box-shadow 180ms ease,
+    filter 180ms ease;
 }
 
 .header-title {
@@ -180,12 +191,12 @@ html, body {
   white-space: nowrap;
 }
 
-:root[data-ui-theme="dark"] .header-logo {
+/* :root[data-ui-theme="dark"] .header-logo {
   padding: 0.2rem;
   border-radius: 0.5rem;
   background: rgba(241, 245, 249, 0.92);
   box-shadow: 0 1px 8px rgb(0 0 0 / 0.28);
-}
+} */
 
 #app-header > .mode-switch {
   grid-area: mode;
@@ -262,7 +273,10 @@ html, body {
   color: var(--text-secondary);
   font-size: 0.75rem;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .header-tool-button:hover {
@@ -311,7 +325,9 @@ html, body {
   font-size: 0.72rem;
   font-weight: 700;
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .header-export-primary:hover {
@@ -443,7 +459,7 @@ html, body {
   color: var(--text-secondary);
 }
 
-.tab-btn[aria-selected="true"] {
+.tab-btn[aria-selected='true'] {
   border-bottom-color: var(--accent);
   color: var(--accent-text);
   font-weight: 700;
@@ -671,7 +687,9 @@ html, body {
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .mode-switch-button:hover {
@@ -729,7 +747,9 @@ html, body {
   font: inherit;
   font-size: 0.75rem;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .export-dropdown-note {
@@ -771,8 +791,8 @@ html, body {
   #app-header {
     grid-template-columns: auto minmax(0, 1fr) auto auto;
     grid-template-areas:
-      "sidebar brand mode theme"
-      "controls controls controls controls";
+      'sidebar brand mode theme'
+      'controls controls controls controls';
     padding-block: 0.4rem;
     row-gap: 0.35rem;
   }
@@ -809,18 +829,41 @@ html, body {
     --header-control-size: 1.75rem;
     --header-logo-size: 2.25rem;
   }
-  .header-nav-slot { width: 8rem; flex-basis: 8rem; }
-  .header-export-slot { width: 4.25rem; flex-basis: 4.25rem; }
-  .header-export-primary span { display: none; }
-  .header-zoom-readout { display: none; }
-  .header-tool-button { width: var(--header-control-size); height: var(--header-control-size); }
-  .header-export-primary { width: var(--header-control-size); height: var(--header-control-size); padding: 0; }
+  .header-nav-slot {
+    width: 8rem;
+    flex-basis: 8rem;
+  }
+  .header-export-slot {
+    width: 4.25rem;
+    flex-basis: 4.25rem;
+  }
+  .header-export-primary span {
+    display: none;
+  }
+  .header-zoom-readout {
+    display: none;
+  }
+  .header-tool-button {
+    width: var(--header-control-size);
+    height: var(--header-control-size);
+  }
+  .header-export-primary {
+    width: var(--header-control-size);
+    height: var(--header-control-size);
+    padding: 0;
+  }
 }
 
 @media (max-width: 380px) {
-  #app-header { padding-inline: 0.5rem; }
-  .header-title { display: none; }
-  #app-header > .header-controls { gap: 0.15rem; }
+  #app-header {
+    padding-inline: 0.5rem;
+  }
+  .header-title {
+    display: none;
+  }
+  #app-header > .header-controls {
+    gap: 0.15rem;
+  }
 }
 
 @media (max-width: 350px) {
@@ -828,10 +871,22 @@ html, body {
     --header-control-size: 1.5rem;
     --header-logo-size: 2rem;
   }
-  .header-nav-slot { width: 6.75rem; flex-basis: 6.75rem; gap: 0.2rem; }
-  .header-zoom-controls { gap: 0.15rem; }
-  .header-tool-button { width: var(--header-control-size); height: var(--header-control-size); }
-  .header-export-primary { width: var(--header-control-size); height: var(--header-control-size); }
+  .header-nav-slot {
+    width: 6.75rem;
+    flex-basis: 6.75rem;
+    gap: 0.2rem;
+  }
+  .header-zoom-controls {
+    gap: 0.15rem;
+  }
+  .header-tool-button {
+    width: var(--header-control-size);
+    height: var(--header-control-size);
+  }
+  .header-export-primary {
+    width: var(--header-control-size);
+    height: var(--header-control-size);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -913,7 +968,10 @@ html, body {
   padding: 0.5rem;
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    transform 0.15s ease;
 }
 
 .choice-card {
@@ -1014,7 +1072,7 @@ html, body {
   margin-top: 0.125rem;
 }
 
-.category-color-row input[type="color"] {
+.category-color-row input[type='color'] {
   width: 1.75rem;
   height: 1.75rem;
   flex: 0 0 auto;
@@ -1090,34 +1148,84 @@ html, body {
 }
 
 /* Tailwind bleibt für das Layout; seine bisherigen UI-Farben folgen den Tokens. */
-:is(#app-container, .modal-overlay) :is(.bg-slate-900) { background-color: var(--bg-surface); }
-:is(#app-container, .modal-overlay) :is(.bg-slate-950, .bg-slate-950\/70, .bg-slate-950\/80) { background-color: var(--bg-subtle); }
-:is(#app-container, .modal-overlay) .bg-slate-800 { background-color: var(--bg-muted); }
-:is(#app-container, .modal-overlay) .bg-slate-700 { background-color: var(--border-light); }
-:is(#app-container, .modal-overlay) .bg-amber-500 { background-color: var(--accent-fill); }
-:is(#app-container, .modal-overlay) :is(.bg-amber-500\/20, .bg-sky-500\/20) { background-color: var(--accent-soft); }
-:is(#app-container, .modal-overlay) .bg-emerald-500 { background-color: var(--ok-border); }
+:is(#app-container, .modal-overlay) :is(.bg-slate-900) {
+  background-color: var(--bg-surface);
+}
+:is(#app-container, .modal-overlay) :is(.bg-slate-950, .bg-slate-950\/70, .bg-slate-950\/80) {
+  background-color: var(--bg-subtle);
+}
+:is(#app-container, .modal-overlay) .bg-slate-800 {
+  background-color: var(--bg-muted);
+}
+:is(#app-container, .modal-overlay) .bg-slate-700 {
+  background-color: var(--border-light);
+}
+:is(#app-container, .modal-overlay) .bg-amber-500 {
+  background-color: var(--accent-fill);
+}
+:is(#app-container, .modal-overlay) :is(.bg-amber-500\/20, .bg-sky-500\/20) {
+  background-color: var(--accent-soft);
+}
+:is(#app-container, .modal-overlay) .bg-emerald-500 {
+  background-color: var(--ok-border);
+}
 
-:is(#app-container, .modal-overlay) :is(.text-slate-100, .text-slate-200, .text-slate-300) { color: var(--text-primary); }
-:is(#app-container, .modal-overlay) .text-slate-400 { color: var(--text-secondary); }
-:is(#app-container, .modal-overlay) :is(.text-slate-500, .text-slate-600) { color: var(--text-muted); }
-:is(#app-container, .modal-overlay) :is(.text-amber-400, .text-amber-500, .text-sky-400) { color: var(--accent-text); }
-:is(#app-container, .modal-overlay) .text-emerald-400 { color: var(--ok-text); }
-:is(#app-container, .modal-overlay) .text-rose-400 { color: var(--err-text); }
-:is(#app-container, .modal-overlay) .text-slate-950 { color: var(--accent-contrast); }
+:is(#app-container, .modal-overlay) :is(.text-slate-100, .text-slate-200, .text-slate-300) {
+  color: var(--text-primary);
+}
+:is(#app-container, .modal-overlay) .text-slate-400 {
+  color: var(--text-secondary);
+}
+:is(#app-container, .modal-overlay) :is(.text-slate-500, .text-slate-600) {
+  color: var(--text-muted);
+}
+:is(#app-container, .modal-overlay) :is(.text-amber-400, .text-amber-500, .text-sky-400) {
+  color: var(--accent-text);
+}
+:is(#app-container, .modal-overlay) .text-emerald-400 {
+  color: var(--ok-text);
+}
+:is(#app-container, .modal-overlay) .text-rose-400 {
+  color: var(--err-text);
+}
+:is(#app-container, .modal-overlay) .text-slate-950 {
+  color: var(--accent-contrast);
+}
 
-:is(#app-container, .modal-overlay) :is(.border-slate-800, .border-slate-700) { border-color: var(--border-medium); }
-:is(#app-container, .modal-overlay) :is(.border-amber-400, .border-amber-500, .border-amber-500\/30, .border-sky-500\/30) { border-color: var(--accent); }
-:is(#app-container, .modal-overlay) :is(.hover\:bg-slate-700, .hover\:bg-slate-800):hover { background-color: var(--border-light); }
-:is(#app-container, .modal-overlay) .hover\:bg-amber-400:hover { background-color: var(--accent-hover); }
-:is(#app-container, .modal-overlay) :is(.hover\:bg-amber-500\/30, .hover\:bg-sky-500\/30):hover { background-color: var(--border-light); }
-:is(#app-container, .modal-overlay) :is(.hover\:text-slate-100, .hover\:text-slate-200):hover { color: var(--text-primary); }
-:is(#app-container, .modal-overlay) .hover\:text-rose-400:hover { color: var(--err-text); }
-:is(#app-container, .modal-overlay) .hover\:border-slate-700:hover { border-color: var(--border-strong); }
-:is(#app-container, .modal-overlay) .focus\:border-amber-500:focus { border-color: var(--accent); }
+:is(#app-container, .modal-overlay) :is(.border-slate-800, .border-slate-700) {
+  border-color: var(--border-medium);
+}
+:is(#app-container, .modal-overlay) :is(.border-amber-400, .border-amber-500, .border-amber-500\/30, .border-sky-500\/30) {
+  border-color: var(--accent);
+}
+:is(#app-container, .modal-overlay) :is(.hover\:bg-slate-700, .hover\:bg-slate-800):hover {
+  background-color: var(--border-light);
+}
+:is(#app-container, .modal-overlay) .hover\:bg-amber-400:hover {
+  background-color: var(--accent-hover);
+}
+:is(#app-container, .modal-overlay) :is(.hover\:bg-amber-500\/30, .hover\:bg-sky-500\/30):hover {
+  background-color: var(--border-light);
+}
+:is(#app-container, .modal-overlay) :is(.hover\:text-slate-100, .hover\:text-slate-200):hover {
+  color: var(--text-primary);
+}
+:is(#app-container, .modal-overlay) .hover\:text-rose-400:hover {
+  color: var(--err-text);
+}
+:is(#app-container, .modal-overlay) .hover\:border-slate-700:hover {
+  border-color: var(--border-strong);
+}
+:is(#app-container, .modal-overlay) .focus\:border-amber-500:focus {
+  border-color: var(--accent);
+}
 
-:is(#app-container, .modal-overlay) .font-mono { font-family: var(--font-mono); }
-:is(#app-sidebar, .modal-overlay) :is(input, select) { accent-color: var(--accent); }
+:is(#app-container, .modal-overlay) .font-mono {
+  font-family: var(--font-mono);
+}
+:is(#app-sidebar, .modal-overlay) :is(input, select) {
+  accent-color: var(--accent);
+}
 :is(#app-sidebar, .modal-overlay) :is(input, select):focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
@@ -1138,9 +1246,19 @@ html, body {
   cursor: pointer;
 }
 
-.theme-toggle:hover { background: var(--bg-muted); }
-.theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.theme-toggle svg { display: block; width: 24px; height: 24px; overflow: visible; }
+.theme-toggle:hover {
+  background: var(--bg-muted);
+}
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.theme-toggle svg {
+  display: block;
+  width: 24px;
+  height: 24px;
+  overflow: visible;
+}
 .theme-toggle #moon-cutout {
   transform: translate(14px, -14px);
   transform-box: view-box;
@@ -1155,12 +1273,23 @@ html, body {
 }
 .theme-toggle .sun-beams {
   transform-origin: 16px 16px;
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  transition:
+    transform 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s ease;
 }
-.theme-toggle.is-dark #moon-cutout { transform: translate(5px, 0); }
-.theme-toggle.is-dark .moon-shape { transform: rotate(-30deg); }
-.theme-toggle.is-dark .sun-beams { transform: scale(0) rotate(90deg); opacity: 0; }
+.theme-toggle.is-dark #moon-cutout {
+  transform: translate(5px, 0);
+}
+.theme-toggle.is-dark .moon-shape {
+  transform: rotate(-30deg);
+}
+.theme-toggle.is-dark .sun-beams {
+  transform: scale(0) rotate(90deg);
+  opacity: 0;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .theme-toggle * { transition: none; }
+  .theme-toggle * {
+    transition: none;
+  }
 }
