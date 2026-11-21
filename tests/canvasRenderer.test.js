@@ -199,6 +199,46 @@ test('preview alignment keeps an oversized plate scrollable and the roll left-al
   assert.equal(canvas.style.marginInline, 'auto');
 });
 
+test('roll preview places the QR after the configured gap and reports insufficient space', () => {
+  const fills = [];
+  const drawContext = {
+    save() {}, restore() {}, scale() {}, strokeRect() {},
+    fillRect(...rect) { fills.push({ color: this.fillStyle, rect }); },
+    setLineDash() {}, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {},
+    fillText() {}, measureText(text) { return { width: String(text).length * 6 }; }
+  };
+  const canvas = { style: {}, getContext: () => drawContext };
+  const state = {
+    bVisible: 42, hVisible: 32, pufferLeft: 15, pufferRight: 15,
+    monthLayout: 'single', subColumns: 1, guideLinesCount: 0,
+    viewMode: 'banner', currentMonthIndex: 0, year: 2027, holidays: [], zoom: 1,
+    lineGrid: 0.2, lineBorder: 0.6, paperColor: '#ffffff',
+    colorHeaderBg: '#f1f5f9', colorHeaderText: '#0f172a',
+    colorText: '#0f172a', colorGrid: '#cbd5e1',
+    fontFamily: 'sans', fontHeaderScale: 1, fontDayScale: 1,
+    headerAlign: 'center', headerStyle: 'uppercase',
+    showKW: false, showMoon: false, showCropMarks: false, qrGapMm: 40
+  };
+  let error;
+  const options = { qrErrorHandler: value => { error = value; }, showViewportOverlay: false };
+  context.window.CronoCanvas.render(canvas, { style: {} }, state, options);
+  const geo = geometryContext.window.CronoGeometry.calculate(state);
+  const qrX = (geo.lTotalMm - geo.pufferRightMm + 40) * 2;
+  assert.equal(error, null);
+  assert.ok(fills.some(fill => fill.color === '#ffffff' && fill.rect[0] === qrX && fill.rect[2] === 200));
+
+  fills.length = 0;
+  state.qrEnabled = false;
+  context.window.CronoCanvas.render(canvas, { style: {} }, state, options);
+  assert.equal(error, null);
+  assert.ok(!fills.some(fill => fill.color === '#ffffff' && fill.rect[0] === qrX && fill.rect[2] === 200));
+
+  state.qrEnabled = true;
+  state.pufferRight = 2;
+  context.window.CronoCanvas.render(canvas, { style: {} }, state, options);
+  assert.match(error.message, /Nachlauf vergrößern/);
+});
+
 test('banner crop marks align with the visible window and never mark month or buffer boundaries', () => {
   const strokedPaths = [];
   let currentPath = [];

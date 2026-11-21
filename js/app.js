@@ -101,6 +101,11 @@
     scrollStartX: 0,
     scrollStartY: 0,
   };
+  const presetDefaults = Object.fromEntries(Object.entries(state).filter(([key]) => ![
+    'holidayFilter', 'holidaySearchQuery', 'viewMode', 'currentMonthIndex', 'zoom',
+    'isDraggingViewport', 'dragStartX', 'isPanning', 'panStartX', 'panStartY',
+    'scrollStartX', 'scrollStartY',
+  ].includes(key)));
 
   const canvas = document.getElementById('preview-canvas');
   const container = document.getElementById('canvas-container');
@@ -701,13 +706,25 @@
     keys.forEach((name) => {
       const item = document.createElement('div');
       item.className = 'bg-slate-950 border border-slate-800 rounded-lg p-2.5 flex items-center justify-between text-xs';
-      item.innerHTML = `
-        <span class="font-medium text-slate-200">${name}</span>
-        <div class="flex items-center space-x-2">
-          <button data-name="${name}" class="btn-load-preset bg-slate-800 hover:bg-slate-700 text-amber-400 px-2 py-1 rounded text-[11px] transition cursor-pointer">Laden</button>
-          <button data-name="${name}" class="btn-delete-preset text-slate-500 hover:text-rose-400 p-1 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
-        </div>
-      `;
+      const label = document.createElement('span');
+      label.className = 'font-medium text-slate-200';
+      label.textContent = name;
+      const actions = document.createElement('div');
+      actions.className = 'flex items-center space-x-2';
+      const load = document.createElement('button');
+      load.className = 'btn-load-preset bg-slate-800 hover:bg-slate-700 text-amber-400 px-2 py-1 rounded text-[11px] transition cursor-pointer';
+      load.setAttribute('data-name', name);
+      load.textContent = 'Laden';
+      const remove = document.createElement('button');
+      remove.className = 'btn-delete-preset text-slate-500 hover:text-rose-400 p-1 cursor-pointer';
+      remove.setAttribute('data-name', name);
+      const icon = document.createElement('i');
+      icon.className = 'fa-solid fa-trash';
+      remove.appendChild(icon);
+      actions.appendChild(load);
+      actions.appendChild(remove);
+      item.appendChild(label);
+      item.appendChild(actions);
       container.appendChild(item);
     });
 
@@ -723,12 +740,11 @@
           Object.assign(
             state,
             {
-              designStyle: 'classic',
-              themeKey: null,
+              ...presetDefaults,
               categoryColors: defaultCategoryColors(),
-              showVacations: false,
               bannerCustomTitle: name,
               holidays: [],
+              monthHeaderTextColor: preset.colorHeaderText || presetDefaults.monthHeaderTextColor,
             },
             preset,
           );
@@ -1207,8 +1223,10 @@
       const name = input.value.trim();
       if (!name) return;
       state.bannerCustomTitle = name;
-      const presets = getPresets();
-      presets[name] = { ...state, _calendarPresetVersion: 1 };
+      const presets = {
+        ...getPresets(),
+        [name]: { ...state, _calendarPresetVersion: 1 },
+      };
       savePresets(presets);
       input.value = '';
       renderPresetsList();

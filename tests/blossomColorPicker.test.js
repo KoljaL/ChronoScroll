@@ -308,6 +308,17 @@ test('Blossom adapter initializes existing inputs and forwards picker changes', 
   assert.equal(input.dataset.colorAlpha, '11');
   assert.equal(textInput.value, '#abcdef1c');
   assert.equal(picker.values.at(-1).alpha, 11);
+  alphaInput.value = '0';
+  alphaInput.dispatchEvent(new ui.window.Event('input'));
+  assert.equal(textInput.value, '#abcdef00');
+  alphaInput.value = '100';
+  alphaInput.dispatchEvent(new ui.window.Event('input'));
+  assert.equal(textInput.value, '#abcdef');
+  textInput.value = '#12345680';
+  textInput.dispatchEvent(new ui.window.Event('input'));
+  assert.equal(input.value, '#123456');
+  assert.equal(textInput.value, '#12345680');
+  assert.ok(Math.abs(Number(input.dataset.colorAlpha) - 128 / 255 * 100) < 1e-10);
 });
 
 test('Blossom adapter synchronizes external state and disabled inputs', () => {

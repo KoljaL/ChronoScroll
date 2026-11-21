@@ -47,13 +47,13 @@ test('header controls, separator settings and next-year links update correctly',
     focus() {}
     querySelectorAll(selector) {
       if (selector !== '.btn-load-preset' && selector !== '.btn-delete-preset') return [];
-      if (this.queries[selector]) return this.queries[selector];
-      this.queries[selector] = this.children.map(child => {
-        const button = new Element();
-        button.attributes['data-name'] = child.html.match(/data-name="([^"]+)"/)[1];
-        return button;
-      });
-      return this.queries[selector];
+      const matching = [];
+      const visit = element => {
+        if ((element.className || '').split(/\s+/).includes(selector.slice(1))) matching.push(element);
+        element.children.forEach(visit);
+      };
+      this.children.forEach(visit);
+      return matching;
     }
   }
   const elements = new Map();
@@ -93,6 +93,7 @@ test('header controls, separator settings and next-year links update correctly',
   const storage = {
     cronoscroll_v2_presets: JSON.stringify({ old: {
       monthLayout: 'single', hVisible: 32, bVisible: 50, showVacations: true,
+      colorHeaderText: '#123456',
       holidays: [
         { id: 'keep', title: 'Privat', start: '2027-01-01', end: '2027-01-01', type: 'custom', color: '#123456' },
         { id: 'vac', title: 'Ferien', start: '2027-01-01', end: '2027-01-02', type: 'vacation', color: '#abcdef' }
@@ -295,6 +296,10 @@ test('header controls, separator settings and next-year links update correctly',
   assert.equal(latestState.themeKey, 'wood');
   assert.equal(latestState.paperColor, '#fdfbf7');
   assert.equal(storage.cronoscroll_theme, 'wood');
+  change('select-theme', 'modern');
+  assert.equal(latestState.themeKey, 'modern');
+  assert.equal(get('select-theme').value, 'modern');
+  change('select-theme', 'wood');
   change('color-category-public', '#abcdef', 'input');
   assert.equal(latestState.categoryColors.public, '#abcdef1c');
   assert.equal(latestState.holidays.find(event => event.type === 'public').color, '#abcdef1c');
@@ -323,16 +328,32 @@ test('header controls, separator settings and next-year links update correctly',
   assert.equal(tabs[1].getAttribute('aria-selected'), 'true');
   assert.equal(tabs[1].tabIndex, 0);
   assert.equal(tabs[0].tabIndex, -1);
+  change('input-h-visible', '35', 'input');
+  change('input-b-visible', '50', 'input');
+  change('checkbox-show-qr', false);
+  change('input-qr-gap', '12', 'input');
+  change('input-month-header-text-color', '#abcdef', 'input');
+  change('input-calendar-week-text-color', '#fedcba', 'input');
+  change('input-calendar-week-text-size', '2', 'input');
+  change('input-moon-opacity', '0.2', 'input');
   get('input-preset-name').value = 'new';
   get('btn-save-preset').dispatch('click');
   const list = get('presets-list');
   const load = name => list.querySelectorAll('.btn-load-preset')
     .find(button => button.getAttribute('data-name') === name).dispatch('click');
+  get('btn-mode-banner').dispatch('click');
   load('old');
+  assert.equal(latestState.viewMode, 'banner');
   assert.equal(latestState.hVisible, 30);
   assert.equal(latestState.bVisible, 42);
   assert.equal(latestState.bannerCustomTitle, 'old');
   assert.equal(latestState.showVacations, false);
+  assert.equal(latestState.qrEnabled, true);
+  assert.equal(latestState.qrGapMm, 40);
+  assert.equal(latestState.monthHeaderTextColor, '#123456');
+  assert.equal(latestState.calendarWeekTextColor, '#64748b');
+  assert.equal(latestState.calendarWeekTextSize, 1);
+  assert.equal(latestState.moonOpacity, 0.89);
   assert.ok(latestState.holidays.some(event => event.id === 'keep'));
   assert.ok(!latestState.holidays.some(event => event.id === 'vac'));
   assert.equal(JSON.parse(storage.cronoscroll_v2_presets).old._calendarPresetVersion, 1);
@@ -341,6 +362,14 @@ test('header controls, separator settings and next-year links update correctly',
   assert.equal(latestState.monthSeparators.single.enabled, false);
   assert.equal(latestState.monthSeparators.double.enabled, false);
   load('new');
+  assert.equal(latestState.hVisible, 35);
+  assert.equal(latestState.bVisible, 50);
+  assert.equal(latestState.qrEnabled, false);
+  assert.equal(latestState.qrGapMm, 12);
+  assert.equal(latestState.monthHeaderTextColor, '#abcdef');
+  assert.equal(latestState.calendarWeekTextColor, '#fedcba');
+  assert.equal(latestState.calendarWeekTextSize, 2);
+  assert.equal(latestState.moonOpacity, 0.2);
   assert.equal(latestState.designStyle, 'zen');
   assert.equal(latestState.themeKey, 'wood');
   assert.equal(latestState.monthSeparators.single.widthMm, 5);
@@ -349,6 +378,22 @@ test('header controls, separator settings and next-year links update correctly',
   assert.equal(latestState.categoryColors.public, '#abcdef1c');
   assert.equal(latestState.categoryColors.vacation, '#fedcba1c');
   assert.equal(latestState.categoryColors.custom, '#1234561c');
+  const specialName = 'Familie "<img src=x>" & Freunde';
+  get('input-preset-name').value = specialName;
+  get('btn-save-preset').dispatch('click');
+  const specialItem = list.children.find(item => item.children[0].textContent === specialName);
+  assert.ok(specialItem);
+  assert.equal(specialItem.children[0].children.length, 0);
+  load(specialName);
+  assert.equal(latestState.bannerCustomTitle, specialName);
+  list.querySelectorAll('.btn-delete-preset')
+    .find(button => button.getAttribute('data-name') === specialName).dispatch('click');
+  assert.equal(JSON.parse(storage.cronoscroll_v2_presets)[specialName], undefined);
+  get('input-preset-name').value = '__proto__';
+  get('btn-save-preset').dispatch('click');
+  load('__proto__');
+  assert.equal(latestState.bannerCustomTitle, '__proto__');
+  assert.ok(Object.hasOwn(JSON.parse(storage.cronoscroll_v2_presets), '__proto__'));
 
   change('input-custom-title', 'Familie 2027', 'input');
   const link = get('next-year-link').href;
