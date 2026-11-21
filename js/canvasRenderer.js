@@ -157,8 +157,8 @@ window.CronoCanvas = (function() {
     ctx.lineWidth = Math.max(1, state.lineGrid * state.zoom * 1.5);
     ctx.strokeRect(headerLeftPx, 0, headerWidthPx, dayHeightPx);
 
-    ctx.fillStyle = state.colorHeaderText || state.colorText;
-    ctx.font = `bold ${11 * state.fontHeaderScale * state.zoom}px ${baseFont}`;
+    ctx.fillStyle = state.monthHeaderTextColor || state.colorHeaderText || state.colorText;
+    ctx.font = `bold ${11 * state.fontHeaderScale * (state.monthHeaderTextSize || 1) * state.zoom}px ${baseFont}`;
     ctx.textAlign = state.headerAlign || 'center';
     ctx.textBaseline = 'middle';
 
@@ -263,8 +263,8 @@ window.CronoCanvas = (function() {
         // --- 6. KALENDERWOCHE (KW) BADGE AM MONTAG ---
         if (state.showKW && day.isoWeek) {
           ctx.save();
-          ctx.fillStyle = '#64748b';
-          ctx.font = `bold ${7.5 * state.zoom}px ${baseFont}`;
+          ctx.fillStyle = state.calendarWeekTextColor || '#64748b';
+          ctx.font = `bold ${7.5 * (state.calendarWeekTextSize || 1) * state.zoom}px ${baseFont}`;
           ctx.fillText(`KW ${day.isoWeek}`, cellLeftPx + leftOffsetPx, textY);
           leftOffsetPx += ctx.measureText(`KW ${day.isoWeek}`).width + (5 * state.zoom);
           ctx.restore();
@@ -273,6 +273,7 @@ window.CronoCanvas = (function() {
         // --- 7. MONDPHASEN-PIKTOGRAMM ---
         if (state.showMoon && day.moonPhase) {
           ctx.save();
+          ctx.globalAlpha = Number.isFinite(state.moonOpacity) ? state.moonOpacity : 0.89;
           ctx.font = `${8.5 * state.zoom}px sans-serif`;
           ctx.fillStyle = '#475569';
           ctx.fillText(day.moonPhase.unicode, cellLeftPx + leftOffsetPx, textY);
@@ -569,6 +570,7 @@ window.CronoCanvas = (function() {
   }
 
   function drawCoverageQr(ctx, state, geo, pixelsPerMm) {
+    if (state.qrEnabled === false) return;
     if (typeof window.qrcode !== 'function') {
       throw new Error('Die QR-Code-Bibliothek ist nicht geladen.');
     }
@@ -593,8 +595,10 @@ window.CronoCanvas = (function() {
 
     const qrSize = qrSizeMm * pixelsPerMm;
     const moduleSize = moduleSizeMm * pixelsPerMm;
+    const gapMm = Math.max(0, Number.isFinite(state.qrGapMm) ? state.qrGapMm : 40);
+    const availableQrX = Math.max(0, geo.pufferRightMm - qrSizeMm);
     const qrX = (geo.lTotalMm - geo.pufferRightMm +
-      (geo.pufferRightMm - qrSizeMm) / 2) * pixelsPerMm;
+      Math.min(gapMm, availableQrX)) * pixelsPerMm;
     const qrY = (geo.hVisibleMm - qrSizeMm) / 2 * pixelsPerMm;
 
     ctx.fillStyle = '#ffffff';

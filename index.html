@@ -165,6 +165,8 @@
                 <span class="text-amber-400 font-mono" id="year-range-display">2026 – 2028</span>
               </label>
               <input type="number" id="input-year" value="2027" min="1900" max="2100" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-mono text-sm focus:outline-none focus:border-amber-500" />
+              <label for="input-custom-title" class="text-xs font-semibold uppercase tracking-wider text-slate-400 block pt-2">Kalendername</label>
+              <input type="text" id="input-custom-title" value="CRONOSCROLL 2027" placeholder="z.B. Familie Mustermann" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100" />
               <p class="text-[11px] text-slate-400">14 Monate (Dezember Vorjahr bis Januar Folgejahr).</p>
             </div>
 
@@ -174,18 +176,22 @@
 
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label for="input-h-visible" class="text-xs text-slate-300 block mb-1">Höhe der Schreibplatte</label>
+                  <label for="input-h-visible" class="text-xs text-slate-300 block mb-1">Höhe Sichtfenster</label>
                   <div class="relative">
-                    <input type="number" id="input-h-visible" value="32.0" step="0.1" min="10" max="150" class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-3 pr-8 py-1.5 text-sm font-mono text-slate-100 focus:outline-none focus:border-amber-500" />
+                    <input type="number" id="input-h-visible" value="30.0" step="0.1" min="10" max="150" class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-3 pr-8 py-1.5 text-sm font-mono text-slate-100 focus:outline-none border-slate-700" />
                     <span class="absolute right-3 top-1.5 text-xs text-slate-500 font-mono">cm</span>
                   </div>
+                  <label for="input-backpanel-offset-height" class="text-[10px] text-slate-500 block mt-1">Rückwandversatz (CAD/BOM)</label>
+                  <input type="number" id="input-backpanel-offset-height" value="2" step="1" min="-100" max="100" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs font-mono text-slate-100" aria-label="Rückwandversatz Höhe" />
                 </div>
                 <div>
-                  <label for="input-b-visible" class="text-xs text-slate-300 block mb-1">Breite für drei Monate</label>
+                  <label for="input-b-visible" class="text-xs text-slate-300 block mb-1">Breite Sichtfenster</label>
                   <div class="relative">
                     <input type="number" id="input-b-visible" value="42.0" step="0.1" min="15" max="200" class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-3 pr-8 py-1.5 text-sm font-mono text-slate-100 focus:outline-none focus:border-amber-500" />
                     <span class="absolute right-3 top-1.5 text-xs text-slate-500 font-mono">cm</span>
                   </div>
+                  <label for="input-backpanel-offset-width" class="text-[10px] text-slate-500 block mt-1">Rückwandversatz (CAD/BOM)</label>
+                  <input type="number" id="input-backpanel-offset-width" value="4" step="1" min="-100" max="100" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs font-mono text-slate-100" aria-label="Rückwandversatz Breite" />
                 </div>
               </div>
             </div>
@@ -222,16 +228,23 @@
               </div>
 
               <div>
-                <label for="input-custom-title" class="text-xs text-slate-300 block mb-1">Titeltext</label>
-                <input type="text" id="input-custom-title" value="CRONOSCROLL 2027" placeholder="z.B. Familie Mustermann" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100" />
-              </div>
-
-              <div>
                 <label for="select-puffer-right-content" class="text-xs text-slate-300 block mb-1">Inhalt des rechten Nachlaufs</label>
                 <select id="select-puffer-right-content" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-100">
                   <option value="blank">Montage-Leerraum (Klassisch)</option>
                   <option value="notes">Jahres-Rückblick & Notizen</option>
                 </select>
+              </div>
+            </div>
+
+            <div class="border-t border-slate-800 pt-3 space-y-2">
+              <label for="checkbox-show-qr" class="flex items-center space-x-2 text-xs text-slate-200">
+                <input type="checkbox" id="checkbox-show-qr" checked class="rounded border-slate-700 bg-slate-950 text-amber-500" />
+                <span>QR-Code in Vorschau und Export anzeigen</span>
+              </label>
+              <label for="input-qr-gap" class="text-xs text-slate-300 block">Abstand zum letzten Monat</label>
+              <div class="relative">
+                <input type="number" id="input-qr-gap" value="40" step="1" min="0" max="100" class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-3 pr-10 py-1.5 text-xs font-mono text-slate-100" />
+                <span class="absolute right-3 top-1.5 text-xs text-slate-500 font-mono">mm</span>
               </div>
             </div>
 
@@ -793,7 +806,7 @@
         </div>
         <div class="status-brand">
           <span class="build-label">Build: </span>
-          <span id="build-date"><!-- BUILD_DATE -->19.11.2026 21:44<!-- /BUILD_DATE --></span>
+          <span id="build-date"><!-- BUILD_DATE -->21.11.2026 13:21<!-- /BUILD_DATE --></span>
           <a class="status-logo-link" href="https://github.com/KoljaL/ChronoScroll" target="_blank" rel="noopener noreferrer" aria-label="ChronoScroll auf GitHub (öffnet einen neuen Tab)">
             <span class="sr-only">Code: </span>
             <img src="./img/logo.svg" alt="" width="18" height="18" />

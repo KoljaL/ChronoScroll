@@ -275,7 +275,7 @@ test('Blossom adapter initializes existing inputs and forwards picker changes', 
   assert.ok(picker);
   assert.equal(input.value, '#abcdef');
   assert.equal(picker.options.colors.length, ui.window.CronoBlossomColorPicker.config.colors.length);
-  assert.equal(picker.options.showAlphaSlider, false);
+  assert.equal(picker.options.showAlphaSlider, true);
   assert.equal(picker.options.showShadeSlider, true);
   assert.equal(input.classList.contains('cronoscroll-color-input-native'), true);
   assert.equal(picker.container.listeners.pointerdown, undefined);

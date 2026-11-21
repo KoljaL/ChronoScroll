@@ -8,7 +8,7 @@ window.CronoGeometry = (function() {
 
   function calculate(state) {
     const bVisible = Math.max(10, parseFloat(state.bVisible) || 42.0); // cm
-    const hVisible = Math.max(10, parseFloat(state.hVisible) || 32.0); // cm
+    const hVisible = Math.max(10, parseFloat(state.hVisible) || 30.0); // cm
     const pufferLeft = Math.max(0, parseFloat(state.pufferLeft ?? state.puffer) || 15.0); // cm
     const pufferRight = Math.max(0, parseFloat(state.pufferRight ?? state.puffer) || 15.0); // cm
     
@@ -72,8 +72,8 @@ window.CronoGeometry = (function() {
     const woodRailLengthCm = bVisible + (pufferLeft > 0 ? 12 : 8) + (pufferRight > 0 ? 12 : 8);
     const roundDowelLengthCm = hVisible + 5.0; // 5 cm Überstand für Drehknäufe & Lager
     const backingBoardCm = {
-      width: bVisible,
-      height: hVisible,
+      width: bVisible + (Math.max(-100, parseFloat(state.backpanelOffsetWidthMm) || 4.0) / 10),
+      height: hVisible + (Math.max(-100, parseFloat(state.backpanelOffsetHeightMm) || 2.0) / 10),
       thicknessMm: 4.0 // Empfehlung: 4-6 mm Multiplex / Acrylglas
     };
 

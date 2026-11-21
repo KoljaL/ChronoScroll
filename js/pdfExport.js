@@ -93,27 +93,34 @@ window.CronoPDF = (function() {
     }
     const geo = window.CronoGeometry.calculate(state);
     const design = window.CronoDesigns && window.CronoDesigns.active(state);
-    if (typeof window.qrcode !== 'function') {
+    const qrEnabled = state.qrEnabled !== false;
+    if (qrEnabled && typeof window.qrcode !== 'function') {
       throw new Error('Die QR-Code-Bibliothek ist nicht geladen.');
     }
     if (!Number.isFinite(geo.lTotalMm) || geo.lTotalMm <= 0 ||
         !Number.isFinite(geo.hVisibleMm) || geo.hVisibleMm <= 0) {
       throw new Error('Die berechneten Rollenmaße sind ungültig.');
     }
-    const url = window.CronoShare.createNextYearUrl(state);
-    const qr = window.qrcode(0, 'L');
-    qr.addData(url);
-    try {
-      qr.make();
-    } catch (error) {
-      throw new Error(`QR-Code konnte nicht erstellt werden: ${error.message || error}`);
-    }
-    const moduleCount = qr.getModuleCount();
-    const qrSizeMm = Math.min(state.pufferRight * 10 - 10, geo.hVisibleMm - 10, 100);
-    const moduleSizeMm = qrSizeMm / (moduleCount + 8);
-    if (!Number.isFinite(moduleCount) || moduleCount <= 0 ||
-        !Number.isFinite(qrSizeMm) || moduleSizeMm < 0.25) {
-      throw new Error('Der rechte Montagepuffer ist für den QR-Code zu schmal. Bitte den Puffer vergrößern.');
+    let qr = null;
+    let moduleCount = 0;
+    let qrSizeMm = 0;
+    let moduleSizeMm = 0;
+    if (qrEnabled) {
+      const url = window.CronoShare.createNextYearUrl(state);
+      qr = window.qrcode(0, 'L');
+      qr.addData(url);
+      try {
+        qr.make();
+      } catch (error) {
+        throw new Error(`QR-Code konnte nicht erstellt werden: ${error.message || error}`);
+      }
+      moduleCount = qr.getModuleCount();
+      qrSizeMm = Math.min(state.pufferRight * 10 - 10, geo.hVisibleMm - 10, 100);
+      moduleSizeMm = qrSizeMm / (moduleCount + 8);
+      if (!Number.isFinite(moduleCount) || moduleCount <= 0 ||
+          !Number.isFinite(qrSizeMm) || moduleSizeMm < 0.25) {
+        throw new Error('Der rechte Montagepuffer ist für den QR-Code zu schmal. Bitte den Puffer vergrößern.');
+      }
     }
     const monthsData = window.CronoHolidays.get14MonthsData(state.year, state.holidays, state);
     if (!Array.isArray(monthsData) || monthsData.length !== 14) {
@@ -328,21 +335,25 @@ window.CronoPDF = (function() {
     const leadOutStartMm = geo.lTotalMm - geo.pufferRightMm;
     doc.setFillColor(...(design ? paperRgb : [248, 250, 252]));
     doc.rect(leadOutStartMm, 0, geo.pufferRightMm, geo.hVisibleMm, 'F');
-    const qrX = leadOutStartMm + (geo.pufferRightMm - qrSizeMm) / 2;
-    const qrY = (geo.hVisibleMm - qrSizeMm) / 2;
-    doc.setFillColor(255, 255, 255);
-    doc.rect(qrX, qrY, qrSizeMm, qrSizeMm, 'F');
-    doc.setFillColor(0, 0, 0);
-    for (let row = 0; row < moduleCount; row++) {
-      for (let col = 0; col < moduleCount;) {
-        if (!qr.isDark(row, col)) {
-          col++;
-          continue;
+    if (qrEnabled) {
+      const gapMm = Math.max(0, Number.isFinite(state.qrGapMm) ? state.qrGapMm : 40);
+      const availableQrX = Math.max(0, geo.pufferRightMm - qrSizeMm);
+      const qrX = leadOutStartMm + Math.min(gapMm, availableQrX);
+      const qrY = (geo.hVisibleMm - qrSizeMm) / 2;
+      doc.setFillColor(255, 255, 255);
+      doc.rect(qrX, qrY, qrSizeMm, qrSizeMm, 'F');
+      doc.setFillColor(0, 0, 0);
+      for (let row = 0; row < moduleCount; row++) {
+        for (let col = 0; col < moduleCount;) {
+          if (!qr.isDark(row, col)) {
+            col++;
+            continue;
+          }
+          const start = col++;
+          while (col < moduleCount && qr.isDark(row, col)) col++;
+          doc.rect(qrX + (start + 4) * moduleSizeMm, qrY + (row + 4) * moduleSizeMm,
+            (col - start) * moduleSizeMm, moduleSizeMm, 'F');
         }
-        const start = col++;
-        while (col < moduleCount && qr.isDark(row, col)) col++;
-        doc.rect(qrX + (start + 4) * moduleSizeMm, qrY + (row + 4) * moduleSizeMm,
-          (col - start) * moduleSizeMm, moduleSizeMm, 'F');
       }
     }
 
@@ -365,7 +376,9 @@ window.CronoPDF = (function() {
     const originalVersion = jsPDF.version;
     try {
       if (originalVersion) jsPDF.version = `${JSPDF_VERSION} via ChronoScroll`;
-      doc.save(`Rollkalender-${state.year}.pdf`);
+      const calendarName = String(state.bannerCustomTitle || `Rollkalender-${state.year}`)
+        .trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '-').replace(/\s+/g, '-');
+      doc.save(`${calendarName || `Rollkalender-${state.year}`}.pdf`);
     } finally {
       if (originalVersion) jsPDF.version = originalVersion;
     }

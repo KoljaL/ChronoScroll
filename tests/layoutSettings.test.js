@@ -248,19 +248,7 @@ test('header controls, separator settings and next-year links update correctly',
   assert.equal(latestState.currentMonthIndex, activeMonth);
   get('btn-mode-calendar').dispatch('click');
   assert.equal(get('app-container').classList.contains('cad-mode'), false);
-  const sidebarToggle = get('btn-toggle-sidebar');
-  sidebarToggle.dispatch('click');
-  assert.equal(get('app-container').classList.contains('sidebar-collapsed'), true);
-  assert.equal(sidebarToggle.getAttribute('aria-expanded'), 'false');
-  assert.equal(get('app-sidebar').inert, true);
-  assert.equal(get('cad-sidebar').inert, true);
   get('btn-mode-cad').dispatch('click');
-  assert.equal(get('app-container').classList.contains('sidebar-collapsed'), true);
-  sidebarToggle.dispatch('click');
-  assert.equal(get('app-container').classList.contains('sidebar-collapsed'), false);
-  assert.equal(sidebarToggle.getAttribute('aria-expanded'), 'true');
-  assert.equal(get('app-sidebar').inert, false);
-  assert.equal(get('cad-sidebar').inert, false);
   get('btn-mode-calendar').dispatch('click');
   assert.equal(context.window.CronoScrollCADBridge.getSnapshot().dimensions.windowWidth, 420);
   assert.equal(context.window.CronoScrollCADBridge.getSnapshot().dimensions.windowHeight, 320);
@@ -268,7 +256,7 @@ test('header controls, separator settings and next-year links update correctly',
   assert.equal(latestState.themeKey, 'sage');
   assert.equal(latestState.paperColor, '#fcfdfa');
   assert.equal(latestState.holidays.find(event => event.type === 'public').color, '#fef08a');
-  assert.equal(latestState.holidays.find(event => event.type === 'vacation').color, '#bfdbfe');
+  assert.equal(latestState.holidays.find(event => event.type === 'vacation'), undefined);
   const change = (id, value, type = 'change') => {
     const element = get(id);
     if (typeof value === 'boolean') element.checked = value;
@@ -303,6 +291,7 @@ test('header controls, separator settings and next-year links update correctly',
   change('color-category-public', '#abcdef', 'input');
   assert.equal(latestState.categoryColors.public, '#abcdef');
   assert.equal(latestState.holidays.find(event => event.type === 'public').color, '#abcdef');
+  change('checkbox-show-vacations', true);
   assert.equal(latestState.holidays.find(event => event.type === 'vacation').color, '#bfdbfe');
   change('color-category-vacation', '#fedcba', 'input');
   assert.equal(latestState.holidays.find(event => event.type === 'vacation').color, '#fedcba');
@@ -344,7 +333,7 @@ test('header controls, separator settings and next-year links update correctly',
 
   change('input-custom-title', 'Familie 2027', 'input');
   const link = get('next-year-link').href;
-  assert.equal(get('next-year-link').textContent, link);
+  assert.equal(get('next-year-link').textContent, `Einstellungen für ${latestState.year + 1} teilen`);
   assert.equal(link, context.window.CronoShare.createNextYearUrl(latestState));
   await get('btn-copy-next-year-link').listeners.click();
   assert.equal(copied, link);

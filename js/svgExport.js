@@ -150,7 +150,9 @@ window.CronoVector = (function() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Rollkalender-${state.year}.svg`;
+    const calendarName = String(state.bannerCustomTitle || `Rollkalender-${state.year}`)
+      .trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '-').replace(/\s+/g, '-');
+    a.download = `${calendarName || `Rollkalender-${state.year}`}.svg`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -182,7 +184,9 @@ window.CronoVector = (function() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Rollkalender-${state.year}-300dpi.png`;
+      const calendarName = String(state.bannerCustomTitle || `Rollkalender-${state.year}`)
+        .trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '-').replace(/\s+/g, '-');
+      a.download = `${calendarName || `Rollkalender-${state.year}`}-300dpi.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

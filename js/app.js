@@ -20,13 +20,18 @@
   // Zentraler App State
   const state = {
     year: 2027,
-    hVisible: 32.0, // cm
+    hVisible: 30.0, // cm
     bVisible: 42.0, // cm
+    backpanelOffsetHeightMm: 2.0,
+    backpanelOffsetWidthMm: 4.0,
     pufferLeft: 15.0, // cm
     pufferRight: 15.0, // cm
     pufferLeftContent: 'blank', // 'blank', 'title', 'year_overview', 'notes'
     pufferRightContent: 'blank', // 'blank', 'notes'
     bannerCustomTitle: 'CRONOSCROLL 2027',
+    qrEnabled: true,
+    qrGapMm: 40,
+    showVacations: false,
 
     monthLayout: 'single', // 'single' oder 'double' Tageslisten pro Monat
     designStyle: 'classic',
@@ -40,6 +45,11 @@
     showCropMarks: false,
     headerStyle: 'uppercase', // 'uppercase', 'titlecase', 'numbered'
     headerAlign: 'center',
+    monthHeaderTextColor: '#0f172a',
+    monthHeaderTextSize: 1.0,
+    calendarWeekTextColor: '#64748b',
+    calendarWeekTextSize: 1.0,
+    moonOpacity: 0.89,
 
     fontFamily: 'sans',
     fontHeaderScale: 1.0,
@@ -257,7 +267,9 @@
   // Feiertage & Ferien initialisieren
   function loadDefaultHolidays() {
     const pub = window.CronoHolidays.getDACHHolidays(state.year, state.country, state.bundesland);
-    const vac = window.CronoHolidays.getSchoolVacations(state.year, state.country, state.bundesland);
+    const vac = state.showVacations
+      ? window.CronoHolidays.getSchoolVacations(state.year, state.country, state.bundesland)
+      : [];
     state.holidays = [...pub, ...vac].map((event) => ({
       ...event,
       color: state.categoryColors[event.type] || event.color,
@@ -363,7 +375,7 @@
     try {
       const url = window.CronoShare.createNextYearUrl(state);
       link.href = url;
-      link.textContent = url;
+      link.textContent = `Einstellungen für ${state.year + 1} teilen`;
       button.disabled = false;
       status.textContent = '';
     } catch (error) {
@@ -389,6 +401,11 @@
     setVal('input-year', state.year);
     setVal('input-h-visible', state.hVisible);
     setVal('input-b-visible', state.bVisible);
+    setVal('input-backpanel-offset-height', state.backpanelOffsetHeightMm);
+    setVal('input-backpanel-offset-width', state.backpanelOffsetWidthMm);
+    setChecked('checkbox-show-qr', state.qrEnabled);
+    setVal('input-qr-gap', state.qrGapMm);
+    setChecked('checkbox-show-vacations', state.showVacations);
     setVal('input-puffer-left', state.pufferLeft);
     setVal('input-puffer-right', state.pufferRight);
     setVal('select-puffer-left-content', state.pufferLeftContent);
@@ -413,6 +430,11 @@
     setChecked('checkbox-show-cropmarks', state.showCropMarks);
     setVal('select-header-style', state.headerStyle);
     setVal('select-header-align', state.headerAlign);
+    setVal('input-month-header-text-color', state.monthHeaderTextColor);
+    setVal('input-month-header-text-size', state.monthHeaderTextSize);
+    setVal('input-calendar-week-text-color', state.calendarWeekTextColor);
+    setVal('input-calendar-week-text-size', state.calendarWeekTextSize);
+    setVal('input-moon-opacity', state.moonOpacity);
 
     // Stil
     setVal('select-design-style', state.designStyle);
@@ -802,6 +824,12 @@
     };
     bindNum('input-h-visible', 'hVisible');
     bindNum('input-b-visible', 'bVisible');
+    bindNum('input-backpanel-offset-height', 'backpanelOffsetHeightMm');
+    bindNum('input-backpanel-offset-width', 'backpanelOffsetWidthMm');
+    bindNum('input-qr-gap', 'qrGapMm');
+    bindNum('input-month-header-text-size', 'monthHeaderTextSize');
+    bindNum('input-calendar-week-text-size', 'calendarWeekTextSize');
+    bindNum('input-moon-opacity', 'moonOpacity');
     bindNum('input-puffer-left', 'pufferLeft');
     bindNum('input-puffer-right', 'pufferRight');
     bindNum('input-font-header-scale', 'fontHeaderScale');
@@ -884,6 +912,18 @@
       state.showMoon = e.target.checked;
       renderPreview();
     });
+    const checkboxQr = document.getElementById('checkbox-show-qr');
+    if (checkboxQr) checkboxQr.addEventListener('change', (e) => {
+      state.qrEnabled = e.target.checked;
+      renderPreview();
+    });
+    const checkboxVacations = document.getElementById('checkbox-show-vacations');
+    if (checkboxVacations) checkboxVacations.addEventListener('change', (e) => {
+      state.showVacations = e.target.checked;
+      loadDefaultHolidays();
+      renderHolidaysList();
+      renderPreview();
+    });
     document.getElementById('checkbox-show-cropmarks').addEventListener('change', (e) => {
       state.showCropMarks = e.target.checked;
       renderPreview();
@@ -895,6 +935,20 @@
     document.getElementById('select-header-align').addEventListener('change', (e) => {
       state.headerAlign = e.target.value;
       renderPreview();
+    });
+    ['input-month-header-text-color'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', e => {
+        state.monthHeaderTextColor = e.target.value;
+        renderPreview();
+      });
+    });
+    ['input-calendar-week-text-color'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', e => {
+        state.calendarWeekTextColor = e.target.value;
+        renderPreview();
+      });
     });
     document.getElementById('select-font-family').addEventListener('change', (e) => {
       state.fontFamily = e.target.value;
@@ -1109,15 +1163,6 @@
       renderPresetsList();
     });
 
-    // 10. Zuschnittliste Modal
-    document.getElementById('btn-open-cutlist').addEventListener('click', openCutListModal);
-    document.getElementById('btn-close-cutlist').addEventListener('click', closeCutListModal);
-    document.getElementById('btn-copy-cutlist').addEventListener('click', () => {
-      const geo = window.CronoGeometry.calculate(state);
-      const text = `CRONOSCROLL — HOLZ- & ZUSCHNITTLISTE (${state.year})\n\n` + `1. Obere & untere Holz-Tragleiste: 2x Länge ${geo.woodRailLengthCm.toFixed(1)} cm (z.B. 25x45 mm Eiche/Buche)\n` + `2. Rundstäbe (Walzen): 2x Länge ${geo.roundDowelLengthCm.toFixed(1)} cm (Durchmesser 22-25 mm)\n` + `3. Schreibplatte (Rückwand): 1x ${geo.backingBoardCm.width.toFixed(1)} cm × ${geo.backingBoardCm.height.toFixed(1)} cm (5 mm Multiplex/MDF)\n` + `4. Papierbahn: Breite ${geo.hVisible.toFixed(1)} cm × Gesamtlänge ${(geo.lTotal / 100).toFixed(2)} m (90-120 g/m² CAD-Papier)\n` + `5. Tageszeilenhöhe: ${(geo.hDay * 10).toFixed(1)} mm\n`;
-      navigator.clipboard.writeText(text).then(() => alert('Zuschnittliste in die Zwischenablage kopiert!'));
-    });
-
     // 11. Export-Aktionen
     document.getElementById('btn-export-pdf').addEventListener('click', () => {
       try {
@@ -1309,19 +1354,6 @@
     window.addEventListener('mouseup', () => {
       state.isDraggingViewport = false;
     });
-
-    // Sidebar Ein-/Ausklappen (Drawer für Tablets/Laptops)
-    const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
-    if (btnToggleSidebar) {
-      btnToggleSidebar.addEventListener('click', () => {
-        const appContainer = document.getElementById('app-container');
-        const collapsed = appContainer.classList.toggle('sidebar-collapsed');
-        btnToggleSidebar.setAttribute('aria-expanded', String(!collapsed));
-        document.getElementById('app-sidebar').inert = collapsed;
-        document.getElementById('cad-sidebar').inert = collapsed;
-        setTimeout(renderPreview, 260);
-      });
-    }
 
     document.getElementById('btn-analyze-coverage').addEventListener('click', refreshCoverageAdvice);
     document.getElementById('coverage-recommendations').addEventListener('click', (event) => {

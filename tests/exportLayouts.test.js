@@ -336,7 +336,7 @@ test('PDF encodes the shared URL as vector modules within the right buffer', () 
   assert.equal(encodedUrl, context.window.CronoShare.createNextYearUrl(state));
   assert.deepEqual(Array.from(exportedDoc.options.format), [2260, 320]);
   const white = exportedDoc.rects.find(({ args, color }) =>
-    args[0] === 2135 && args[1] === 110 && args[2] === 100 &&
+    args[0] === 2150 && args[1] === 110 && args[2] === 100 &&
     args[3] === 100 && JSON.stringify(color) === '[255,255,255]');
   assert.ok(white);
   const moduleSize = 100 / (qr.getModuleCount() + 8);
@@ -344,10 +344,10 @@ test('PDF encodes the shared URL as vector modules within the right buffer', () 
     JSON.stringify(color) === '[0,0,0]' && args[4] === 'F');
   const drawn = new Set();
   for (const { args: [x, y, width, height] } of black) {
-    assert.ok(x >= 2135 + 4 * moduleSize && x + width <= 2235 - 4 * moduleSize + 1e-9);
+    assert.ok(x >= 2150 + 4 * moduleSize && x + width <= 2250 - 4 * moduleSize + 1e-9);
     assert.ok(y >= 110 + 4 * moduleSize && y + height <= 210 - 4 * moduleSize + 1e-9);
     const row = Math.round((y - 110) / moduleSize) - 4;
-    const first = Math.round((x - 2135) / moduleSize) - 4;
+    const first = Math.round((x - 2150) / moduleSize) - 4;
     for (let col = first; col < first + Math.round(width / moduleSize); col++) drawn.add(`${row},${col}`);
   }
   for (let row = 0; row < qr.getModuleCount(); row++) {
