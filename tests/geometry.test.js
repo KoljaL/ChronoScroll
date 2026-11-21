@@ -36,6 +36,38 @@ test('back panel offsets enlarge CAD and BOM sizes without changing the visible 
   assert.equal(geo.backingBoardCm.height, 30.2);
 });
 
+test('zero offsets and zero buffers remain zero', () => {
+    const geo = calculate({
+      bVisible: 42, hVisible: 30, pufferLeft: 0, pufferRight: 0,
+      backpanelOffsetWidthMm: 0, backpanelOffsetHeightMm: 0
+    });
+    assert.equal(geo.backingBoardCm.width, 42);
+    assert.equal(geo.backingBoardCm.height, 30);
+    assert.equal(geo.pufferLeftMm, 0);
+    assert.equal(geo.pufferRightMm, 0);
+});
+
+test('translucent colors are blended onto the paper for PDF', () => {
+  assert.equal(context.window.CronoGeometry.flattenColor('#ff00001c', '#ffffff'), '#ffe3e3');
+  assert.equal(context.window.CronoGeometry.flattenColor('#ff000000', '#123456'), '#123456');
+  assert.equal(context.window.CronoGeometry.flattenColor('#ff0000ff', '#123456'), '#ff0000');
+});
+
+test('QR placement preserves the requested gap and rejects an insufficient buffer', () => {
+    const dependencies = {
+      CronoShare: { createNextYearUrl: () => 'https://example.com' },
+      qrcode: () => ({ addData() {}, make() {}, getModuleCount: () => 21 })
+    };
+    const state = { bVisible: 42, hVisible: 30, pufferRight: 15, qrGapMm: 40 };
+    const geo = calculate(state);
+    const qr = context.window.CronoGeometry.createQr(state, geo, dependencies);
+    assert.equal(qr.x - (geo.lTotalMm - geo.pufferRightMm), 40);
+    assert.ok(qr.x + qr.size <= geo.lTotalMm);
+    assert.throws(() => context.window.CronoGeometry.createQr(
+      { ...state, qrGapMm: 149 }, geo, dependencies), /zu schmal/);
+    assert.equal(context.window.CronoGeometry.createQr({ ...state, qrEnabled: false }, geo, {}), null);
+});
+
 test('double-column layout preserves the physical dimensions and maps days 1–15 / 16–31', () => {
   const single = calculate({ bVisible: 42, hVisible: 32, pufferLeft: 15, pufferRight: 15 });
   const double = calculate({

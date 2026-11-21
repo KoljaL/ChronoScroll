@@ -19,6 +19,41 @@ const months = holidays.get14MonthsData(2028, [
   { title: 'Feiertag & Fest', start: '2028-02-29', end: '2028-02-29', type: 'public', color: '#ff0000' }
 ]);
 
+test('moon shapes share the selected opacity and disappear at zero opacity', () => {
+  const transparent = designs.moonCommands('new', 10, 20, 1, 0, '#ffffff');
+  assert.equal(transparent.length, 0);
+  const opaque = designs.moonCommands('new', 10, 20, 1, 1, '#ffffff');
+  assert.equal(opaque[0].fillColor, '#475569');
+  const half = designs.moonCommands('first_quarter', 10, 20, 1, 0.5, '#ffffff');
+  assert.equal(half[0].strokeColor, '#a3aab4');
+  assert.ok(half.some(command => command.type === 'line'));
+  assert.ok(designs.svgCommands(half, 'sans').join('').includes('#a3aab4'));
+  const coloredPaper = designs.moonCommands('new', 10, 20, 1, 0.5, '#ff000080', '#0000ff');
+  assert.equal(coloredPaper[0].fillColor, '#642b74');
+});
+
+test('all special designs apply header and calendar-week controls', () => {
+  const geo = geometry.calculate(state);
+  const month = {
+    ...months[2],
+    days: [{ dayNum: 1, dayName: 'Mo', isValid: true, isoWeek: 9 }]
+  };
+  for (const designStyle of designs.styles) {
+    const current = {
+      ...state, designStyle, headerStyle: 'titlecase', headerAlign: 'left',
+      monthHeaderTextColor: '#112233', calendarWeekTextColor: '#445566',
+      calendarWeekTextSize: 1.5
+    };
+    const commands = designs.monthCommands(current, geo, month, 2, 0);
+    const header = commands.find(command => command.type === 'text');
+    assert.equal(header.value, month.label);
+    assert.equal(header.align, 'left');
+    assert.equal(header.textColor, '#112233');
+    assert.ok(commands.some(command => command.type === 'text' &&
+      String(command.value).includes('9') && command.textColor === '#445566'), designStyle);
+  }
+});
+
 test('all designs use the original coordinates and stay within the roll in both layouts', () => {
   for (const designStyle of designs.styles) {
     for (const monthLayout of ['single', 'double']) {

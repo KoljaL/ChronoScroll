@@ -9,8 +9,10 @@ window.CronoGeometry = (function() {
   function calculate(state) {
     const bVisible = Math.max(10, parseFloat(state.bVisible) || 42.0); // cm
     const hVisible = Math.max(10, parseFloat(state.hVisible) || 30.0); // cm
-    const pufferLeft = Math.max(0, parseFloat(state.pufferLeft ?? state.puffer) || 15.0); // cm
-    const pufferRight = Math.max(0, parseFloat(state.pufferRight ?? state.puffer) || 15.0); // cm
+    const left = parseFloat(state.pufferLeft ?? state.puffer);
+    const right = parseFloat(state.pufferRight ?? state.puffer);
+    const pufferLeft = Math.max(0, Number.isFinite(left) ? left : 15.0); // cm
+    const pufferRight = Math.max(0, Number.isFinite(right) ? right : 15.0); // cm
     
     // Monatspalten-Breite (exakt 1/3 der Sichtbreite)
     const bMonth = bVisible / 3;
@@ -71,9 +73,11 @@ window.CronoGeometry = (function() {
     // Obere & untere Querleisten: Sichtbreite + beidseitiger Überstand für Rollenlager
     const woodRailLengthCm = bVisible + (pufferLeft > 0 ? 12 : 8) + (pufferRight > 0 ? 12 : 8);
     const roundDowelLengthCm = hVisible + 5.0; // 5 cm Überstand für Drehknäufe & Lager
+    const offsetWidth = parseFloat(state.backpanelOffsetWidthMm);
+    const offsetHeight = parseFloat(state.backpanelOffsetHeightMm);
     const backingBoardCm = {
-      width: bVisible + (Math.max(-100, parseFloat(state.backpanelOffsetWidthMm) || 4.0) / 10),
-      height: hVisible + (Math.max(-100, parseFloat(state.backpanelOffsetHeightMm) || 2.0) / 10),
+      width: bVisible + (Math.max(0, Number.isFinite(offsetWidth) ? offsetWidth : 4.0) / 10),
+      height: hVisible + (Math.max(0, Number.isFinite(offsetHeight) ? offsetHeight : 2.0) / 10),
       thicknessMm: 4.0 // Empfehlung: 4-6 mm Multiplex / Acrylglas
     };
 
@@ -122,8 +126,61 @@ window.CronoGeometry = (function() {
     return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
   }
 
+  function flattenColor(color, background = '#ffffff') {
+    const parse = value => {
+      const match = /^#([0-9a-f]{6})([0-9a-f]{2})?$/i.exec(value || '');
+      if (!match) throw new Error(`Ungültige Farbe: ${value}`);
+      return {
+        rgb: match[1].match(/../g).map(channel => parseInt(channel, 16)),
+        alpha: match[2] ? parseInt(match[2], 16) / 255 : 1
+      };
+    };
+    const foreground = parse(color);
+    const base = parse(background);
+    const rgb = foreground.rgb.map((value, i) => {
+      const paper = base.rgb[i] * base.alpha + 255 * (1 - base.alpha);
+      return Math.round(value * foreground.alpha + paper * (1 - foreground.alpha));
+    });
+    return `#${rgb.map(value => value.toString(16).padStart(2, '0')).join('')}`;
+  }
+
+  function calendarFilename(title, year) {
+    const fallback = `Rollkalender-${year}`;
+    return String(title || fallback).trim()
+      .replace(/[<>:"/\\|?*\x00-\x1F]/g, '-').replace(/\s+/g, '-') || fallback;
+  }
+
+  function createQr(state, geo, dependencies = window) {
+    if (state.qrEnabled === false) return null;
+    if (typeof dependencies.qrcode !== 'function' || !dependencies.CronoShare) {
+      throw new Error('QR-Code-Bibliothek oder Teilen-Funktion ist nicht verfügbar.');
+    }
+    const qr = dependencies.qrcode(0, 'L');
+    qr.addData(dependencies.CronoShare.createNextYearUrl(state));
+    try {
+      qr.make();
+    } catch (error) {
+      throw new Error(`QR-Code konnte nicht erstellt werden: ${error.message || error}`);
+    }
+    const count = qr.getModuleCount();
+    const gap = Math.max(0, Number.isFinite(state.qrGapMm) ? state.qrGapMm : 40);
+    const size = Math.min(geo.pufferRightMm - gap, geo.hVisibleMm - 10, 100);
+    const moduleSize = size / (count + 8);
+    if (!Number.isFinite(count) || count <= 0 || !Number.isFinite(size) || moduleSize < 0.25) {
+      throw new Error('Der rechte Montagepuffer ist für QR-Code und Abstand zu schmal. Bitte den Nachlauf vergrößern oder den QR-Code deaktivieren.');
+    }
+    return {
+      qr, count, size, moduleSize,
+      x: geo.lTotalMm - geo.pufferRightMm + gap,
+      y: (geo.hVisibleMm - size) / 2
+    };
+  }
+
   return {
     calculate,
-    getISOWeek
+    getISOWeek,
+    flattenColor,
+    calendarFilename,
+    createQr
   };
 })();

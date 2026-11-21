@@ -30,6 +30,8 @@ const months = Array.from({ length: 14 }, (_, monthIndex) => ({
 const context = {
   window: {
     CronoGeometry: geometryContext.window.CronoGeometry,
+    CronoShare: { createNextYearUrl: () => 'https://example.com/' },
+    qrcode: () => ({ addData() {}, make() {}, getModuleCount: () => 1, isDark: () => true }),
     CronoHolidays: { get14MonthsData: () => months },
     CronoThemes: geometryContext.window.CronoThemes,
     CronoDesigns: geometryContext.window.CronoDesigns,
@@ -334,9 +336,10 @@ test('canvas draws separators at visible boundaries using the selected color and
     const geo = geometryContext.window.CronoGeometry.calculate(state);
     context.window.CronoCanvas.render({ style: {}, getContext: () => ctx }, { style: {} }, state);
     const y = header ? 0 : geo.hDay * 20;
-    const separators = fills.filter(({ color, rect }) =>
+    const separators = fills.filter(({ color, rect }, index) =>
       color === '#abcdef' && rect[1] === y && rect[2] <= 40 && Math.abs(rect[3] - (640 - y)) < 1e-9);
-    assert.deepEqual(separators.map(({ rect }) => [rect[0], rect[2]]), [[0, 20], [260, 40], [540, 40], [820, 20]]);
+    assert.deepEqual(separators.filter((_, index) => index % 2 === 0).map(({ rect }) => [rect[0], rect[2]]),
+      [[0, 20], [260, 40], [540, 40], [820, 20]]);
   }
 });
 

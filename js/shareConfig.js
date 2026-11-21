@@ -11,7 +11,7 @@ window.CronoShare = (function() {
     typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max &&
     (!integer || Number.isInteger(value));
   const choice = (...values) => value => values.includes(value);
-  const color = value => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
+  const color = value => typeof value === 'string' && /^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i.test(value);
   const boolean = value => typeof value === 'boolean';
   const categoryColors = value => value && typeof value === 'object' &&
     ['public', 'vacation', 'custom'].every(key => color(value[key]));
@@ -69,9 +69,9 @@ window.CronoShare = (function() {
     }
   }
 
-  function createNextYearUrl(state) {
-    if (!number(1900, 2099, true)(state.year)) {
-      throw new Error('Das Folgejahr muss zwischen 1900 und 2100 liegen.');
+  function createUrl(state, nextYear) {
+    if (!number(1900, nextYear ? 2099 : 2100, true)(state.year)) {
+      throw new Error(nextYear ? 'Das Folgejahr muss zwischen 1900 und 2100 liegen.' : 'Das Kalenderjahr muss zwischen 1900 und 2100 liegen.');
     }
     const values = fields.map(([name, valid]) => {
       let value = state[name];
@@ -90,18 +90,8 @@ window.CronoShare = (function() {
       if (name === 'calendarWeekTextColor' && value === undefined) value = '#64748b';
       if (name === 'calendarWeekTextSize' && value === undefined) value = 1;
       if (name === 'moonOpacity' && value === undefined) value = 0.89;
-      if (name === 'backpanelOffsetHeightMm' && value === undefined) value = 2;
-      if (name === 'backpanelOffsetWidthMm' && value === undefined) value = 4;
-      if (name === 'qrEnabled' && value === undefined) value = true;
-      if (name === 'qrGapMm' && value === undefined) value = 40;
-      if (name === 'showVacations' && value === undefined) value = false;
-      if (name === 'monthHeaderTextColor' && value === undefined) value = '#0f172a';
-      if (name === 'monthHeaderTextSize' && value === undefined) value = 1;
-      if (name === 'calendarWeekTextColor' && value === undefined) value = '#64748b';
-      if (name === 'calendarWeekTextSize' && value === undefined) value = 1;
-      if (name === 'moonOpacity' && value === undefined) value = 0.89;
-      if (name === 'year') value++;
-      if (name === 'bannerCustomTitle' && typeof value === 'string') {
+      if (name === 'year' && nextYear) value++;
+      if (name === 'bannerCustomTitle' && nextYear && typeof value === 'string') {
         value = value.replace(new RegExp(`(^|[^0-9])${state.year}(?=[^0-9]|$)`, 'g'), `$1${state.year + 1}`);
       }
       if (!valid(value)) throw new Error(`Ungültige Einstellung: ${name}.`);
@@ -122,31 +112,11 @@ window.CronoShare = (function() {
   }
 
   function createCurrentUrl(state) {
-    if (!number(1900, 2100, true)(state.year)) {
-      throw new Error('Das Kalenderjahr muss zwischen 1900 und 2100 liegen.');
-    }
-    const values = fields.map(([name, valid]) => {
-      let value = state[name];
-      if (name === 'designStyle' && value === undefined) value = 'classic';
-      if (name === 'themeKey' && value === undefined) value = null;
-      if (name === 'categoryColors' && value === undefined) {
-        value = { public: '#fef08a', vacation: '#bfdbfe', custom: '#bfdbfe' };
-      }
-      if (!valid(value)) throw new Error(`Ungültige Einstellung: ${name}.`);
-      return value;
-    });
-    if (!Object.hasOwn(regions, state.country) || !regions[state.country].includes(state.bundesland)) {
-      throw new Error('Ungültiges Land oder ungültige Region.');
-    }
-    const separators = ['single', 'double'].map(layout => {
-      const separator = state.monthSeparators && state.monthSeparators[layout];
-      return separatorFields.map(([name, valid]) => {
-        const value = separator && separator[name];
-        if (!valid(value)) throw new Error(`Ungültige Einstellung: ${layout}.${name}.`);
-        return value;
-      });
-    });
-    return `${baseUrl}?config=${encode([1, values, state.country, state.bundesland, separators])}`;
+    return createUrl(state, false);
+  }
+
+  function createNextYearUrl(state) {
+    return createUrl(state, true);
   }
 
   function restore(search, state) {

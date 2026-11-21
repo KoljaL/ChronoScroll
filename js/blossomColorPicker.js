@@ -6,6 +6,7 @@
       '#ffffff', '#f8fafc', '#f1f5f9', '#e2e8f0', '#cbd5e1', '#0f172a',
       '#fef08a', '#fed7aa', '#fecaca', '#fbcfe8', '#e9d5ff', '#ddd6fe',
       '#bfdbfe', '#bae6fd', '#a7f3d0', '#bbf7d0', '#86efac', '#fde68a',
+      '#d97706', '#0284c7', '#16a34a', '#64748b', '#e11d48',
     ]),
     sizes: Object.freeze({
       default: 28,
@@ -17,7 +18,7 @@
       animationDuration: 180,
       openOnHover: false,
       initialExpanded: false,
-      showAlphaSlider: true,
+      showAlphaSlider: false,
       showShadeSlider: true,
       showCoreColor: true,
       adaptivePositioning: true,
@@ -71,7 +72,7 @@
     };
   }
 
-  function pickerValue(hex) {
+  function pickerValue(hex, alpha = 100) {
     const hsl = hexToHsl(hex);
     const toSlider = window.BlossomColorPicker && window.BlossomColorPicker.lightnessToSliderValue;
     const slider = typeof toSlider === 'function'
@@ -82,7 +83,7 @@
       saturation: slider,
       originalSaturation: hsl.saturation,
       lightness: hsl.lightness,
-      alpha: 100,
+      alpha,
       layer: hsl.lightness >= 80 ? 'inner' : 'outer',
     };
   }
@@ -152,11 +153,24 @@
     record.input.dispatchEvent(event);
   }
 
+  function alphaFor(input) {
+    const value = Number(input.dataset.colorAlpha);
+    return input.dataset.colorAlpha === undefined || !Number.isFinite(value)
+      ? 100 : Math.max(0, Math.min(100, value));
+  }
+
+  function displayValue(input) {
+    const alpha = Math.round(alphaFor(input) * 255 / 100);
+    return `${normalizeHex(input.value)}${alpha === 255 ? '' : alpha.toString(16).padStart(2, '0')}`;
+  }
+
   function updateInputFromPicker(record, color) {
     if (!color || !color.hex) return;
     const value = normalizeHex(color.hex);
     record.syncing = true;
     record.input.value = value;
+    record.textInput.value = displayValue(record.input);
+    record.textInput.removeAttribute('aria-invalid');
     dispatchColorEvent(record, 'input');
     record.syncing = false;
   }
@@ -178,8 +192,14 @@
     record.host.setAttribute('aria-label', record.label);
     record.host.title = record.label;
     record.placeholder.style.setProperty('--blossom-picker-size', `${record.size}px`);
+    record.textInput.value = displayValue(record.input);
+    record.textInput.disabled = record.input.disabled;
+    record.textInput.removeAttribute('aria-invalid');
+    record.alphaInput.value = alphaFor(record.input);
+    record.alphaInput.disabled = record.input.disabled;
+    record.alphaOutput.textContent = `${Math.round(alphaFor(record.input))}%`;
     record.syncing = true;
-    record.picker.setValue(pickerValue(value));
+    record.picker.setValue(pickerValue(value, alphaFor(record.input)));
     record.picker.setOptions({ value: undefined, disabled: !!record.input.disabled });
     record.syncing = false;
     const trigger = record.host.querySelector('.bcp-trigger-btn');
@@ -207,17 +227,39 @@
     host.style.width = `${size}px`;
     host.style.height = `${size}px`;
     host.setAttribute('data-blossom-color-picker', '');
+    const textInput = document.createElement('input');
+    textInput.type = 'text';
+    textInput.className = 'cronoscroll-color-value';
+    textInput.setAttribute('aria-label', `${labelFor(input)} als Hex-Farbwert`);
+    textInput.setAttribute('pattern', '#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?');
+    textInput.setAttribute('maxlength', '9');
+    const alphaLabel = document.createElement('span');
+    alphaLabel.className = 'cronoscroll-color-alpha';
+    const alphaInput = document.createElement('input');
+    alphaInput.type = 'range';
+    alphaInput.min = '0';
+    alphaInput.max = '100';
+    alphaInput.step = '1';
+    alphaInput.setAttribute('aria-label', `${labelFor(input)} Deckkraft`);
+    const alphaOutput = document.createElement('span');
+    alphaLabel.appendChild(alphaInput);
+    alphaLabel.appendChild(alphaOutput);
 
     input.parentNode.insertBefore(placeholder, input);
     input.classList.add('cronoscroll-color-input-native');
     input.dataset.blossomPicker = 'true';
     placeholder.appendChild(input);
     placeholder.appendChild(host);
+    placeholder.appendChild(textInput);
+    placeholder.appendChild(alphaLabel);
 
     const record = {
       input,
       placeholder,
       host,
+      textInput,
+      alphaInput,
+      alphaOutput,
       picker: null,
       size,
       label: labelFor(input),
@@ -232,6 +274,23 @@
     record.nativeInput = () => {
       if (!record.syncing) syncRecord(record);
     };
+    record.textChange = () => {
+      if (!/^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i.test(textInput.value)) {
+        textInput.setAttribute('aria-invalid', 'true');
+        return;
+      }
+      textInput.removeAttribute('aria-invalid');
+      input.value = textInput.value.slice(0, 7).toLowerCase();
+      input.dataset.colorAlpha = textInput.value.length === 9
+        ? String(parseInt(textInput.value.slice(7), 16) / 255 * 100) : '100';
+      dispatchColorEvent(record, 'input');
+      dispatchColorEvent(record, 'change');
+    };
+    record.alphaChange = () => {
+      input.dataset.colorAlpha = alphaInput.value;
+      dispatchColorEvent(record, 'input');
+    };
+    record.alphaComplete = () => dispatchColorEvent(record, 'change');
     record.nativeClick = (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -257,7 +316,7 @@
       colors: [...CONFIG.colors],
       coreSize: size,
       petalSize: CONFIG.sizes.petal,
-      defaultValue: pickerValue(input.value),
+      defaultValue: pickerValue(input.value, alphaFor(input)),
       onChange: (color) => {
         if (!record.syncing) updateInputFromPicker(record, color);
       },
@@ -271,6 +330,9 @@
     input.addEventListener('input', record.nativeInput);
     input.addEventListener('click', record.nativeClick);
     input.addEventListener('keydown', record.nativeKeydown);
+    textInput.addEventListener('input', record.textChange);
+    alphaInput.addEventListener('input', record.alphaChange);
+    alphaInput.addEventListener('change', record.alphaComplete);
     host.addEventListener('click', record.hostClick);
     syncRecord(record);
     return record;
@@ -295,6 +357,9 @@
     input.removeEventListener('input', record.nativeInput);
     input.removeEventListener('click', record.nativeClick);
     input.removeEventListener('keydown', record.nativeKeydown);
+    record.textInput.removeEventListener('input', record.textChange);
+    record.alphaInput.removeEventListener('input', record.alphaChange);
+    record.alphaInput.removeEventListener('change', record.alphaComplete);
     record.host.removeEventListener('click', record.hostClick);
     delete input.dataset.blossomPicker;
     input.classList.remove('cronoscroll-color-input-native');

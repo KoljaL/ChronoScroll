@@ -194,9 +194,6 @@ window.CronoCanvas = (function() {
         } else if (day.isSaturday) {
           ctx.fillStyle = state.colorSaturdayBg || state.colorWeekendBg;
           ctx.fillRect(cellLeftPx, rowTopPx, dayColumnWidthPx, dayHeightPx);
-        } else {
-          ctx.fillStyle = state.paperColor || '#ffffff';
-          ctx.fillRect(cellLeftPx, rowTopPx, dayColumnWidthPx, dayHeightPx);
         }
       }
 
@@ -272,13 +269,15 @@ window.CronoCanvas = (function() {
 
         // --- 7. MONDPHASEN-PIKTOGRAMM ---
         if (state.showMoon && day.moonPhase) {
-          ctx.save();
-          ctx.globalAlpha = Number.isFinite(state.moonOpacity) ? state.moonOpacity : 0.89;
-          ctx.font = `${8.5 * state.zoom}px sans-serif`;
-          ctx.fillStyle = '#475569';
-          ctx.fillText(day.moonPhase.unicode, cellLeftPx + leftOffsetPx, textY);
+          const scale = 2 * state.zoom;
+          const background = day.holiday && day.holiday.color ? day.holiday.color
+            : day.isSunday ? state.colorSundayBg || state.colorWeekendBg
+              : day.isSaturday ? state.colorSaturdayBg || state.colorWeekendBg : null;
+          const radius = Math.min(1.2, geo.hDayMm * 0.2);
+          window.CronoDesigns.drawCanvas(ctx, window.CronoDesigns.moonCommands(
+            day.moonPhase.type, (cellLeftPx + leftOffsetPx) / scale + radius,
+            textY / scale, radius, state.moonOpacity, background, state.paperColor), scale, baseFont);
           leftOffsetPx += 12 * state.zoom;
-          ctx.restore();
         }
 
         // --- 8. FEIERTAGS- & TERMIN-TITEL MIT KOLLISIONSSCHUTZ ---
@@ -321,15 +320,16 @@ window.CronoCanvas = (function() {
     const separator = state.monthSeparators[geo.monthLayout];
     const widthPx = geo.separatorWidth * 20 * state.zoom;
     const topPx = separator.header ? 0 : dayHeightPx;
-    ctx.fillStyle = window.CronoDesigns && window.CronoDesigns.active(state)
-      ? state.paperColor || '#ffffff'
-      : separator.colorMode === 'paper' ? state.paperColor : separator.color;
+    const color = separator.colorMode === 'paper' ? state.paperColor : separator.color;
     for (let i = 0; i <= count; i++) {
       const boundary = firstMonth + i;
       if (boundary <= 0 || boundary >= 14) continue;
       const center = startPx + i * monthWidthPx;
       const left = Math.max(startPx, center - widthPx / 2);
       const right = Math.min(startPx + count * monthWidthPx, center + widthPx / 2);
+      ctx.fillStyle = state.paperColor || '#ffffff';
+      ctx.fillRect(left, topPx, right - left, heightPx - topPx);
+      ctx.fillStyle = color;
       ctx.fillRect(left, topPx, right - left, heightPx - topPx);
     }
   }
@@ -478,6 +478,17 @@ window.CronoCanvas = (function() {
         ctx.fillText('WICKEL-PUFFER (MONTAGE)', leadOutStartPx + (leadOutPx / 2), targetHeightPx / 2);
       }
 
+      if (renderOptions.qrErrorHandler) {
+        try {
+          drawCoverageQr(ctx, state, geo, 2 * state.zoom);
+          renderOptions.qrErrorHandler(null);
+        } catch (error) {
+          renderOptions.qrErrorHandler(error);
+        }
+      } else {
+        drawCoverageQr(ctx, state, geo, 2 * state.zoom);
+      }
+
       // Außenrahmen
       if (state.designStyle !== 'zen') {
         ctx.strokeStyle = design ? state.colorText : state.colorBorder || '#0f172a';
@@ -532,7 +543,7 @@ window.CronoCanvas = (function() {
       const elHDay = document.getElementById('calc-h-day');
       if (elHDay) elHDay.textContent = `${geo.hDay.toFixed(3)} cm`;
       const elLTotal = document.getElementById('calc-l-total');
-      if (elLTotal) elLTotal.textContent = `${geo.lTotal.toFixed(2)} cm (${(geo.lTotal/100).toFixed(2)} m)`;
+      if (elLTotal) elLTotal.textContent = `${geo.lTotal.toFixed(2)} cm`;
       const elYearRange = document.getElementById('year-range-display');
       if (elYearRange) elYearRange.textContent = `${state.year - 1} – ${state.year + 1}`;
       const elZoomInd = document.getElementById('preview-scale-indicator');
@@ -570,36 +581,13 @@ window.CronoCanvas = (function() {
   }
 
   function drawCoverageQr(ctx, state, geo, pixelsPerMm) {
-    if (state.qrEnabled === false) return;
-    if (typeof window.qrcode !== 'function') {
-      throw new Error('Die QR-Code-Bibliothek ist nicht geladen.');
-    }
-    if (!window.CronoShare || typeof window.CronoShare.createNextYearUrl !== 'function') {
-      throw new Error('Der QR-Code-Link kann nicht erstellt werden.');
-    }
-
-    const qr = window.qrcode(0, 'L');
-    qr.addData(window.CronoShare.createNextYearUrl(state));
-    try {
-      qr.make();
-    } catch (error) {
-      throw new Error(`QR-Code konnte nicht erstellt werden: ${error.message || error}`);
-    }
-
-    const moduleCount = qr.getModuleCount();
-    const qrSizeMm = Math.min(state.pufferRight * 10 - 10, geo.hVisibleMm - 10, 100);
-    const moduleSizeMm = qrSizeMm / (moduleCount + 8);
-    if (moduleSizeMm < 0.25) {
-      throw new Error('Der rechte Montagepuffer ist für den QR-Code zu schmal.');
-    }
-
-    const qrSize = qrSizeMm * pixelsPerMm;
-    const moduleSize = moduleSizeMm * pixelsPerMm;
-    const gapMm = Math.max(0, Number.isFinite(state.qrGapMm) ? state.qrGapMm : 40);
-    const availableQrX = Math.max(0, geo.pufferRightMm - qrSizeMm);
-    const qrX = (geo.lTotalMm - geo.pufferRightMm +
-      Math.min(gapMm, availableQrX)) * pixelsPerMm;
-    const qrY = (geo.hVisibleMm - qrSizeMm) / 2 * pixelsPerMm;
+    const data = window.CronoGeometry.createQr(state, geo, window);
+    if (!data) return;
+    const { qr, count: moduleCount } = data;
+    const qrSize = data.size * pixelsPerMm;
+    const moduleSize = data.moduleSize * pixelsPerMm;
+    const qrX = data.x * pixelsPerMm;
+    const qrY = data.y * pixelsPerMm;
 
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(qrX, qrY, qrSize, qrSize);
@@ -648,8 +636,6 @@ window.CronoCanvas = (function() {
 
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Canvas-Kontext für die Druckschätzung fehlt.');
-    const geo = window.CronoGeometry.calculate(coverageState);
-    drawCoverageQr(ctx, coverageState, geo, 2 * coverageState.zoom);
     const coverage = estimateInkCoverage(ctx.getImageData(0, 0, canvas.width, canvas.height));
 
     cachedCoverageKey = cacheKey;

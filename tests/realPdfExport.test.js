@@ -216,7 +216,7 @@ test('export fails visibly for incomplete months, page-size mismatches and a lon
       CronoFonts: { registerPdfFont: () => 'font' },
       CronoGeometry: { calculate: () => ({
         lTotalMm: 2260, hVisibleMm: 320, pufferLeftMm: 150, pufferRightMm: 150
-      }) }
+      }), createQr: () => null }
     }
   };
   vm.createContext(context);

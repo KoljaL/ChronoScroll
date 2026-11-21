@@ -177,8 +177,6 @@
                     <input type="number" id="input-h-visible" value="30.0" step="0.1" min="10" max="150" class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-3 pr-8 py-1.5 text-sm font-mono text-slate-100 focus:outline-none border-slate-700" />
                     <span class="absolute right-3 top-1.5 text-xs text-slate-500 font-mono">cm</span>
                   </div>
-                  <label for="input-backpanel-offset-height" class="text-[10px] text-slate-500 block mt-1">Rückwandversatz (CAD/BOM)</label>
-                  <input type="number" id="input-backpanel-offset-height" value="2" step="1" min="-100" max="100" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs font-mono text-slate-100" aria-label="Rückwandversatz Höhe" />
                 </div>
                 <div>
                   <label for="input-b-visible" class="text-xs text-slate-300 block mb-1">Breite Sichtfenster</label>
@@ -186,8 +184,6 @@
                     <input type="number" id="input-b-visible" value="42.0" step="0.1" min="15" max="200" class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-3 pr-8 py-1.5 text-sm font-mono text-slate-100 focus:outline-none focus:border-amber-500" />
                     <span class="absolute right-3 top-1.5 text-xs text-slate-500 font-mono">cm</span>
                   </div>
-                  <label for="input-backpanel-offset-width" class="text-[10px] text-slate-500 block mt-1">Rückwandversatz (CAD/BOM)</label>
-                  <input type="number" id="input-backpanel-offset-width" value="4" step="1" min="-100" max="100" class="w-full mt-1 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs font-mono text-slate-100" aria-label="Rückwandversatz Breite" />
                 </div>
               </div>
             </div>
@@ -242,6 +238,7 @@
                 <input type="number" id="input-qr-gap" value="40" step="1" min="0" max="100" class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-3 pr-10 py-1.5 text-xs font-mono text-slate-100" />
                 <span class="absolute right-3 top-1.5 text-xs text-slate-500 font-mono">mm</span>
               </div>
+              <p id="qr-status" role="status" aria-live="polite" class="text-[11px] text-amber-400"></p>
             </div>
 
             <!-- Automatische Geometrie-Ergebnisse -->
@@ -262,7 +259,7 @@
               </div>
               <div class="bg-slate-900 p-2 rounded border border-slate-800 text-xs font-mono">
                 <span class="text-slate-500 text-[10px] block uppercase">Gesamte Rollenlänge</span>
-                <span id="calc-l-total" class="text-emerald-400 font-bold text-sm">226.00 cm (2.26 m)</span>
+                <span id="calc-l-total" class="text-emerald-400 font-bold text-sm">226.00 cm</span>
               </div>
             </div>
           </div>
@@ -316,7 +313,7 @@
 
               <div class="border-t border-slate-800 pt-3 space-y-2">
                 <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Monatsabstände</h3>
-                <p class="text-[11px] text-slate-400">Einstellungen gelten getrennt für das gewählte Tageslisten-Layout. Ein breiter Streifen in Papierfarbe wirkt wie eine Leerspalte.</p>
+                <p class="text-[11px] text-slate-400">Einstellungen gelten getrennt für das gewählte Tageslisten-Layout. Die Deckkraft bestimmt die Transparenz des Streifens.</p>
                 <label for="checkbox-month-separator" class="flex items-center space-x-2 text-xs text-slate-200">
                   <input type="checkbox" id="checkbox-month-separator" class="rounded border-slate-700 bg-slate-950 text-amber-500" />
                   <span>Trennung zwischen Monaten aktivieren</span>
@@ -328,11 +325,7 @@
                     <p id="month-separator-width-error" role="alert" class="hidden text-[11px] text-rose-400">Bitte eine Breite zwischen 0,1 und 20 mm eingeben.</p>
                   </div>
                   <div>
-                    <label for="select-month-separator-color" class="text-xs text-slate-300 block mb-1">Farbe</label>
-                    <select id="select-month-separator-color" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-100">
-                      <option value="custom">Frei wählen</option>
-                      <option value="paper">Papierfarbe</option>
-                    </select>
+                    <label for="color-month-separator" class="text-xs text-slate-300 block mb-1">Farbe und Deckkraft</label>
                     <input type="color" id="color-month-separator" value="#cbd5e1" aria-label="Farbe des Trennstreifens" class="w-7 h-7 rounded bg-transparent cursor-pointer" />
                   </div>
                 </div>
@@ -366,7 +359,7 @@
 
                 <label class="flex items-center space-x-2 cursor-pointer text-xs text-slate-200">
                   <input type="checkbox" id="checkbox-show-moon" checked class="rounded border-slate-700 bg-slate-950 text-amber-500 focus:ring-0" />
-                  <span>Mondphasen-Piktogramme (🌑 🌓 🌕 🌗)</span>
+                  <span>Mondphasen-Piktogramme</span>
                 </label>
                 <div class="pl-6">
                   <label for="input-moon-opacity" class="text-xs text-slate-300 block mb-1">Mondphasen Deckkraft</label>
@@ -541,23 +534,13 @@
               </div>
             </div>
 
-            <div class="border-t border-slate-800 pt-3 space-y-2">
-              <div class="flex items-center justify-between gap-2">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Druckfarbe sparen</h3>
-                <button id="btn-analyze-coverage" type="button" class="shrink-0 text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded border border-slate-700 transition cursor-pointer">Tipps berechnen</button>
-              </div>
-              <p class="text-[11px] text-slate-400">Vergleicht mögliche Farbänderungen für die ganze Rolle. Es wird nichts ohne Klick geändert; Empfehlungen sind Näherungen ohne Druckerprofil.</p>
-              <div id="coverage-recommendations" class="space-y-2" aria-live="polite">
-                <p class="text-[11px] text-slate-500">Berechne Tipps, um mögliche Einsparungen anzuzeigen.</p>
-              </div>
-            </div>
           </div>
 
           <!-- TAB 4: FEIERTAGS- & TERMIN-ENGINE -->
           <div id="tab-holidays" role="tabpanel" aria-labelledby="tab-button-holidays" tabindex="0" class="tab-content calendar-tabpanel hidden">
             <div class="space-y-1">
               <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Termine verwalten</h3>
-              <p class="text-[11px] text-slate-400">Regionale Feiertage und Ferien laden, eigene Termine pflegen oder einen .ics-Kalender importieren. Farben werden im Tab „Erscheinung“ festgelegt.</p>
+              <p class="text-[11px] text-slate-400">Regionale Feiertage laden, eigene Termine pflegen oder einen .ics-Kalender importieren. Ferien werden erst nach Aktivierung erzeugt.</p>
             </div>
 
             <!-- Länder & Bundesländer Auswahl -->
@@ -579,6 +562,10 @@
                 </div>
               </div>
 
+              <label for="checkbox-show-vacations" class="flex items-center gap-2 text-xs text-slate-200">
+                <input type="checkbox" id="checkbox-show-vacations" />
+                <span>Schulferien erzeugen</span>
+              </label>
               <button id="btn-load-feiertage" class="w-full text-xs bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 px-2 py-1.5 rounded border border-amber-500/30 transition flex items-center justify-center space-x-1 cursor-pointer">
                 <i class="fa-solid fa-sync text-[10px]"></i>
                 <span>Feiertage & Ferien neu berechnen</span>
@@ -634,7 +621,7 @@
           <div id="tab-presets" role="tabpanel" aria-labelledby="tab-button-presets" tabindex="0" class="tab-content calendar-tabpanel hidden">
             <div class="space-y-2">
               <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400">Vorlagen und Teilen</h3>
-              <h4 class="text-xs font-semibold text-slate-300">Einstellungen fürs Folgejahr teilen</h4>
+              <h4 class="text-xs font-semibold text-slate-300">Einstellungen teilen</h4>
               <a id="next-year-link" class="block text-xs text-amber-400 break-all" target="_blank" rel="noopener noreferrer"></a>
               <button id="btn-copy-next-year-link" type="button" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs">Link kopieren</button>
               <p id="next-year-link-status" class="text-xs text-slate-400" role="status" aria-live="polite"></p>
@@ -642,7 +629,8 @@
             </div>
 
             <div class="space-y-2">
-              <label for="input-preset-name" class="text-xs text-slate-300 block">Aktuelle Einstellungen als Vorlage speichern</label>
+              <label for="input-preset-name" class="text-xs text-slate-300 block">Kalendername für diese Vorlage</label>
+              <p class="text-[11px] text-slate-400">Vorlagen werden lokal in diesem Browser gespeichert.</p>
               <div class="flex space-x-2">
                 <input type="text" id="input-preset-name" placeholder="Name (z.B. NRW 32x42 cm 2-Spalten)" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-amber-500" />
                 <button id="btn-save-preset" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs transition cursor-pointer">Speichern</button>
@@ -766,7 +754,7 @@
           </section>
 
           <section class="kpi-grid" aria-label="Berechnete Konstruktionsmaße">
-            <div class="kpi-box"><span class="kpi-label">Achsabstand Wickelstäbe</span><span id="cad-kpi-axis-distance" class="kpi-value">—</span><span class="kpi-sub">Fenster + 2×Spalt + Ø Stab</span></div>
+            <div class="kpi-box"><span class="kpi-label">Achsabstand Wickelstäbe</span><span id="cad-kpi-axis-distance" class="kpi-value">—</span><span class="kpi-sub">Rückwand + 2×Spalt + Ø Stab</span></div>
             <div class="kpi-box"><span class="kpi-label">Außenmaße Gehäuse (B × H)</span><span id="cad-kpi-outer-dims" class="kpi-value">—</span><span id="cad-kpi-total-with-nuts" class="kpi-sub">—</span></div>
             <div class="kpi-box"><span class="kpi-label">Stablänge (Zuschnitt)</span><span id="cad-kpi-rod-cut" class="kpi-value">—</span><span class="kpi-sub">Abzüglich Gleiter- und Münzstapel</span></div>
             <div class="kpi-box cad-kpi-blue">
@@ -810,7 +798,7 @@
         </div>
         <div class="status-brand">
           <span class="build-label">Build: </span>
-          <span id="build-date"><!-- BUILD_DATE -->21.11.2026 13:47<!-- /BUILD_DATE --></span>
+          <span id="build-date"><!-- BUILD_DATE -->21.11.2026 14:54<!-- /BUILD_DATE --></span>
           <a class="status-logo-link" href="https://github.com/KoljaL/ChronoScroll" target="_blank" rel="noopener noreferrer" aria-label="ChronoScroll auf GitHub (öffnet einen neuen Tab)">
             <span class="sr-only">Code: </span>
             <img src="./img/logo.svg" alt="" width="18" height="18" />

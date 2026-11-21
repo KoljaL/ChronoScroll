@@ -134,7 +134,7 @@ window.CronoThemes = (function() {
     delete values.name;
     delete values.label;
     delete values.description;
-    Object.assign(state, values, { themeKey: key });
+    Object.assign(state, values, { themeKey: key, monthHeaderTextColor: values.colorHeaderText });
     return true;
   }
 

@@ -8,7 +8,7 @@ window.CronoCoverageAdvisor = (function() {
   }
 
   function toGrayscale(color) {
-    const match = /^#?([0-9a-f]{6})$/i.exec(color || '');
+    const match = /^#?([0-9a-f]{6})([0-9a-f]{2})?$/i.exec(color || '');
     if (!match) return color;
     const value = match[1];
     const red = parseInt(value.slice(0, 2), 16);
@@ -16,7 +16,7 @@ window.CronoCoverageAdvisor = (function() {
     const blue = parseInt(value.slice(4, 6), 16);
     const gray = Math.round(0.299 * red + 0.587 * green + 0.114 * blue)
       .toString(16).padStart(2, '0');
-    return `#${gray}${gray}${gray}`;
+    return `#${gray}${gray}${gray}${match[2] || ''}`;
   }
 
   function getAlternatives(state) {

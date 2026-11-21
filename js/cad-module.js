@@ -29,8 +29,10 @@
         {
           group: '1. Sichtfenster & Rückwand',
           items: [
-            { key: 'windowWidth', label: 'Breite Sichtfenster / Rückwand', min: 150, max: 2000, step: 1, default: 420, unit: 'mm' },
-            { key: 'windowHeight', label: 'Höhe Sichtfenster / Rückwand', min: 100, max: 1500, step: 1, default: 320, unit: 'mm' },
+            { key: 'windowWidth', label: 'Breite Sichtfenster', min: 150, max: 2000, step: 1, default: 420, unit: 'mm' },
+            { key: 'backpanelOffsetWidthMm', label: 'Zuschlag Rückwandbreite', min: 0, max: 100, step: 1, default: 4, unit: 'mm' },
+            { key: 'windowHeight', label: 'Höhe Sichtfenster', min: 100, max: 1500, step: 1, default: 300, unit: 'mm' },
+            { key: 'backpanelOffsetHeightMm', label: 'Zuschlag Rückwandhöhe', min: 0, max: 100, step: 1, default: 2, unit: 'mm' },
             { key: 'backpanelThickness', label: 'Dicke Rückwand (Multiplex)', min: 6, max: 30, step: 1, default: 20, unit: 'mm' },
             { key: 'backpanelOffsetZ', label: 'Tiefenposition Rückwand (Z)', min: 0, max: 30, step: 1, default: 10, unit: 'mm' }
           ]
@@ -247,9 +249,11 @@
       }
 
       function analyze(p) {
-        const axisDistance = p.windowWidth + 2 * p.sideClearance + p.rodDiameter;
+        const panelWidth = p.windowWidth + p.backpanelOffsetWidthMm;
+        const panelHeight = p.windowHeight + p.backpanelOffsetHeightMm;
+        const axisDistance = panelWidth + 2 * p.sideClearance + p.rodDiameter;
         const totalWidth = axisDistance + 2 * p.railEndMargin;
-        const totalHeight = p.windowHeight + 2 * p.railHeight;
+        const totalHeight = panelHeight + 2 * p.railHeight;
         const totalHeightWithNuts = totalHeight + p.knurledNutHeight;
 
         const maxRollDiameter = Math.sqrt(
@@ -261,14 +265,14 @@
 
         const upperStack = p.gliderThickness + p.coinThickness + 1.5;
         const lowerStack = p.gliderThickness + 0.5;
-        const rodCutLength = p.windowHeight + 2 * p.blindHoleDepth - upperStack - lowerStack;
+        const rodCutLength = panelHeight + 2 * p.blindHoleDepth - upperStack - lowerStack;
 
         const backpanelFrontZ = p.backpanelOffsetZ;
         const backpanelBackZ = p.backpanelOffsetZ + p.backpanelThickness;
         const rollFrontZ = p.rodOffsetZ - maxRollRadius;
         const rollBackZ = p.rodOffsetZ + maxRollRadius;
 
-        const edgeX = p.windowWidth / 2;
+        const edgeX = panelWidth / 2;
         const axisX = axisDistance / 2;
 
         const tangentCoreRight = computeTangentPoint(edgeX, backpanelFrontZ, axisX, p.rodOffsetZ, rodRadius);
@@ -563,7 +567,7 @@
 
         const frontTopY = marginTop;
         const railH = p.railHeight * mainScale;
-        const winH = p.windowHeight * mainScale;
+        const winH = (p.windowHeight + p.backpanelOffsetHeightMm) * mainScale;
         const nutH = p.knurledNutHeight * mainScale;
         const nutW = 24 * mainScale;
 
@@ -574,7 +578,7 @@
 
         const leftAxisX = frontLeftX + p.railEndMargin * mainScale;
         const rightAxisX = frontRightX - p.railEndMargin * mainScale;
-        const winW = p.windowWidth * mainScale;
+        const winW = (p.windowWidth + p.backpanelOffsetWidthMm) * mainScale;
         const winLeftX = frontCenterX - winW / 2;
         const winRightX = frontCenterX + winW / 2;
 
@@ -646,11 +650,15 @@
           fill: '#f8fafc', stroke: '#475569', 'stroke-width': '1.2'
         }));
         if (viewOpts.showCalendarPreview) {
-          calendarClip.firstChild.setAttribute('x', winLeftX);
-          calendarClip.firstChild.setAttribute('y', winTopY);
-          calendarClip.firstChild.setAttribute('width', winW);
-          calendarClip.firstChild.setAttribute('height', winH);
-          drawCalendarPreview(gA, 'cad-calendar-window-clip', winLeftX, winTopY, winW, winH, calendarPreview, mainScale);
+          const paperW = p.windowWidth * mainScale;
+          const paperH = p.windowHeight * mainScale;
+          const paperX = frontCenterX - paperW / 2;
+          const paperY = winTopY + (winH - paperH) / 2;
+          calendarClip.firstChild.setAttribute('x', paperX);
+          calendarClip.firstChild.setAttribute('y', paperY);
+          calendarClip.firstChild.setAttribute('width', paperW);
+          calendarClip.firstChild.setAttribute('height', paperH);
+          drawCalendarPreview(gA, 'cad-calendar-window-clip', paperX, paperY, paperW, paperH, calendarPreview, mainScale);
         } else {
           gA.appendChild(el('line', { x1: winLeftX, y1: winTopY, x2: winRightX, y2: winBottomY, stroke: '#e2e8f0', 'stroke-width': '1' }));
           gA.appendChild(el('line', { x1: winRightX, y1: winTopY, x2: winLeftX, y2: winBottomY, stroke: '#e2e8f0', 'stroke-width': '1' }));
@@ -712,13 +720,13 @@
         drawDimH(gA, frontLeftX, leftAxisX, frontTopY, frontTopY - 15, `${p.railEndMargin}`);
         drawDimH(gA, leftAxisX, rightAxisX, frontTopY, frontTopY - 15, `${geom.axisDistance.toFixed(0)}`);
         drawDimH(gA, frontLeftX, frontRightX, frontTopY, frontTopY - 32, `${geom.totalWidth.toFixed(0)}`);
-        drawDimH(gA, winLeftX, winRightX, winTopY + winH * 0.34, winTopY + winH * 0.34, `Rückwand / Fenster ${p.windowWidth}`);
+        drawDimH(gA, winLeftX, winRightX, winTopY + winH * 0.34, winTopY + winH * 0.34, `Rückwand ${p.windowWidth + p.backpanelOffsetWidthMm}`);
         if (p.sideClearance >= 4) {
           drawDimH(gA, leftAxisX + rodR, winLeftX, winTopY + 26, winTopY + 26, `${p.sideClearance}`);
         }
 
         drawDimV(gA, frontTopY, winTopY, frontLeftX, frontLeftX - 17, `${p.railHeight}`);
-        drawDimV(gA, winTopY, winBottomY, frontLeftX, frontLeftX - 17, `${p.windowHeight}`);
+        drawDimV(gA, winTopY, winBottomY, frontLeftX, frontLeftX - 17, `${p.windowHeight + p.backpanelOffsetHeightMm}`);
         drawDimV(gA, frontBottomY, nutBottomY, frontLeftX, frontLeftX - 17, `${p.knurledNutHeight}`);
         drawDimV(gA, frontTopY, nutBottomY, frontLeftX, frontLeftX - 36, `${geom.totalHeightWithNuts.toFixed(0)}`);
 
@@ -965,6 +973,11 @@
         toastTimeout = setTimeout(() => toast.classList.remove('visible'), 2800);
       }
 
+      function cadFilename(extension) {
+        const snapshot = window.CronoScrollCADBridge.getSnapshot();
+        return `${window.CronoGeometry.calendarFilename(snapshot.calendarName, snapshot.year)}-CAD.${extension}`;
+      }
+
       function buildParameterForm() {
         const container = cadElement('parameter-groups-container');
         container.innerHTML = '';
@@ -1106,7 +1119,7 @@
         const rows = [
           ['2×', 'Horizontale Tragleisten', `${geom.totalWidth.toFixed(1)} × ${p.railDepth} × ${p.railHeight} mm`, 'Holz; oben und unten'],
           ['2×', 'Wickelstäbe', `Ø ${p.rodDiameter} × ${geom.rodCutLength.toFixed(1)} mm`, 'Rundstab; Zuschnittlänge'],
-          ['1×', 'Rückwand / Schreibplatte', `${p.windowWidth} × ${p.windowHeight} × ${p.backpanelThickness} mm`, 'Multiplex oder Acrylglas'],
+          ['1×', 'Rückwand / Schreibplatte', `${p.windowWidth + p.backpanelOffsetWidthMm} × ${p.windowHeight + p.backpanelOffsetHeightMm} × ${p.backpanelThickness} mm`, 'Multiplex oder Acrylglas'],
           ['1×', 'Papierbahn', `${p.windowHeight} × ${p.paperLength} mm`, 'Breite × Länge'],
           ['4×', 'PTFE-Möbelgleiter', `${p.gliderThickness} mm stark`, 'Je zwei pro Wickelstab'],
           ['2×', '5-Cent-Münze', `${p.coinThickness} mm stark`, 'Auflage für obere Justierung'],
@@ -1497,8 +1510,7 @@
           const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
-          const rawName = cadElement('preset-name-input').value.trim();
-          const filename = rawName ? `ChronoScroll_${rawName.replace(/[^a-z0-9_-]/gi, '_')}.json` : 'ChronoScroll_Konfiguration.json';
+          const filename = cadFilename('json');
           a.href = url;
           a.download = filename;
           document.body.appendChild(a);
@@ -1547,8 +1559,7 @@
           const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
-          const rawName = cadElement('preset-name-input').value.trim();
-          const filename = rawName ? `ChronoScroll_${rawName.replace(/[^a-z0-9_-]/gi, '_')}.svg` : 'ChronoScroll_Zeichnung.svg';
+          const filename = cadFilename('svg');
           a.href = url;
           a.download = filename;
           document.body.appendChild(a);
@@ -1560,8 +1571,7 @@
 
         sharedElement('cad-btn-export-pdf').addEventListener('click', async () => {
           try {
-            const rawName = cadElement('preset-name-input').value.trim();
-            const filename = rawName ? `ChronoScroll_${rawName.replace(/[^a-z0-9_-]/gi, '_')}.pdf` : 'ChronoScroll_CAD.pdf';
+            const filename = cadFilename('pdf');
             await window.CronoScrollCADPdf.exportCadDrawing(svgEl, baseViewBox, filename);
             showToast(`Technisches PDF „${filename}“ gespeichert.`);
           } catch (err) {

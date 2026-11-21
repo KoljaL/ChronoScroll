@@ -183,6 +183,7 @@ test('SVG export uses the same split-column coordinates as the PDF geometry', ()
   let exportedBlob;
   const context = {
     window: {
+      ...stubQrDependencies(),
       CronoGeometry: null,
       CronoHolidays: { get14MonthsData: createMonths }
     },
@@ -217,6 +218,64 @@ test('SVG export uses the same split-column coordinates as the PDF geometry', ()
   assert.ok(exportedBlob.content.includes(
     `x="360" y="${14 * geo.hDayMm}" width="70" height="${geo.hDayMm}" fill="#fafafa"`
   ));
+});
+
+test('transparent event colors and moon phases reach PDF and SVG', () => {
+  let doc;
+  let svg;
+  const months = createMonths();
+  months[0].days[0].holiday = { title: 'Termin', color: '#d977061c' };
+  months[0].days[0].moonPhase = { type: 'new' };
+  class JsPdf {
+    constructor() {
+      doc = this;
+      this.fills = [];
+      this.texts = [];
+      this.circles = 0;
+      this.internal = { pageSize: { getWidth: () => 2260, getHeight: () => 320 } };
+    }
+    setProperties() {} setFillColor(...rgb) { this.fills.push(rgb); }
+    circle() { this.circles++; }
+    rect() {} line() {} setLineWidth() {} setDrawColor() {}
+    setTextColor(...rgb) { this.textColor = rgb; }
+    setFont() {} setFontSize() {} setLineDashPattern() {}
+    getTextWidth(text) { return String(text).length; }
+    text(value) { this.texts.push({ value, color: this.textColor }); } save() {}
+  }
+  const context = {
+    window: {
+      jspdf: { jsPDF: JsPdf },
+      CronoHolidays: { get14MonthsData: () => months },
+      CronoFonts: { registerPdfFont: () => 'sans' }
+    },
+    Blob: class { constructor(parts) { svg = parts.join(''); } },
+    URL: { createObjectURL: () => 'blob:test', revokeObjectURL() {} },
+    document: { body: { appendChild() {}, removeChild() {} }, createElement: () => ({ click() {} }) }
+  };
+  vm.createContext(context);
+  for (const file of ['geometry.js', 'designPresets.js', 'pdfExport.js', 'svgExport.js']) {
+    vm.runInContext(fs.readFileSync(path.join(root, 'js', file), 'utf8'), context);
+  }
+  const current = {
+    ...createState('single'), qrEnabled: false, showMoon: true, moonOpacity: 0.5,
+    paperColor: '#c0d0e0', colorText: '#00000080'
+  };
+  context.window.CronoPDF.exportPlotterPDF(current);
+  context.window.CronoVector.exportSVG(current);
+  const flatten = context.window.CronoGeometry.flattenColor;
+  const cellBackground = flatten('#d977061c', current.paperColor);
+  const rgb = color => color.slice(1).match(/../g).map(x => parseInt(x, 16));
+  const expected = rgb(cellBackground);
+  assert.ok(doc.fills.some(rgb => JSON.stringify(rgb) === JSON.stringify(expected)));
+  assert.deepEqual(doc.texts.find(text => text.value === '01 Mo').color, rgb(flatten(current.colorText, cellBackground)));
+  assert.ok(doc.circles > 0);
+  assert.ok(svg.includes('fill="#d977061c"'));
+  assert.ok(svg.includes('<circle'));
+  current.moonOpacity = 0;
+  context.window.CronoPDF.exportPlotterPDF(current);
+  context.window.CronoVector.exportSVG(current);
+  assert.equal(doc.circles, 0);
+  assert.ok(!svg.includes('<circle'));
 });
 
 test('PDF and SVG reserve and paint the same separators for both layouts', () => {
@@ -355,6 +414,20 @@ test('PDF encodes the shared URL as vector modules within the right buffer', () 
       assert.equal(drawn.has(`${row},${col}`), qr.isDark(row, col));
     }
   }
+  let svg;
+  context.Blob = class { constructor(parts) { svg = parts.join(''); } };
+  context.URL = { createObjectURL: () => 'blob:calendar', revokeObjectURL() {} };
+  context.document = {
+    body: { appendChild() {}, removeChild() {} },
+    createElement: () => ({ click() {} })
+  };
+  vm.runInContext(fs.readFileSync(path.join(root, 'js/svgExport.js'), 'utf8'), context);
+  context.window.CronoVector.exportSVG(state);
+  assert.ok(svg.includes('<g id="qr-code"><rect x="2150" y="110" width="100" height="100"'));
+  state.qrEnabled = false;
+  context.window.CronoVector.exportSVG(state);
+  assert.ok(!svg.includes('id="qr-code"'));
+  state.qrEnabled = true;
   state.pufferRight = 1;
   assert.throws(() => context.window.CronoPDF.exportPlotterPDF(state), /puffer.*zu schmal/i);
   state.pufferRight = 0;

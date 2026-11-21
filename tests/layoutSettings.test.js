@@ -12,6 +12,7 @@ test('header controls, separator settings and next-year links update correctly',
       this.children = [];
       this.listeners = {};
       this.attributes = {};
+      this.dataset = {};
       this.options = [];
       this.style = {};
       this.classList = {
@@ -90,7 +91,13 @@ test('header controls, separator settings and next-year links update correctly',
     return button;
   });
   const storage = {
-    cronoscroll_v2_presets: JSON.stringify({ old: { monthLayout: 'single' } }),
+    cronoscroll_v2_presets: JSON.stringify({ old: {
+      monthLayout: 'single', hVisible: 32, bVisible: 50, showVacations: true,
+      holidays: [
+        { id: 'keep', title: 'Privat', start: '2027-01-01', end: '2027-01-01', type: 'custom', color: '#123456' },
+        { id: 'vac', title: 'Ferien', start: '2027-01-01', end: '2027-01-02', type: 'vacation', color: '#abcdef' }
+      ]
+    } }),
     cronoscroll_theme: 'sage'
   };
   const windowListeners = new Map();
@@ -255,7 +262,7 @@ test('header controls, separator settings and next-year links update correctly',
   assert.equal(context.window.CronoScrollCADBridge.getSnapshot().dimensions.paperLength, 2260);
   assert.equal(latestState.themeKey, 'sage');
   assert.equal(latestState.paperColor, '#fcfdfa');
-  assert.equal(latestState.holidays.find(event => event.type === 'public').color, '#fef08a');
+  assert.equal(latestState.holidays.find(event => event.type === 'public').color, '#d977061c');
   assert.equal(latestState.holidays.find(event => event.type === 'vacation'), undefined);
   const change = (id, value, type = 'change') => {
     const element = get(id);
@@ -265,7 +272,7 @@ test('header controls, separator settings and next-year links update correctly',
   };
   change('checkbox-month-separator', true);
   change('input-month-separator-width', '5', 'input');
-  change('select-month-separator-color', 'paper');
+  change('color-month-separator', '#123456', 'input');
   change('select-month-layout', 'double');
   assert.equal(get('checkbox-month-separator').checked, false);
   change('checkbox-month-separator', true);
@@ -276,7 +283,7 @@ test('header controls, separator settings and next-year links update correctly',
   assert.equal(latestState.monthSeparators.double.widthMm, 12);
   change('select-month-layout', 'single');
   assert.equal(get('input-month-separator-width').value, 5);
-  assert.equal(get('select-month-separator-color').value, 'paper');
+  assert.equal(get('color-month-separator').value, '#123456');
   change('select-design-style', 'zen');
   assert.equal(storage.cronoscroll_design_style, 'zen');
   const zenCard = get('design-options').children.find(button => button.getAttribute('data-design-style') === 'zen');
@@ -289,20 +296,25 @@ test('header controls, separator settings and next-year links update correctly',
   assert.equal(latestState.paperColor, '#fdfbf7');
   assert.equal(storage.cronoscroll_theme, 'wood');
   change('color-category-public', '#abcdef', 'input');
-  assert.equal(latestState.categoryColors.public, '#abcdef');
-  assert.equal(latestState.holidays.find(event => event.type === 'public').color, '#abcdef');
+  assert.equal(latestState.categoryColors.public, '#abcdef1c');
+  assert.equal(latestState.holidays.find(event => event.type === 'public').color, '#abcdef1c');
   change('checkbox-show-vacations', true);
-  assert.equal(latestState.holidays.find(event => event.type === 'vacation').color, '#bfdbfe');
+  assert.equal(latestState.holidays.find(event => event.type === 'vacation').color, '#0284c71c');
   change('color-category-vacation', '#fedcba', 'input');
-  assert.equal(latestState.holidays.find(event => event.type === 'vacation').color, '#fedcba');
-  assert.equal(latestState.holidays.find(event => event.type === 'public').color, '#abcdef');
+  assert.equal(latestState.holidays.find(event => event.type === 'vacation').color, '#fedcba1c');
+  assert.equal(latestState.holidays.find(event => event.type === 'public').color, '#abcdef1c');
   get('btn-add-holiday').dispatch('click');
   get('modal-event-title').value = 'Eigener Termin';
   get('modal-event-date-start').value = '2027-06-01';
   get('btn-modal-event-save').dispatch('click');
-  assert.equal(latestState.holidays.find(event => event.type === 'custom').color, '#bfdbfe');
+  assert.equal(latestState.holidays.find(event => event.type === 'custom').color, '#16a34a1c');
+  change('checkbox-show-vacations', false);
+  assert.ok(latestState.holidays.some(event => event.type === 'custom' && event.title === 'Eigener Termin'));
+  assert.equal(latestState.holidays.some(event => event.type === 'vacation'), false);
+  change('checkbox-show-vacations', true);
+  assert.ok(latestState.holidays.some(event => event.type === 'custom' && event.title === 'Eigener Termin'));
   change('color-category-custom', '#123456', 'input');
-  assert.equal(latestState.holidays.find(event => event.type === 'custom').color, '#123456');
+  assert.equal(latestState.holidays.find(event => event.type === 'custom').color, '#1234561c');
   filters.find(button => button.getAttribute('data-filter') === 'custom').dispatch('click');
   assert.equal(get('holiday-list').children.length, 1);
   assert.equal(filters.find(button => button.getAttribute('data-filter') === 'custom').getAttribute('aria-pressed'), 'true');
@@ -317,6 +329,13 @@ test('header controls, separator settings and next-year links update correctly',
   const load = name => list.querySelectorAll('.btn-load-preset')
     .find(button => button.getAttribute('data-name') === name).dispatch('click');
   load('old');
+  assert.equal(latestState.hVisible, 30);
+  assert.equal(latestState.bVisible, 42);
+  assert.equal(latestState.bannerCustomTitle, 'old');
+  assert.equal(latestState.showVacations, false);
+  assert.ok(latestState.holidays.some(event => event.id === 'keep'));
+  assert.ok(!latestState.holidays.some(event => event.id === 'vac'));
+  assert.equal(JSON.parse(storage.cronoscroll_v2_presets).old._calendarPresetVersion, 1);
   assert.equal(latestState.designStyle, 'classic');
   assert.equal(latestState.themeKey, null);
   assert.equal(latestState.monthSeparators.single.enabled, false);
@@ -327,9 +346,9 @@ test('header controls, separator settings and next-year links update correctly',
   assert.equal(latestState.monthSeparators.single.widthMm, 5);
   assert.equal(latestState.monthSeparators.double.widthMm, 12);
   assert.equal(latestState.monthSeparators.double.header, true);
-  assert.equal(latestState.categoryColors.public, '#abcdef');
-  assert.equal(latestState.categoryColors.vacation, '#fedcba');
-  assert.equal(latestState.categoryColors.custom, '#123456');
+  assert.equal(latestState.categoryColors.public, '#abcdef1c');
+  assert.equal(latestState.categoryColors.vacation, '#fedcba1c');
+  assert.equal(latestState.categoryColors.custom, '#1234561c');
 
   change('input-custom-title', 'Familie 2027', 'input');
   const link = get('next-year-link').href;

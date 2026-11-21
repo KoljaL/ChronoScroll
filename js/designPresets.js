@@ -38,6 +38,33 @@ window.CronoDesigns = (function() {
     return blackContrast >= whiteContrast ? '#000000' : '#ffffff';
   }
 
+  function moonCommands(phase, x, y, radius, opacity, background, paper = '#ffffff') {
+    const alpha = Math.max(0, Math.min(1, Number.isFinite(opacity) ? opacity : 0.89));
+    if (!alpha) return [];
+    const baseColor = background
+      ? window.CronoGeometry.flattenColor(background, paper)
+      : window.CronoGeometry.flattenColor(paper);
+    const base = /^#([0-9a-f]{6})$/i.exec(baseColor);
+    const channels = base[1].match(/../g).map((value, i) =>
+      Math.round(parseInt(value, 16) * (1 - alpha) + [71, 85, 105][i] * alpha));
+    const color = `#${channels.map(value => value.toString(16).padStart(2, '0')).join('')}`;
+    const commands = [{
+      type: 'circle', x, y, r: radius, fill: phase === 'new',
+      fillColor: color, strokeColor: color
+    }];
+    if (phase === 'first_quarter' || phase === 'last_quarter') {
+      for (let dy = -radius + 0.1; dy < radius; dy += 0.2) {
+        const dx = Math.sqrt(Math.max(0, radius * radius - dy * dy));
+        commands.push({
+          type: 'line', x1: phase === 'first_quarter' ? x - dx : x,
+          x2: phase === 'first_quarter' ? x : x + dx,
+          y1: y + dy, y2: y + dy, width: 0.2, strokeColor: color
+        });
+      }
+    }
+    return commands;
+  }
+
   function monthCommands(state, geo, month, index, left) {
     const commands = [];
     const style = state.designStyle;
@@ -63,7 +90,7 @@ window.CronoDesigns = (function() {
     const gridColor = colors.grid;
     const textColor = colors.text;
     const headerBg = colors.header.background;
-    const headerText = colors.header.text;
+    const headerText = state.monthHeaderTextColor || colors.header.text;
     const highlight = colors.highlight;
     const metrics = geo.getMonthMetrics(index);
     const x = left + metrics.leftInsetMm;
@@ -82,16 +109,20 @@ window.CronoDesigns = (function() {
     const circle = (cx, cy, r, fill = false) =>
       commands.push({ type: 'circle', x: cx, y: cy, r, fill,
         fillColor: highlight, strokeColor: gridColor });
-    const daySize = Math.min(2.6 * (state.fontDayScale || 1), h * 0.55, w * 0.16);
-    const headerSize = Math.min((style === 'bauhaus' ? 5 : 3.2) * (state.fontHeaderScale || 1), h * 0.65);
+    const daySize = Math.min(3.2 * (state.fontDayScale || 1), h * 0.55, w * 0.16);
+    const headerSize = Math.min((style === 'bauhaus' ? 5 : 3.2) * (state.fontHeaderScale || 1) * (state.monthHeaderTextSize || 1), h * 0.65);
     const headerY = h * (style === 'gantt' ? 0.35 : 0.52);
     if (style === 'midcentury') rect(x, 0, fullWidth, h, true, 0.15, headerBg);
-    text(month.label.toUpperCase(), style === 'bauhaus' ? x + 2 : x + fullWidth / 2,
+    let headerTitle = month.label.toUpperCase();
+    if (state.headerStyle === 'titlecase') headerTitle = month.label;
+    else if (state.headerStyle === 'numbered') headerTitle = `${month.monthNumber} · ${month.monthName.toUpperCase()} ${month.year}`;
+    const leftHeader = state.headerAlign === 'left' || (state.headerAlign == null && style === 'bauhaus');
+    text(headerTitle, leftHeader ? x + 2 : x + fullWidth / 2,
       headerY, headerSize, fullWidth - 4,
       {
-        align: style === 'bauhaus' ? 'left' : 'center',
+        align: leftHeader ? 'left' : 'center',
         bold: style !== 'zen',
-        textColor: style === 'midcentury' ? contrastText(headerBg, headerText) : headerText
+        textColor: state.monthHeaderTextColor || (style === 'midcentury' ? contrastText(headerBg, headerText) : headerText)
       });
 
     if (style === 'gantt') {
@@ -129,7 +160,7 @@ window.CronoDesigns = (function() {
         if (state.showKW && day.isoWeek) {
           const r = Math.min(2.1, h * 0.23, Math.max(0.1, (w - strip - 1) / 2));
           circle(cx + strip + r, cy, r);
-          text(day.isoWeek, cx + strip + r, cy, Math.min(1.6, r), 2 * r - 0.3, { align: 'center' });
+          text(day.isoWeek, cx + strip + r, cy, Math.min(1.6 * (state.calendarWeekTextSize || 1), r), 2 * r - 0.3, { align: 'center', textColor: state.calendarWeekTextColor || textColor });
           detailStart = strip + 2 * r + 1;
         }
         if (day.dayNum === 1) {
@@ -151,6 +182,10 @@ window.CronoDesigns = (function() {
       } else if (style === 'gantt') {
         const laneStart = Math.min(15, w * 0.28);
         text(date + ' ' + day.dayName, cx + 1, cy, daySize, laneStart - 2, { textColor: dayTextColor });
+        if (state.showKW && day.isoWeek) {
+          text('KW ' + day.isoWeek, cx + laneStart + 1, cy, daySize * 0.7 * (state.calendarWeekTextSize || 1),
+            Math.max(0.1, (w - laneStart) / 3 - 2), { textColor: state.calendarWeekTextColor || textColor });
+        }
         if (day.dayName === 'Mo') {
           line(cx, y, cx + w, y, 0.25);
           const lane = (w - laneStart) / 3;
@@ -177,21 +212,13 @@ window.CronoDesigns = (function() {
       }
 
       if (state.showKW && day.isoWeek && style !== 'midcentury' && style !== 'gantt' && w - strip > 20) {
-        text('KW ' + day.isoWeek, cx + strip + 1, cy, daySize * 0.7, 9);
+        text('KW ' + day.isoWeek, cx + strip + 1, cy, daySize * 0.7 * (state.calendarWeekTextSize || 1), 9, { textColor: state.calendarWeekTextColor || textColor });
         detailStart += 10;
       }
       if (state.showMoon && day.moonPhase && w - detailStart > 9) {
         const r = Math.min(1.2, h * 0.2);
         const mx = cx + detailStart + r;
-        const phase = day.moonPhase.type;
-        circle(mx, cy, r, phase === 'new');
-        if (phase === 'first_quarter' || phase === 'last_quarter') {
-          for (let dy = -r + 0.2; dy < r; dy += 0.25) {
-            const dx = Math.sqrt(Math.max(0, r * r - dy * dy));
-            line(phase === 'first_quarter' ? mx - dx : mx, cy + dy,
-              phase === 'first_quarter' ? mx : mx + dx, cy + dy, 0.15);
-          }
-        }
+        commands.push(...moonCommands(day.moonPhase.type, mx, cy, r, state.moonOpacity, state.paperColor));
         detailStart += 2 * r + 1;
       }
       if (day.holiday && day.holiday.title && w - detailStart > 8) {
@@ -228,27 +255,27 @@ window.CronoDesigns = (function() {
     ctx.restore();
   }
 
-  function hexRgb(hex) {
-    const match = /^#([0-9a-f]{6})$/i.exec(hex || '');
+  function hexRgb(hex, background = '#ffffff') {
+    const match = /^#([0-9a-f]{6})$/i.exec(window.CronoGeometry.flattenColor(hex || '#000000', background));
     if (!match) return [0, 0, 0];
     return match[1].match(/../g).map(channel => parseInt(channel, 16));
   }
 
-  function drawPdf(doc, commands, font) {
+  function drawPdf(doc, commands, font, background = '#ffffff') {
     commands.forEach(c => {
-      const stroke = hexRgb(c.strokeColor || '#000000');
+      const stroke = hexRgb(c.strokeColor || '#000000', background);
       doc.setDrawColor(...stroke);
       doc.setLineWidth(c.width || 0.15);
       doc.setLineDashPattern(c.dash ? [0.2, 0.8] : [], 0);
       if (c.type === 'line') doc.line(c.x1, c.y1, c.x2, c.y2);
       else if (c.type === 'rect') {
-        doc.setFillColor(...hexRgb(c.fillColor || '#000000'));
+        doc.setFillColor(...hexRgb(c.fillColor || '#000000', background));
         doc.rect(c.x, c.y, c.w, c.h, c.fill ? 'F' : 'D');
       } else if (c.type === 'circle') {
-        doc.setFillColor(...hexRgb(c.fillColor || '#000000'));
+        doc.setFillColor(...hexRgb(c.fillColor || '#000000', background));
         doc.circle(c.x, c.y, c.r, c.fill ? 'F' : 'D');
       } else {
-        doc.setTextColor(...hexRgb(c.textColor || (c.white ? '#ffffff' : '#000000')));
+        doc.setTextColor(...hexRgb(c.textColor || (c.white ? '#ffffff' : '#000000'), background));
         doc.setFont(font, c.bold ? 'bold' : 'normal');
         let size = c.size * 72 / 25.4;
         doc.setFontSize(size);
@@ -277,5 +304,5 @@ window.CronoDesigns = (function() {
     });
   }
 
-  return { styles, active, fontKey, monthCommands, drawCanvas, drawPdf, svgCommands };
+  return { styles, active, fontKey, monthCommands, moonCommands, drawCanvas, drawPdf, svgCommands };
 })();

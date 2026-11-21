@@ -51,6 +51,29 @@ test('next-year URL round trips only durable settings and updates matching title
   assert.equal(original.year, 2027);
 });
 
+test('current-year URL retains year and title even at the last supported year', () => {
+  const original = state();
+  original.year = 2100;
+  original.bannerCustomTitle = 'Kalender 2100';
+  const restored = state();
+  share.restore(new URL(share.createCurrentUrl(original)).search, restored);
+  assert.equal(restored.year, 2100);
+  assert.equal(restored.bannerCustomTitle, 'Kalender 2100');
+  assert.throws(() => share.createNextYearUrl(original), /Folgejahr/);
+});
+
+test('transparent color settings survive a shared link', () => {
+  const original = state();
+  original.colorSundayBg = '#e11d481c';
+  original.categoryColors = { public: '#d977061c', vacation: '#0284c71c', custom: '#16a34a1c' };
+  original.monthSeparators.single.color = '#12345680';
+  const restored = state();
+  share.restore(new URL(share.createCurrentUrl(original)).search, restored);
+  assert.equal(restored.colorSundayBg, '#e11d481c');
+  assert.equal(restored.categoryColors.public, '#d977061c');
+  assert.equal(restored.monthSeparators.single.color, '#12345680');
+});
+
 test('malformed, unsupported and invalid values do not block restoration', () => {
   const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
   for (const search of ['?config=%%%', '?config=e30', '?config=abc&config=abc',

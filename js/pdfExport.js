@@ -61,10 +61,11 @@ window.CronoPDF = (function() {
     return size;
   }
 
-  function hexToRgb(hex) {
+  function hexToRgb(hex, background = '#ffffff') {
     if (!hex) return [0, 0, 0];
     let c = hex.replace('#', '');
     if (c.length === 3) c = c.split('').map(x => x + x).join('');
+    c = window.CronoGeometry.flattenColor(`#${c}`, background).slice(1);
     const num = parseInt(c, 16);
     return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
   }
@@ -93,35 +94,11 @@ window.CronoPDF = (function() {
     }
     const geo = window.CronoGeometry.calculate(state);
     const design = window.CronoDesigns && window.CronoDesigns.active(state);
-    const qrEnabled = state.qrEnabled !== false;
-    if (qrEnabled && typeof window.qrcode !== 'function') {
-      throw new Error('Die QR-Code-Bibliothek ist nicht geladen.');
-    }
     if (!Number.isFinite(geo.lTotalMm) || geo.lTotalMm <= 0 ||
         !Number.isFinite(geo.hVisibleMm) || geo.hVisibleMm <= 0) {
       throw new Error('Die berechneten Rollenmaße sind ungültig.');
     }
-    let qr = null;
-    let moduleCount = 0;
-    let qrSizeMm = 0;
-    let moduleSizeMm = 0;
-    if (qrEnabled) {
-      const url = window.CronoShare.createNextYearUrl(state);
-      qr = window.qrcode(0, 'L');
-      qr.addData(url);
-      try {
-        qr.make();
-      } catch (error) {
-        throw new Error(`QR-Code konnte nicht erstellt werden: ${error.message || error}`);
-      }
-      moduleCount = qr.getModuleCount();
-      qrSizeMm = Math.min(state.pufferRight * 10 - 10, geo.hVisibleMm - 10, 100);
-      moduleSizeMm = qrSizeMm / (moduleCount + 8);
-      if (!Number.isFinite(moduleCount) || moduleCount <= 0 ||
-          !Number.isFinite(qrSizeMm) || moduleSizeMm < 0.25) {
-        throw new Error('Der rechte Montagepuffer ist für den QR-Code zu schmal. Bitte den Puffer vergrößern.');
-      }
-    }
+    const qrData = window.CronoGeometry.createQr(state, geo, window);
     const monthsData = window.CronoHolidays.get14MonthsData(state.year, state.holidays, state);
     if (!Array.isArray(monthsData) || monthsData.length !== 14) {
       throw new Error('Der Kalender konnte nicht vollständig mit 14 Monaten erzeugt werden.');
@@ -143,9 +120,10 @@ window.CronoPDF = (function() {
 
     const baseFont = window.CronoFonts.registerPdfFont(doc, design ? window.CronoDesigns.fontKey(state) : state.fontFamily);
 
-    const gridRgb = hexToRgb(state.colorGrid);
-    const textRgb = hexToRgb(state.colorText);
-    const borderRgb = hexToRgb(design ? state.colorText : state.colorBorder || '#0f172a');
+    const paper = state.paperColor || '#ffffff';
+    const gridRgb = hexToRgb(state.colorGrid, paper);
+    const textRgb = hexToRgb(state.colorText, paper);
+    const borderRgb = hexToRgb(design ? state.colorText : state.colorBorder || '#0f172a', paper);
     const paperRgb = hexToRgb(state.paperColor || '#ffffff');
 
     // 1. Hintergrund für gesamtes Banner
@@ -179,7 +157,7 @@ window.CronoPDF = (function() {
     monthsData.forEach((month, mIdx) => {
       const monthLeftMm = leadInMm + (mIdx * geo.bMonthMm);
       if (design) {
-        window.CronoDesigns.drawPdf(doc, window.CronoDesigns.monthCommands(state, geo, month, mIdx, monthLeftMm), baseFont);
+        window.CronoDesigns.drawPdf(doc, window.CronoDesigns.monthCommands(state, geo, month, mIdx, monthLeftMm), baseFont, paper);
         return;
       }
       const metrics = geo.getMonthMetrics(mIdx);
@@ -191,7 +169,7 @@ window.CronoPDF = (function() {
       const headerWidthMm = insetHeader ? metrics.contentWidthMm : geo.bMonthMm;
 
       // Monatskopf (Header)
-      const headerBgRgb = hexToRgb(state.colorHeaderBg || '#f1f5f9');
+      const headerBgRgb = hexToRgb(state.colorHeaderBg || '#f1f5f9', paper);
       doc.setFillColor(headerBgRgb[0], headerBgRgb[1], headerBgRgb[2]);
       doc.setLineWidth(state.lineGrid);
       doc.setDrawColor(gridRgb[0], gridRgb[1], gridRgb[2]);
@@ -201,9 +179,10 @@ window.CronoPDF = (function() {
       if (state.headerStyle === 'titlecase') headerTitle = month.label;
       else if (state.headerStyle === 'numbered') headerTitle = `${month.monthNumber} · ${month.monthName.toUpperCase()} ${month.year}`;
 
-      doc.setTextColor(textRgb[0], textRgb[1], textRgb[2]);
+      const headerBackground = window.CronoGeometry.flattenColor(state.colorHeaderBg || '#f1f5f9', paper);
+      doc.setTextColor(...hexToRgb(state.monthHeaderTextColor || state.colorHeaderText || state.colorText, headerBackground));
       doc.setFont(baseFont, 'bold');
-      doc.setFontSize(10 * state.fontHeaderScale);
+      doc.setFontSize(10 * state.fontHeaderScale * (state.monthHeaderTextSize || 1));
 
       if (insetHeader) {
         while (headerTitle.length > 1 && doc.getTextWidth(headerTitle) > headerWidthMm - 6) {
@@ -219,21 +198,27 @@ window.CronoPDF = (function() {
         const position = geo.getDayPosition(dIdx + 1);
         const cellLeftMm = contentLeftMm + (position.column * dayColumnWidthMm);
         const rowTopMm = (position.row + 1) * geo.hDayMm;
+        const background = day.holiday && day.holiday.color ? day.holiday.color
+          : day.isSunday ? state.colorSundayBg || state.colorWeekendBg
+            : day.isSaturday ? state.colorSaturdayBg || state.colorWeekendBg : null;
+        const cellBackground = background
+          ? window.CronoGeometry.flattenColor(background, paper)
+          : window.CronoGeometry.flattenColor(paper);
 
         // Zellhintergrund
         if (!day.isValid) {
           doc.setFillColor(250, 250, 250);
           doc.rect(cellLeftMm, rowTopMm, dayColumnWidthMm, geo.hDayMm, 'F');
         } else if (day.holiday && day.holiday.color) {
-          const hRgb = hexToRgb(day.holiday.color);
+          const hRgb = hexToRgb(day.holiday.color, paper);
           doc.setFillColor(hRgb[0], hRgb[1], hRgb[2]);
           doc.rect(cellLeftMm, rowTopMm, dayColumnWidthMm, geo.hDayMm, 'F');
         } else if (day.isSunday) {
-          const sunBg = hexToRgb(state.colorSundayBg || state.colorWeekendBg);
+          const sunBg = hexToRgb(state.colorSundayBg || state.colorWeekendBg, paper);
           doc.setFillColor(sunBg[0], sunBg[1], sunBg[2]);
           doc.rect(cellLeftMm, rowTopMm, dayColumnWidthMm, geo.hDayMm, 'F');
         } else if (day.isSaturday) {
-          const satBg = hexToRgb(state.colorSaturdayBg || state.colorWeekendBg);
+          const satBg = hexToRgb(state.colorSaturdayBg || state.colorWeekendBg, paper);
           doc.setFillColor(satBg[0], satBg[1], satBg[2]);
           doc.rect(cellLeftMm, rowTopMm, dayColumnWidthMm, geo.hDayMm, 'F');
         }
@@ -266,13 +251,13 @@ window.CronoPDF = (function() {
 
           // Textfarbe für Tag
           if (day.isSunday) {
-            const sunTxt = hexToRgb(state.colorSundayText || state.colorWeekendText);
+            const sunTxt = hexToRgb(state.colorSundayText || state.colorWeekendText, cellBackground);
             doc.setTextColor(sunTxt[0], sunTxt[1], sunTxt[2]);
           } else if (day.isSaturday) {
-            const satTxt = hexToRgb(state.colorSaturdayText || state.colorWeekendText);
+            const satTxt = hexToRgb(state.colorSaturdayText || state.colorWeekendText, cellBackground);
             doc.setTextColor(satTxt[0], satTxt[1], satTxt[2]);
           } else {
-            doc.setTextColor(textRgb[0], textRgb[1], textRgb[2]);
+            doc.setTextColor(...hexToRgb(state.colorText, cellBackground));
           }
 
           doc.setFont(baseFont, 'normal');
@@ -286,9 +271,18 @@ window.CronoPDF = (function() {
           // Kalenderwoche (KW) am Montag
           if (state.showKW && day.isoWeek) {
             doc.setFont(baseFont, 'bold');
-            doc.setFontSize(6.5);
-            doc.setTextColor(100, 116, 139);
+            doc.setFontSize(6.5 * (state.calendarWeekTextSize || 1));
+            doc.setTextColor(...hexToRgb(state.calendarWeekTextColor || '#64748b', cellBackground));
             doc.text(`KW ${day.isoWeek}`, cellLeftMm + leftOffsetMm, textYMm);
+            leftOffsetMm += doc.getTextWidth(`KW ${day.isoWeek}`) + 1.5;
+          }
+
+          if (state.showMoon && day.moonPhase) {
+            const radius = Math.min(1.2, geo.hDayMm * 0.2);
+            window.CronoDesigns.drawPdf(doc, window.CronoDesigns.moonCommands(
+              day.moonPhase.type, cellLeftMm + leftOffsetMm + radius,
+              rowTopMm + geo.hDayMm / 2, radius, state.moonOpacity, background, paper), baseFont);
+            leftOffsetMm += 2 * radius + 1;
           }
 
           // Feiertags-/Terminbezeichnung mit Kollisionsschutz
@@ -322,7 +316,7 @@ window.CronoPDF = (function() {
 
     if (geo.separatorWidthMm > 0) {
       const separator = state.monthSeparators[geo.monthLayout];
-      const color = hexToRgb(design ? state.paperColor || '#ffffff' : separator.colorMode === 'paper' ? state.paperColor : separator.color);
+      const color = hexToRgb(separator.colorMode === 'paper' ? paper : separator.color, paper);
       const topMm = separator.header ? 0 : geo.hDayMm;
       doc.setFillColor(color[0], color[1], color[2]);
       for (let i = 1; i < 14; i++) {
@@ -335,11 +329,8 @@ window.CronoPDF = (function() {
     const leadOutStartMm = geo.lTotalMm - geo.pufferRightMm;
     doc.setFillColor(...(design ? paperRgb : [248, 250, 252]));
     doc.rect(leadOutStartMm, 0, geo.pufferRightMm, geo.hVisibleMm, 'F');
-    if (qrEnabled) {
-      const gapMm = Math.max(0, Number.isFinite(state.qrGapMm) ? state.qrGapMm : 40);
-      const availableQrX = Math.max(0, geo.pufferRightMm - qrSizeMm);
-      const qrX = leadOutStartMm + Math.min(gapMm, availableQrX);
-      const qrY = (geo.hVisibleMm - qrSizeMm) / 2;
+    if (qrData) {
+      const { qr, count: moduleCount, size: qrSizeMm, moduleSize: moduleSizeMm, x: qrX, y: qrY } = qrData;
       doc.setFillColor(255, 255, 255);
       doc.rect(qrX, qrY, qrSizeMm, qrSizeMm, 'F');
       doc.setFillColor(0, 0, 0);
@@ -376,9 +367,8 @@ window.CronoPDF = (function() {
     const originalVersion = jsPDF.version;
     try {
       if (originalVersion) jsPDF.version = `${JSPDF_VERSION} via ChronoScroll`;
-      const calendarName = String(state.bannerCustomTitle || `Rollkalender-${state.year}`)
-        .trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '-').replace(/\s+/g, '-');
-      doc.save(`${calendarName || `Rollkalender-${state.year}`}.pdf`);
+      const calendarName = window.CronoGeometry.calendarFilename(state.bannerCustomTitle, state.year);
+      doc.save(`${calendarName}.pdf`);
     } finally {
       if (originalVersion) jsPDF.version = originalVersion;
     }

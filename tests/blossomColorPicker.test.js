@@ -275,7 +275,7 @@ test('Blossom adapter initializes existing inputs and forwards picker changes', 
   assert.ok(picker);
   assert.equal(input.value, '#abcdef');
   assert.equal(picker.options.colors.length, ui.window.CronoBlossomColorPicker.config.colors.length);
-  assert.equal(picker.options.showAlphaSlider, true);
+  assert.equal(picker.options.showAlphaSlider, false);
   assert.equal(picker.options.showShadeSlider, true);
   assert.equal(input.classList.contains('cronoscroll-color-input-native'), true);
   assert.equal(picker.container.listeners.pointerdown, undefined);
@@ -291,7 +291,23 @@ test('Blossom adapter initializes existing inputs and forwards picker changes', 
   picker.options.onChange({ hex: '#123ABC' });
   picker.options.onChangeComplete({ hex: '#123ABC' });
   assert.equal(input.value, '#123abc');
-  assert.deepEqual(appEvents, ['input', 'change']);
+  const textInput = input.parentNode.children.find(child => child.type === 'text');
+  assert.equal(textInput.value, '#123abc');
+  textInput.value = '#f';
+  textInput.dispatchEvent(new ui.window.Event('input'));
+  assert.equal(textInput.getAttribute('aria-invalid'), 'true');
+  assert.equal(input.value, '#123abc');
+  textInput.value = '#abcdef';
+  textInput.dispatchEvent(new ui.window.Event('input'));
+  assert.equal(input.value, '#abcdef');
+  assert.equal(textInput.getAttribute('aria-invalid'), undefined);
+  assert.deepEqual(appEvents, ['input', 'change', 'input', 'change']);
+  const alphaInput = input.parentNode.children.find(child => child.className === 'cronoscroll-color-alpha').children[0];
+  alphaInput.value = '11';
+  alphaInput.dispatchEvent(new ui.window.Event('input'));
+  assert.equal(input.dataset.colorAlpha, '11');
+  assert.equal(textInput.value, '#abcdef1c');
+  assert.equal(picker.values.at(-1).alpha, 11);
 });
 
 test('Blossom adapter synchronizes external state and disabled inputs', () => {

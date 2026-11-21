@@ -11,6 +11,7 @@ window.CronoVector = (function() {
     const geo = window.CronoGeometry.calculate(state);
     const design = window.CronoDesigns && window.CronoDesigns.active(state);
     const monthsData = window.CronoHolidays.get14MonthsData(state.year, state.holidays, state);
+    const qrData = window.CronoGeometry.createQr(state, geo, window);
 
     const wMm = geo.lTotalMm;
     const hMm = geo.hVisibleMm;
@@ -30,10 +31,10 @@ window.CronoVector = (function() {
         `  @font-face { font-family: "${designFont.family}"; font-weight: bold; src: url(data:font/ttf;base64,${designFont.styles.bold}) format("truetype"); }`
       ] : []),
       `  text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }`,
-      `  .header-text { font-weight: bold; font-size: 3.2mm; fill: ${state.colorText}; }`,
+      `  .header-text { font-weight: bold; font-size: ${3.2 * (state.fontHeaderScale || 1) * (state.monthHeaderTextSize || 1)}mm; fill: ${state.monthHeaderTextColor || state.colorHeaderText || state.colorText}; }`,
       `  .day-text { font-size: 2.6mm; fill: ${state.colorText}; }`,
       `  .wk-text { font-size: 2.6mm; fill: ${state.colorSundayText || '#e11d48'}; }`,
-      `  .kw-text { font-size: 2.0mm; font-weight: bold; fill: #64748b; }`,
+      `  .kw-text { font-size: ${2 * (state.calendarWeekTextSize || 1)}mm; font-weight: bold; fill: ${state.calendarWeekTextColor || '#64748b'}; }`,
       `  .holiday-text { font-size: 2.1mm; font-style: italic; fill: #1e293b; text-anchor: end; }`,
       `  .grid-line { stroke: ${state.colorGrid}; stroke-width: ${state.lineGrid}mm; }`,
       `  .border-line { stroke: ${state.colorBorder || '#0f172a'}; stroke-width: ${state.lineBorder}mm; fill: none; }`,
@@ -67,7 +68,10 @@ window.CronoVector = (function() {
       const hX = (state.headerAlign === 'left') ? (headerLeftMm + 2.5) : (headerLeftMm + headerWidthMm / 2);
       if (insetHeader) svg.push(`  <clipPath id="month-header-${mIdx}"><rect x="${headerLeftMm}" y="0" width="${headerWidthMm}" height="${geo.hDayMm}"/></clipPath>`);
       const headerClip = insetHeader ? ` clip-path="url(#month-header-${mIdx})"` : '';
-      svg.push(`  <text x="${hX}" y="${geo.hDayMm / 2 + 1.1}" text-anchor="${hAlign}" class="header-text"${headerClip}>${month.label.toUpperCase()}</text>`);
+      let headerTitle = month.label.toUpperCase();
+      if (state.headerStyle === 'titlecase') headerTitle = month.label;
+      else if (state.headerStyle === 'numbered') headerTitle = `${month.monthNumber} · ${month.monthName.toUpperCase()} ${month.year}`;
+      svg.push(`  <text x="${hX}" y="${geo.hDayMm / 2 + 1.1}" text-anchor="${hAlign}" class="header-text"${headerClip}>${headerTitle}</text>`);
 
       month.days.forEach((day, dIdx) => {
         const position = geo.getDayPosition(dIdx + 1);
@@ -114,6 +118,17 @@ window.CronoVector = (function() {
             svg.push(`  <text x="${cellLeftMm + 13}" y="${textY}" class="kw-text">KW ${day.isoWeek}</text>`);
           }
 
+          if (state.showMoon && day.moonPhase) {
+            const background = day.holiday && day.holiday.color ? day.holiday.color
+              : day.isSunday ? state.colorSundayBg || state.colorWeekendBg
+                : day.isSaturday ? state.colorSaturdayBg || state.colorWeekendBg : null;
+            const radius = Math.min(1.2, geo.hDayMm * 0.2);
+            const moonX = cellLeftMm + (state.showKW && day.isoWeek ? 23 : 13) + radius;
+            svg.push(...window.CronoDesigns.svgCommands(window.CronoDesigns.moonCommands(
+              day.moonPhase.type, moonX, rowTopMm + geo.hDayMm / 2,
+              radius, state.moonOpacity, background, state.paperColor), designFont ? designFont.family : 'sans-serif'));
+          }
+
           if (day.holiday && day.holiday.title) {
             svg.push(`  <text x="${cellLeftMm + dayColumnWidthMm - 2.5}" y="${textY}" class="holiday-text">${day.holiday.title}</text>`);
           }
@@ -128,9 +143,10 @@ window.CronoVector = (function() {
 
     if (geo.separatorWidthMm > 0) {
       const separator = state.monthSeparators[geo.monthLayout];
-      const color = design ? state.paperColor || '#ffffff' : separator.colorMode === 'paper' ? state.paperColor : separator.color;
+      const color = separator.colorMode === 'paper' ? state.paperColor : separator.color;
       const topMm = separator.header ? 0 : geo.hDayMm;
       for (let i = 1; i < 14; i++) {
+        svg.push(`  <rect x="${leadInMm + i * geo.bMonthMm - geo.separatorWidthMm / 2}" y="${topMm}" width="${geo.separatorWidthMm}" height="${hMm - topMm}" fill="${state.paperColor || '#ffffff'}"/>`);
         svg.push(`  <rect x="${leadInMm + i * geo.bMonthMm - geo.separatorWidthMm / 2}" y="${topMm}" width="${geo.separatorWidthMm}" height="${hMm - topMm}" fill="${color}"/>`);
       }
     }
@@ -139,6 +155,19 @@ window.CronoVector = (function() {
     svg.push(`  <text x="${leadInMm / 2}" y="${hMm / 2}" transform="rotate(-90 ${leadInMm / 2} ${hMm / 2})" text-anchor="middle" fill="${design ? state.colorText : '#94a3b8'}" font-size="3mm">WICKEL-PUFFER (MONTAGE)</text>`);
     svg.push(`  <text x="${wMm - leadOutMm / 2}" y="${hMm / 2}" transform="rotate(-90 ${wMm - leadOutMm / 2} ${hMm / 2})" text-anchor="middle" fill="${design ? state.colorText : '#94a3b8'}" font-size="3mm">WICKEL-PUFFER (MONTAGE)</text>`);
 
+    if (qrData) {
+      const { qr, count, size, moduleSize, x, y } = qrData;
+      svg.push(`  <g id="qr-code"><rect x="${x}" y="${y}" width="${size}" height="${size}" fill="#ffffff"/>`);
+      for (let row = 0; row < count; row++) {
+        for (let col = 0; col < count;) {
+          if (!qr.isDark(row, col)) { col++; continue; }
+          const start = col++;
+          while (col < count && qr.isDark(row, col)) col++;
+          svg.push(`  <rect x="${x + (start + 4) * moduleSize}" y="${y + (row + 4) * moduleSize}" width="${(col - start) * moduleSize}" height="${moduleSize}" fill="#000000"/>`);
+        }
+      }
+      svg.push('  </g>');
+    }
     // Rahmen
     if (state.designStyle !== 'zen') {
       svg.push(design ? `  <rect x="0" y="0" width="${wMm}" height="${hMm}" fill="none" stroke="${state.colorText}" stroke-width="${state.lineBorder}"/>` : `  <rect x="0" y="0" width="${wMm}" height="${hMm}" class="border-line"/>`);
@@ -150,9 +179,8 @@ window.CronoVector = (function() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    const calendarName = String(state.bannerCustomTitle || `Rollkalender-${state.year}`)
-      .trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '-').replace(/\s+/g, '-');
-    a.download = `${calendarName || `Rollkalender-${state.year}`}.svg`;
+    const calendarName = window.CronoGeometry.calendarFilename(state.bannerCustomTitle, state.year);
+    a.download = `${calendarName}.svg`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -175,18 +203,19 @@ window.CronoVector = (function() {
       zoom: (offCanvas.height / (state.hVisible * 20))
     };
 
-    const renderOptions = window.CronoDesigns && window.CronoDesigns.active(state)
-      ? { showViewportOverlay: false } : {};
+    const renderOptions = { showViewportOverlay: false, pixelRatio: 1, updateUi: false };
     window.CronoCanvas.render(offCanvas, offContainer, offState, renderOptions);
 
     offCanvas.toBlob((blob) => {
-      if (!blob) return;
+      if (!blob) {
+        alert('PNG konnte nicht erstellt werden. Bitte kleinere Druckmaße wählen.');
+        return;
+      }
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      const calendarName = String(state.bannerCustomTitle || `Rollkalender-${state.year}`)
-        .trim().replace(/[<>:"/\\|?*\x00-\x1F]/g, '-').replace(/\s+/g, '-');
-      a.download = `${calendarName || `Rollkalender-${state.year}`}-300dpi.png`;
+      const calendarName = window.CronoGeometry.calendarFilename(state.bannerCustomTitle, state.year);
+      a.download = `${calendarName}-300dpi.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

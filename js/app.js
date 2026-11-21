@@ -14,7 +14,20 @@
   }
 
   function defaultCategoryColors() {
-    return { public: '#fef08a', vacation: '#bfdbfe', custom: '#bfdbfe' };
+    return { public: '#d977061c', vacation: '#0284c71c', custom: '#16a34a1c' };
+  }
+
+  function colorInputValue(input) {
+    const alpha = input.dataset && input.dataset.colorAlpha !== undefined
+      ? Math.round(Number(input.dataset.colorAlpha) * 255 / 100) : 255;
+    return `${input.value}${alpha === 255 ? '' : Math.max(0, Math.min(255, alpha)).toString(16).padStart(2, '0')}`;
+  }
+
+  function setColorInput(input, color) {
+    if (!input || typeof color !== 'string') return;
+    input.value = color.slice(0, 7);
+    if (input.dataset) input.dataset.colorAlpha = color.length === 9
+      ? String(parseInt(color.slice(7, 9), 16) / 255 * 100) : '100';
   }
 
   // Zentraler App State
@@ -62,9 +75,9 @@
     colorHeaderText: '#0f172a',
     colorGrid: '#cbd5e1',
     colorText: '#0f172a',
-    colorSaturdayBg: '#f8fafc',
+    colorSaturdayBg: '#64748b1c',
     colorSaturdayText: '#0f172a',
-    colorSundayBg: '#f1f5f9',
+    colorSundayBg: '#e11d481c',
     colorSundayText: '#e11d48',
     colorWeekendBg: '#f1f5f9',
     colorWeekendText: '#e11d48',
@@ -110,6 +123,8 @@
       }));
 
     return {
+      calendarName: state.bannerCustomTitle,
+      year: state.year,
       dimensions: {
         windowWidth: geo.bVisible * 10,
         windowHeight: geo.hVisible * 10,
@@ -270,10 +285,11 @@
     const vac = state.showVacations
       ? window.CronoHolidays.getSchoolVacations(state.year, state.country, state.bundesland)
       : [];
-    state.holidays = [...pub, ...vac].map((event) => ({
+    const custom = state.holidays.filter((event) => event.type !== 'public' && event.type !== 'vacation');
+    state.holidays = [...custom, ...[...pub, ...vac].map((event) => ({
       ...event,
       color: state.categoryColors[event.type] || event.color,
-    }));
+    }))];
   }
 
   function categoryForEvent(event) {
@@ -330,7 +346,12 @@
 
   function renderPreview() {
     updateNextYearLink();
-    window.CronoCanvas.render(canvas, container, state);
+    window.CronoCanvas.render(canvas, container, state, {
+      qrErrorHandler(error) {
+        const status = document.getElementById('qr-status');
+        if (status) status.textContent = error ? error.message : '';
+      }
+    });
     publishCadSnapshot();
     updateCoverageStatus();
     invalidateStaleCoverageAdvice();
@@ -382,13 +403,20 @@
       link.parentElement.insertBefore(currentLink, link);
     }
     try {
-      const url = window.CronoShare.createNextYearUrl(state);
-      link.href = url;
-      link.textContent = `Einstellungen für ${state.year + 1} teilen`;
       if (currentLink && window.CronoShare.createCurrentUrl) {
         currentLink.href = window.CronoShare.createCurrentUrl(state);
         currentLink.textContent = `Vorlage für ${state.year}`;
       }
+    } catch (error) {
+      if (currentLink) {
+        currentLink.removeAttribute('href');
+        currentLink.textContent = `Aktuelle Vorlage nicht verfügbar: ${error.message}`;
+      }
+    }
+    try {
+      const url = window.CronoShare.createNextYearUrl(state);
+      link.href = url;
+      link.textContent = `Einstellungen für ${state.year + 1} teilen`;
       button.disabled = false;
       status.textContent = '';
     } catch (error) {
@@ -410,12 +438,11 @@
       const el = document.getElementById(id);
       if (el) el.checked = !!val;
     };
+    const setColor = (id, val) => setColorInput(document.getElementById(id), val);
 
     setVal('input-year', state.year);
     setVal('input-h-visible', state.hVisible);
     setVal('input-b-visible', state.bVisible);
-    setVal('input-backpanel-offset-height', state.backpanelOffsetHeightMm);
-    setVal('input-backpanel-offset-width', state.backpanelOffsetWidthMm);
     setChecked('checkbox-show-qr', state.qrEnabled);
     setVal('input-qr-gap', state.qrGapMm);
     setChecked('checkbox-show-vacations', state.showVacations);
@@ -424,14 +451,14 @@
     setVal('select-puffer-left-content', state.pufferLeftContent);
     setVal('select-puffer-right-content', state.pufferRightContent);
     setVal('input-custom-title', state.bannerCustomTitle);
+    setVal('input-preset-name', state.bannerCustomTitle);
 
     // Layout
     setVal('select-month-layout', state.monthLayout);
     const separator = state.monthSeparators[state.monthLayout === 'double' ? 'double' : 'single'];
     setChecked('checkbox-month-separator', separator.enabled);
     setVal('input-month-separator-width', separator.widthMm);
-    setVal('select-month-separator-color', separator.colorMode);
-    setVal('color-month-separator', separator.color);
+    setColor('color-month-separator', separator.colorMode === 'paper' ? state.paperColor : separator.color);
     setChecked('checkbox-month-separator-header', separator.header);
     document.getElementById('month-separator-width-error').classList.add('hidden');
     document.getElementById('input-month-separator-width').removeAttribute('aria-invalid');
@@ -440,9 +467,9 @@
     setChecked('checkbox-show-cropmarks', state.showCropMarks);
     setVal('select-header-style', state.headerStyle);
     setVal('select-header-align', state.headerAlign);
-    setVal('input-month-header-text-color', state.monthHeaderTextColor);
+    setColor('input-month-header-text-color', state.monthHeaderTextColor);
     setVal('input-month-header-text-size', state.monthHeaderTextSize);
-    setVal('input-calendar-week-text-color', state.calendarWeekTextColor);
+    setColor('input-calendar-week-text-color', state.calendarWeekTextColor);
     setVal('input-calendar-week-text-size', state.calendarWeekTextSize);
     setVal('input-moon-opacity', state.moonOpacity);
 
@@ -469,16 +496,16 @@
     setVal('input-line-border', state.lineBorder);
 
     // Farben
-    setVal('color-paper', state.paperColor);
-    setVal('color-grid', state.colorGrid);
-    setVal('color-text', state.colorText);
-    setVal('color-saturday-bg', state.colorSaturdayBg);
-    setVal('color-saturday-text', state.colorSaturdayText);
-    setVal('color-sunday-bg', state.colorSundayBg);
-    setVal('color-sunday-text', state.colorSundayText);
-    setVal('color-category-public', state.categoryColors.public);
-    setVal('color-category-vacation', state.categoryColors.vacation);
-    setVal('color-category-custom', state.categoryColors.custom);
+    setColor('color-paper', state.paperColor);
+    setColor('color-grid', state.colorGrid);
+    setColor('color-text', state.colorText);
+    setColor('color-saturday-bg', state.colorSaturdayBg);
+    setColor('color-saturday-text', state.colorSaturdayText);
+    setColor('color-sunday-bg', state.colorSundayBg);
+    setColor('color-sunday-text', state.colorSundayText);
+    setColor('color-category-public', state.categoryColors.public);
+    setColor('color-category-vacation', state.categoryColors.vacation);
+    setColor('color-category-custom', state.categoryColors.custom);
 
     // Land & Region
     setVal('select-country', state.country);
@@ -585,7 +612,7 @@
           </div>
         </div>
         <div class="flex items-center space-x-2 pt-0.5">
-          <input type="color" value="${h.color}" data-id="${h.id}" data-field="color" aria-label="Farbe dieses Termins" class="holiday-input w-5 h-5 rounded cursor-pointer bg-transparent">
+          <input type="color" value="${h.color.slice(0, 7)}" data-color-alpha="${h.color.length === 9 ? parseInt(h.color.slice(7), 16) / 255 * 100 : 100}" data-id="${h.id}" data-field="color" aria-label="Farbe dieses Termins" class="holiday-input w-5 h-5 rounded cursor-pointer bg-transparent">
           <span class="text-[10px] text-slate-400">Farbe im Kalender</span>
           <span class="text-[9px] px-1.5 py-0.5 rounded ml-auto font-mono ${h.type === 'public' ? 'bg-amber-500/20 text-amber-400' : h.type === 'vacation' ? 'bg-sky-500/20 text-sky-400' : 'bg-slate-800 text-slate-300'}">${h.type === 'public' ? 'Feiertag' : h.type === 'vacation' ? 'Ferien' : 'Eigener Termin'}</span>
         </div>
@@ -599,7 +626,7 @@
         const field = e.target.getAttribute('data-field');
         const item = state.holidays.find((x) => x.id === id);
         if (item) {
-          item[field] = e.target.value;
+          item[field] = field === 'color' ? colorInputValue(e.target) : e.target.value;
           renderPreview();
         }
       });
@@ -623,7 +650,7 @@
     document.getElementById('modal-event-date-start').value = dateStr;
     document.getElementById('modal-event-date-end').value = dateStr;
     document.getElementById('modal-event-title').value = title;
-    document.getElementById('modal-event-color').value = state.categoryColors.custom;
+    setColorInput(document.getElementById('modal-event-color'), state.categoryColors.custom);
     if (window.CronoBlossomColorPicker) {
       window.CronoBlossomColorPicker.sync(document.getElementById('modal-event-color'));
     }
@@ -639,7 +666,24 @@
   // --- VORLAGEN (PRESETS) ---
   function getPresets() {
     const saved = localStorage.getItem('cronoscroll_v2_presets');
-    return saved ? JSON.parse(saved) : {};
+    const presets = saved ? JSON.parse(saved) : {};
+    let migrated = false;
+    Object.entries(presets).forEach(([name, preset]) => {
+      if (!preset || typeof preset !== 'object' || preset._calendarPresetVersion === 1) return;
+      presets[name] = {
+        ...preset,
+        hVisible: 30,
+        bVisible: 42,
+        bannerCustomTitle: preset.bannerCustomTitle || name,
+        showVacations: false,
+        ...(Array.isArray(preset.holidays)
+          ? { holidays: preset.holidays.filter(event => event.type !== 'vacation') } : {}),
+        _calendarPresetVersion: 1,
+      };
+      migrated = true;
+    });
+    if (migrated) savePresets(presets);
+    return presets;
   }
   function savePresets(p) {
     localStorage.setItem('cronoscroll_v2_presets', JSON.stringify(p));
@@ -682,10 +726,17 @@
               designStyle: 'classic',
               themeKey: null,
               categoryColors: defaultCategoryColors(),
+              showVacations: false,
+              bannerCustomTitle: name,
+              holidays: [],
             },
             preset,
           );
           state.categoryColors = { ...defaultCategoryColors(), ...preset.categoryColors };
+          if (!Array.isArray(preset.holidays)) loadDefaultHolidays();
+          if (!state.showVacations) {
+            state.holidays = state.holidays.filter((event) => event.type !== 'vacation');
+          }
           localStorage.setItem('cronoscroll_design_style', state.designStyle);
           localStorage.setItem('cronoscroll_theme', state.themeKey || '');
           const defaults = defaultMonthSeparators();
@@ -815,8 +866,6 @@
     };
     bindNum('input-h-visible', 'hVisible');
     bindNum('input-b-visible', 'bVisible');
-    bindNum('input-backpanel-offset-height', 'backpanelOffsetHeightMm');
-    bindNum('input-backpanel-offset-width', 'backpanelOffsetWidthMm');
     bindNum('input-qr-gap', 'qrGapMm');
     bindNum('input-month-header-text-size', 'monthHeaderTextSize');
     bindNum('input-calendar-week-text-size', 'calendarWeekTextSize');
@@ -847,6 +896,12 @@
     });
     document.getElementById('input-custom-title').addEventListener('input', (e) => {
       state.bannerCustomTitle = e.target.value;
+      document.getElementById('input-preset-name').value = state.bannerCustomTitle;
+      renderPreview();
+    });
+    document.getElementById('input-preset-name').addEventListener('input', (e) => {
+      state.bannerCustomTitle = e.target.value;
+      document.getElementById('input-custom-title').value = state.bannerCustomTitle;
       renderPreview();
     });
     document.getElementById('select-month-layout').addEventListener('change', (e) => {
@@ -871,12 +926,9 @@
       currentSeparator().widthMm = width;
       renderPreview();
     });
-    document.getElementById('select-month-separator-color').addEventListener('change', (e) => {
-      currentSeparator().colorMode = e.target.value;
-      renderPreview();
-    });
     document.getElementById('color-month-separator').addEventListener('input', (e) => {
-      currentSeparator().color = e.target.value;
+      currentSeparator().colorMode = 'custom';
+      currentSeparator().color = colorInputValue(e.target);
       renderPreview();
     });
     document.getElementById('checkbox-month-separator-header').addEventListener('change', (e) => {
@@ -918,14 +970,14 @@
     ['input-month-header-text-color'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.addEventListener('input', e => {
-        state.monthHeaderTextColor = e.target.value;
+        state.monthHeaderTextColor = colorInputValue(e.target);
         renderPreview();
       });
     });
     ['input-calendar-week-text-color'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.addEventListener('input', e => {
-        state.calendarWeekTextColor = e.target.value;
+        state.calendarWeekTextColor = colorInputValue(e.target);
         renderPreview();
       });
     });
@@ -975,7 +1027,7 @@
       const el = document.getElementById(id);
       if (el)
         el.addEventListener('input', (e) => {
-          state[prop] = e.target.value;
+          state[prop] = colorInputValue(e.target);
           renderPreview();
         });
     };
@@ -992,7 +1044,7 @@
       ['color-category-custom', 'custom'],
     ].forEach(([id, category]) => {
       document.getElementById(id).addEventListener('input', (event) => {
-        applyCategoryColor(category, event.target.value);
+        applyCategoryColor(category, colorInputValue(event.target));
       });
     });
 
@@ -1101,7 +1153,8 @@
     });
 
     document.getElementById('btn-export-ics').addEventListener('click', () => {
-      window.CronoICS.downloadICS(state.holidays, `CronoScroll-${state.year}.ics`);
+      const name = window.CronoGeometry.calendarFilename(state.bannerCustomTitle, state.year);
+      window.CronoICS.downloadICS(state.holidays, `${name}.ics`);
     });
 
     // 7. Modals: Termin anlegen
@@ -1113,7 +1166,7 @@
       const title = document.getElementById('modal-event-title').value.trim() || 'Termin';
       const start = document.getElementById('modal-event-date-start').value;
       const end = document.getElementById('modal-event-date-end').value || start;
-      const color = document.getElementById('modal-event-color').value;
+      const color = colorInputValue(document.getElementById('modal-event-color'));
 
       state.holidays.push({
         id: 'termin_' + Date.now(),
@@ -1153,8 +1206,9 @@
       const input = document.getElementById('input-preset-name');
       const name = input.value.trim();
       if (!name) return;
+      state.bannerCustomTitle = name;
       const presets = getPresets();
-      presets[name] = { ...state };
+      presets[name] = { ...state, _calendarPresetVersion: 1 };
       savePresets(presets);
       input.value = '';
       renderPresetsList();
@@ -1169,10 +1223,18 @@
       }
     });
     document.getElementById('btn-export-svg').addEventListener('click', () => {
-      window.CronoVector.exportSVG(state);
+      try {
+        window.CronoVector.exportSVG(state);
+      } catch (error) {
+        alert(`SVG konnte nicht erstellt werden: ${error.message}`);
+      }
     });
     document.getElementById('btn-export-png').addEventListener('click', () => {
-      window.CronoVector.exportHighResPNG(state);
+      try {
+        window.CronoVector.exportHighResPNG(state);
+      } catch (error) {
+        alert(`PNG konnte nicht erstellt werden: ${error.message}`);
+      }
     });
 
     // 12. Reiter-Umschaltung
