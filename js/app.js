@@ -372,10 +372,23 @@
     const link = document.getElementById('next-year-link');
     const button = document.getElementById('btn-copy-next-year-link');
     const status = document.getElementById('next-year-link-status');
+    let currentLink = document.getElementById('current-year-link');
+    if (!currentLink && link && link.parentElement) {
+      currentLink = document.createElement('a');
+      currentLink.id = 'current-year-link';
+      currentLink.className = 'block text-xs text-amber-400';
+      currentLink.target = '_blank';
+      currentLink.rel = 'noopener noreferrer';
+      link.parentElement.insertBefore(currentLink, link);
+    }
     try {
       const url = window.CronoShare.createNextYearUrl(state);
       link.href = url;
       link.textContent = `Einstellungen für ${state.year + 1} teilen`;
+      if (currentLink && window.CronoShare.createCurrentUrl) {
+        currentLink.href = window.CronoShare.createCurrentUrl(state);
+        currentLink.textContent = `Vorlage für ${state.year}`;
+      }
       button.disabled = false;
       status.textContent = '';
     } catch (error) {
@@ -422,9 +435,6 @@
     setChecked('checkbox-month-separator-header', separator.header);
     document.getElementById('month-separator-width-error').classList.add('hidden');
     document.getElementById('input-month-separator-width').removeAttribute('aria-invalid');
-    setVal('select-sub-columns', state.subColumns);
-    setVal('select-guidelines-count', state.guideLinesCount);
-    setVal('select-guidelines-style', state.guideLinesStyle);
     setChecked('checkbox-show-kw', state.showKW);
     setChecked('checkbox-show-moon', state.showMoon);
     setChecked('checkbox-show-cropmarks', state.showCropMarks);
@@ -452,6 +462,7 @@
       if (state.fontFamily === 'custom' && !hasCustomFont) state.fontFamily = 'sans';
     }
     setVal('select-font-family', state.fontFamily);
+    setVal('select-theme', state.themeKey || '');
     setVal('input-font-header-scale', state.fontHeaderScale);
     setVal('input-font-day-scale', state.fontDayScale);
     setVal('input-line-grid', state.lineGrid);
@@ -622,26 +633,6 @@
 
   function closeEventModal() {
     const modal = document.getElementById('event-modal');
-    if (modal) modal.classList.add('hidden');
-  }
-
-  // --- MODAL: DIY MATERIAL- & ZUSCHNITTLISTE ---
-  function openCutListModal() {
-    const modal = document.getElementById('cutlist-modal');
-    if (!modal) return;
-    const geo = window.CronoGeometry.calculate(state);
-
-    document.getElementById('cutlist-rail-len').textContent = `${geo.woodRailLengthCm.toFixed(1)} cm`;
-    document.getElementById('cutlist-dowel-len').textContent = `${geo.roundDowelLengthCm.toFixed(1)} cm`;
-    document.getElementById('cutlist-plate-size').textContent = `${geo.backingBoardCm.width.toFixed(1)} cm × ${geo.backingBoardCm.height.toFixed(1)} cm`;
-    document.getElementById('cutlist-paper-roll').textContent = `Breite ${geo.hVisible.toFixed(1)} cm × Gesamtlänge ${(geo.lTotal / 100).toFixed(2)} m`;
-    document.getElementById('cutlist-day-height').textContent = `${(geo.hDay * 10).toFixed(1)} mm`;
-
-    modal.classList.remove('hidden');
-  }
-
-  function closeCutListModal() {
-    const modal = document.getElementById('cutlist-modal');
     if (modal) modal.classList.add('hidden');
   }
 
@@ -892,18 +883,6 @@
       currentSeparator().header = e.target.checked;
       renderPreview();
     });
-    document.getElementById('select-sub-columns').addEventListener('change', (e) => {
-      state.subColumns = parseInt(e.target.value) || 1;
-      renderPreview();
-    });
-    document.getElementById('select-guidelines-count').addEventListener('change', (e) => {
-      state.guideLinesCount = parseInt(e.target.value) || 0;
-      renderPreview();
-    });
-    document.getElementById('select-guidelines-style').addEventListener('change', (e) => {
-      state.guideLinesStyle = e.target.value;
-      renderPreview();
-    });
     document.getElementById('checkbox-show-kw').addEventListener('change', (e) => {
       state.showKW = e.target.checked;
       renderPreview();
@@ -1018,6 +997,24 @@
     });
 
     // 3. 1-Klick Theme Buttons
+    const themeSelect = document.getElementById('select-theme');
+    if (themeSelect) {
+      themeSelect.addEventListener('change', (e) => {
+        const key = e.target.value;
+        if (!key) {
+          state.themeKey = null;
+          localStorage.setItem('cronoscroll_theme', '');
+          syncInputsFromState();
+          renderPreview();
+          return;
+        }
+        if (window.CronoThemes.apply(state, key)) {
+          localStorage.setItem('cronoscroll_theme', state.themeKey);
+          syncInputsFromState();
+          renderPreview();
+        }
+      });
+    }
     document.querySelectorAll('.theme-pill').forEach((pill) => {
       pill.addEventListener('click', () => {
         const key = pill.getAttribute('data-theme');

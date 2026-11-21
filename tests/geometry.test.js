@@ -20,6 +20,22 @@ test('single-column layout keeps the existing calendar geometry', () => {
   assert.deepEqual({ ...geo.getDayPosition(31) }, { column: 0, row: 30 });
 });
 
+test('back panel offsets enlarge CAD and BOM sizes without changing the visible window', () => {
+  const geo = calculate({
+    bVisible: 42,
+    hVisible: 30,
+    pufferLeft: 15,
+    pufferRight: 15,
+    backpanelOffsetWidthMm: 4,
+    backpanelOffsetHeightMm: 2,
+  });
+
+  assert.equal(geo.bVisible, 42);
+  assert.equal(geo.hVisible, 30);
+  assert.equal(geo.backingBoardCm.width, 42.4);
+  assert.equal(geo.backingBoardCm.height, 30.2);
+});
+
 test('double-column layout preserves the physical dimensions and maps days 1–15 / 16–31', () => {
   const single = calculate({ bVisible: 42, hVisible: 32, pufferLeft: 15, pufferRight: 15 });
   const double = calculate({
