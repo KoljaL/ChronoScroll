@@ -1042,7 +1042,7 @@ body {
   gap: 0.4rem;
   align-items: center;
   justify-content: flex-start;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .cronoscroll-color-input-native {
@@ -1069,6 +1069,7 @@ body {
 
 .cronoscroll-color-value {
   width: 7em;
+  max-width: calc(100vw - 72px);
   min-width: 0;
   border: 1px solid var(--border-medium);
   border-radius: 0.25rem;
@@ -1076,18 +1077,6 @@ body {
   color: var(--text-primary);
   padding: 0.2rem;
   font: inherit;
-}
-
-.cronoscroll-color-alpha {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  color: var(--text-primary);
-  font-size: 0.7rem;
-}
-
-.cronoscroll-color-alpha input {
-  width: 4.5rem;
 }
 
 .cronoscroll-color-value[aria-invalid="true"] {
@@ -1110,6 +1099,26 @@ body {
   --bcp-focus-ring-gap: var(--bg-surface);
   --bcp-trigger-shadow: 0 0 0 1px var(--border-medium), 0 2px 8px rgb(15 23 42 / 0.18);
   --bcp-trigger-shadow-hover: 0 0 0 1px var(--accent), 0 4px 14px rgb(15 23 42 / 0.28);
+}
+
+.cronoscroll-blossom-host .bcp-container:has(.bcp-trigger-btn[aria-expanded="true"]) {
+  position: relative;
+  isolation: isolate;
+}
+
+.cronoscroll-blossom-host .bcp-container:has(.bcp-trigger-btn[aria-expanded="true"])::before {
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: 50%;
+  width: min(296px, calc(100vw - 1rem));
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  box-shadow: 0 12px 32px rgb(15 23 42 / 0.28), 0 2px 8px rgb(15 23 42 / 0.16);
+  content: "";
+  pointer-events: none;
+  transform: translate(-50%, -50%);
 }
 
 .cronoscroll-blossom-host .bcp-trigger-btn {

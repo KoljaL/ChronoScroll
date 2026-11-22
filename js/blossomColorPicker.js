@@ -195,9 +195,6 @@
     record.textInput.value = displayValue(record.input);
     record.textInput.disabled = record.input.disabled;
     record.textInput.removeAttribute('aria-invalid');
-    record.alphaInput.value = alphaFor(record.input);
-    record.alphaInput.disabled = record.input.disabled;
-    record.alphaOutput.textContent = `${Math.round(alphaFor(record.input))}%`;
     record.syncing = true;
     record.picker.setValue(pickerValue(value, alphaFor(record.input)));
     record.picker.setOptions({ value: undefined, disabled: !!record.input.disabled });
@@ -233,33 +230,19 @@
     textInput.setAttribute('aria-label', `${labelFor(input)} als Hex-Farbwert`);
     textInput.setAttribute('pattern', '#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?');
     textInput.setAttribute('maxlength', '9');
-    const alphaLabel = document.createElement('span');
-    alphaLabel.className = 'cronoscroll-color-alpha';
-    const alphaInput = document.createElement('input');
-    alphaInput.type = 'range';
-    alphaInput.min = '0';
-    alphaInput.max = '100';
-    alphaInput.step = '1';
-    alphaInput.setAttribute('aria-label', `${labelFor(input)} Deckkraft`);
-    const alphaOutput = document.createElement('span');
-    alphaLabel.appendChild(alphaInput);
-    alphaLabel.appendChild(alphaOutput);
 
     input.parentNode.insertBefore(placeholder, input);
     input.classList.add('cronoscroll-color-input-native');
     input.dataset.blossomPicker = 'true';
     placeholder.appendChild(input);
-    placeholder.appendChild(host);
     placeholder.appendChild(textInput);
-    placeholder.appendChild(alphaLabel);
+    placeholder.appendChild(host);
 
     const record = {
       input,
       placeholder,
       host,
       textInput,
-      alphaInput,
-      alphaOutput,
       picker: null,
       size,
       label: labelFor(input),
@@ -286,11 +269,6 @@
       dispatchColorEvent(record, 'input');
       dispatchColorEvent(record, 'change');
     };
-    record.alphaChange = () => {
-      input.dataset.colorAlpha = alphaInput.value;
-      dispatchColorEvent(record, 'input');
-    };
-    record.alphaComplete = () => dispatchColorEvent(record, 'change');
     record.nativeClick = (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -331,8 +309,6 @@
     input.addEventListener('click', record.nativeClick);
     input.addEventListener('keydown', record.nativeKeydown);
     textInput.addEventListener('input', record.textChange);
-    alphaInput.addEventListener('input', record.alphaChange);
-    alphaInput.addEventListener('change', record.alphaComplete);
     host.addEventListener('click', record.hostClick);
     syncRecord(record);
     return record;
@@ -358,8 +334,6 @@
     input.removeEventListener('click', record.nativeClick);
     input.removeEventListener('keydown', record.nativeKeydown);
     record.textInput.removeEventListener('input', record.textChange);
-    record.alphaInput.removeEventListener('input', record.alphaChange);
-    record.alphaInput.removeEventListener('change', record.alphaComplete);
     record.host.removeEventListener('click', record.hostClick);
     delete input.dataset.blossomPicker;
     input.classList.remove('cronoscroll-color-input-native');

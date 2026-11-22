@@ -278,6 +278,10 @@ test('Blossom adapter initializes existing inputs and forwards picker changes', 
   assert.equal(picker.options.showAlphaSlider, false);
   assert.equal(picker.options.showShadeSlider, true);
   assert.equal(input.classList.contains('cronoscroll-color-input-native'), true);
+  assert.equal(input.parentNode.children[0], input);
+  assert.equal(input.parentNode.children[1].type, 'text');
+  assert.equal(input.parentNode.children[2], picker.container);
+  assert.equal(input.parentNode.children.length, 3);
   assert.equal(picker.container.listeners.pointerdown, undefined);
   picker.container.children[0].setAttribute('aria-expanded', 'true');
   picker.container.dispatchEvent(new ui.window.Event('click', { bubbles: true }));
@@ -302,18 +306,15 @@ test('Blossom adapter initializes existing inputs and forwards picker changes', 
   assert.equal(input.value, '#abcdef');
   assert.equal(textInput.getAttribute('aria-invalid'), undefined);
   assert.deepEqual(appEvents, ['input', 'change', 'input', 'change']);
-  const alphaInput = input.parentNode.children.find(child => child.className === 'cronoscroll-color-alpha').children[0];
-  alphaInput.value = '11';
-  alphaInput.dispatchEvent(new ui.window.Event('input'));
-  assert.equal(input.dataset.colorAlpha, '11');
+  textInput.value = '#abcdef1c';
+  textInput.dispatchEvent(new ui.window.Event('input'));
+  assert.equal(input.value, '#abcdef');
   assert.equal(textInput.value, '#abcdef1c');
-  assert.equal(picker.values.at(-1).alpha, 11);
-  alphaInput.value = '0';
-  alphaInput.dispatchEvent(new ui.window.Event('input'));
-  assert.equal(textInput.value, '#abcdef00');
-  alphaInput.value = '100';
-  alphaInput.dispatchEvent(new ui.window.Event('input'));
-  assert.equal(textInput.value, '#abcdef');
+  assert.ok(Math.abs(Number(input.dataset.colorAlpha) - 28 / 255 * 100) < 1e-10);
+  assert.ok(Math.abs(picker.values.at(-1).alpha - 28 / 255 * 100) < 1e-10);
+  picker.options.onChange({ hex: '#123456' });
+  assert.equal(input.value, '#123456');
+  assert.equal(textInput.value, '#1234561c');
   textInput.value = '#12345680';
   textInput.dispatchEvent(new ui.window.Event('input'));
   assert.equal(input.value, '#123456');
@@ -324,15 +325,24 @@ test('Blossom adapter initializes existing inputs and forwards picker changes', 
 test('Blossom adapter synchronizes external state and disabled inputs', () => {
   const ui = setup();
   const input = colorInput(ui.document);
+  input.dataset.colorAlpha = String(128 / 255 * 100);
   ui.document.body.appendChild(input);
   ui.window.CronoBlossomColorPicker.sync(input);
   const picker = ui.FakePicker.instances[0];
+  const textInput = input.parentNode.children[1];
+  assert.equal(textInput.value, '#abcdef80');
+  assert.ok(Math.abs(picker.values.at(-1).alpha - 128 / 255 * 100) < 1e-10);
+  picker.container.children[0].setAttribute('aria-expanded', 'true');
+  picker.container.dispatchEvent(new ui.window.Event('click', { bubbles: true }));
+  assert.equal(textInput.value, '#abcdef80');
+  picker.options.onCollapse();
 
   input.value = '#010203';
   input.disabled = true;
   ui.window.CronoBlossomColorPicker.sync(input);
 
-  assert.equal(picker.values.at(-1).alpha, 100);
+  assert.equal(textInput.value, '#01020380');
+  assert.ok(Math.abs(picker.values.at(-1).alpha - 128 / 255 * 100) < 1e-10);
   assert.equal(picker.optionUpdates.at(-1).disabled, true);
   assert.equal(Object.hasOwn(picker.optionUpdates.at(-1), 'value'), true);
   assert.equal(picker.optionUpdates.at(-1).value, undefined);
@@ -344,12 +354,16 @@ test('Blossom adapter discovers future color inputs and destroys removed instanc
   const ui = setup();
   const item = ui.document.createElement('div');
   const input = colorInput(ui.document, 'future-color');
+  input.dataset.colorAlpha = String(28 / 255 * 100);
   item.appendChild(input);
   ui.document.body.appendChild(item);
   ui.observer({ type: 'childList', addedNodes: [item], removedNodes: [] });
 
   const picker = ui.FakePicker.instances[0];
   assert.ok(picker);
+  assert.equal(input.parentNode.children[1].value, '#abcdef1c');
+  picker.options.onChange({ hex: '#123456' });
+  assert.equal(input.parentNode.children[1].value, '#1234561c');
   ui.observer({
     type: 'childList',
     addedNodes: [input],
