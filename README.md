@@ -140,6 +140,177 @@ Alle Abmessungen leiten sich dynamisch von der montierten Schreibplatte ab:
   * Vorlagen werden unter dem Kalendernamen lokal im Browser (`localStorage`) gespeichert. Ältere Vorlagen werden einmalig auf 30 × 42 cm und deaktivierte Ferien umgestellt; eigene Termine bleiben erhalten. Später gespeicherte Maße bleiben unverändert.
   * Teilbare Links öffnen die Gestaltungseinstellungen für das aktuelle oder das folgende Jahr. Individuelle und importierte Termine werden nicht übertragen; Feiertage und, falls aktiviert, Ferien werden für das gewählte Jahr und die Region neu berechnet. Eigene Schriftdateien müssen erneut geladen werden.
   * Der optionale QR-Code erscheint in der Druckrollen-Vorschau und im Kalenderexport. Sein Abstand zum letzten Monat beträgt standardmäßig 40 mm; bei zu kleinem rechtem Nachlauf wird ein Hinweis angezeigt.
+
+### Datenmodell für Darstellung, Farbwelten und Teilen
+
+Die Anwendung hält die Kalenderoptionen in einem zentralen Zustandsobjekt. `designStyle` wählt die Zeichenstruktur (`classic`, `midcentury`, `bauhaus`, `gantt`, `zen` oder `kursbuch`); `themeKey` wählt optional eine Farbwelt. Die Farbwelt setzt zunächst die Palette und Schriftfamilie, die anschließend bearbeitbar sind. Darstellung und Farbwelt sind voneinander unabhängig. Ohne ausgewählte Farbwelt können die Spezialdarstellungen ihre eigenen Schrift-Defaults verwenden.
+
+**Lokale Vorlagen** sind davon getrennt: Unter `cronoscroll_v2_presets` liegt in `localStorage` ein JSON-Objekt, dessen Schlüssel die Vorlagennamen und dessen Werte gespeicherte Zustandsobjekte einschließlich der Version `_calendarPresetVersion: 1` sind. Beim Speichern wird der Vorlagenname auch als Kalendername übernommen. Die Einträge sind an den lokalen Browser und dessen Speicher gebunden; es gibt keine Importfunktion in der Oberfläche. Ein extern erstellter JSON-Eintrag muss daher manuell mit den vorhandenen Einträgen in `localStorage` zusammengeführt werden. Ältere Einträge ohne aktuelle Vorlagenversion werden beim Laden einmalig auf 30 × 42 cm und deaktivierte Ferien umgestellt. Dabei werden Ferien-Einträge aus dem gespeicherten Terminbestand entfernt, andere Termine bleiben erhalten. Eine eigene Schriftdatei ist nicht Teil des Zustands und muss nach dem Laden erneut ausgewählt werden.
+
+Für eine neue lokale Vorlage sollte der Wert ein vollständiges Zustandsobjekt verwenden. Der folgende JSON-Schnappschuss enthält alle aktuell gespeicherten Zustandsfelder und die Standardwerte aus der Anwendung; `holidays: []` bedeutet hier absichtlich, dass keine Termine gespeichert sind:
+
+```json
+{
+  "Frühlingsplan 2027": {
+    "_calendarPresetVersion": 1,
+    "year": 2027,
+    "hVisible": 30,
+    "bVisible": 42,
+    "backpanelOffsetHeightMm": 2,
+    "backpanelOffsetWidthMm": 4,
+    "pufferLeft": 15,
+    "pufferRight": 15,
+    "pufferLeftContent": "blank",
+    "pufferRightContent": "blank",
+    "bannerCustomTitle": "Frühlingsplan 2027",
+    "qrEnabled": true,
+    "qrGapMm": 40,
+    "showVacations": false,
+    "monthLayout": "single",
+    "designStyle": "classic",
+    "themeKey": null,
+    "monthSeparators": {
+      "single": {
+        "enabled": false,
+        "widthMm": 0.5,
+        "colorMode": "custom",
+        "color": "#cbd5e1",
+        "header": false
+      },
+      "double": {
+        "enabled": false,
+        "widthMm": 0.5,
+        "colorMode": "custom",
+        "color": "#cbd5e1",
+        "header": false
+      }
+    },
+    "subColumns": 1,
+    "guideLinesCount": 0,
+    "guideLinesStyle": "dashed",
+    "showKW": true,
+    "showMoon": true,
+    "showCropMarks": false,
+    "headerStyle": "uppercase",
+    "headerAlign": "center",
+    "monthHeaderTextColor": "#0f172a",
+    "monthHeaderTextSize": 1,
+    "calendarWeekTextColor": "#64748b",
+    "calendarWeekTextSize": 1,
+    "moonOpacity": 0.89,
+    "fontFamily": "sans",
+    "fontHeaderScale": 1,
+    "fontDayScale": 1,
+    "lineGrid": 0.2,
+    "lineBorder": 0.6,
+    "paperColor": "#ffffff",
+    "colorHeaderBg": "#f1f5f9",
+    "colorHeaderText": "#0f172a",
+    "colorGrid": "#cbd5e1",
+    "colorText": "#0f172a",
+    "colorSaturdayBg": "#64748b1c",
+    "colorSaturdayText": "#0f172a",
+    "colorSundayBg": "#e11d481c",
+    "colorSundayText": "#e11d48",
+    "colorWeekendBg": "#f1f5f9",
+    "colorWeekendText": "#e11d48",
+    "categoryColors": {
+      "public": "#d977061c",
+      "vacation": "#0284c71c",
+      "custom": "#16a34a1c"
+    },
+    "country": "DE",
+    "bundesland": "NW",
+    "holidays": [],
+    "holidayFilter": "all",
+    "holidaySearchQuery": "",
+    "viewMode": "plate",
+    "currentMonthIndex": 1,
+    "zoom": 1,
+    "isDraggingViewport": false,
+    "dragStartX": 0,
+    "isPanning": false,
+    "panStartX": 0,
+    "panStartY": 0,
+    "scrollStartX": 0,
+    "scrollStartY": 0
+  }
+}
+```
+
+Wichtige Regeln für diesen Snapshot:
+
+* `year`, Titel, Maße, Gestaltung, Farben, Land und Region sollten zusammenpassen. Für Geometrie, Aufbau, Farben und Darstellungen gelten die oben dokumentierten Feldtypen und Wertebereiche; zusätzlich sind `holidayFilter` (`all`, `public`, `vacation` oder `custom`) und `viewMode` (`plate` oder `banner`) zulässige Werte.
+* `monthSeparators` braucht beide Einträge (`single` und `double`) mit jeweils `enabled`, `widthMm`, `colorMode`, `color` und `header`. Fehlende Trennstreifenwerte werden beim Laden zwar mit Standardwerten ergänzt, ein vollständig erzeugter Snapshot sollte sie dennoch enthalten.
+* Die Vorlagen-Ladefunktion validiert das Objekt nicht vollständig. Insbesondere gelten die strengen Share-Link-Validierungen nicht automatisch für lokale Vorlagen; Werte daher genau im dokumentierten Format halten. `_calendarPresetVersion: 1` muss gesetzt sein, sonst behandelt der Loader den Eintrag als ältere Vorlage und migriert ihn.
+* `holidays` ist eine vollständige Terminliste des Schnappschusses. Ist es ein Array – auch ein leeres –, wird es beim Laden nicht automatisch durch Feiertage ersetzt; bei `showVacations: false` werden lediglich Ferien-Einträge herausgefiltert. Soll die Anwendung Feiertage und gegebenenfalls Ferien beim Laden passend zu Jahr und Region neu erzeugen, die Eigenschaft `holidays` ganz weglassen. Eigene Termine werden dann nicht mitgespeichert. Sollen eigene Termine zusammen mit Feiertagen oder Ferien enthalten sein, muss `holidays` stattdessen die vollständige gewünschte Liste enthalten; diese wird als Snapshot geladen und nicht neu berechnet.
+* Ein Terminobjekt hat die Form `{"id":"termin_fruehling_1","title":"Frühlingsbeginn","start":"2027-03-20","end":"2027-03-20","color":"#16a34a","type":"custom"}`. `id` sollte innerhalb der Liste eindeutig sein; `start` und `end` sind gültige Kalenderdaten im Format `YYYY-MM-DD`, `end` darf nicht vor `start` liegen, und bei eintägigen Terminen sind beide gleich. `type` ist für eigene oder importierte Termine `custom`; automatisch berechnete Kategorien heißen `public` und `vacation`. Farben verwenden `#RRGGBB` oder `#RRGGBBAA`.
+* Zum lokalen Anwenden den Vorlagenwert unter dem gewünschten Namen in das existierende JSON-Objekt `cronoscroll_v2_presets` einfügen und dieses Objekt wieder als JSON in `localStorage` speichern. Bestehende Einträge dabei zusammenführen, nicht überschreiben. Das Objekt ist nur für dieselbe Browser-Origin und denselben Browser verfügbar.
+
+Wenn das erzeugte JSON-Objekt beispielsweise in `generatedPresets` liegt, kann es in der Browser-Konsole der geöffneten CronoScroll-Seite mit den vorhandenen Einträgen zusammengeführt werden:
+
+```js
+const savedPresets = JSON.parse(localStorage.getItem('cronoscroll_v2_presets') || '{}');
+const mergedPresets = { ...savedPresets, ...generatedPresets };
+localStorage.setItem('cronoscroll_v2_presets', JSON.stringify(mergedPresets));
+```
+
+Danach die Seite neu laden und die Vorlage im Tab „Vorlagen & Teilen“ laden. Ein Eintrag mit einem bereits vorhandenen Namen wird durch das Zusammenführen ersetzt.
+
+**Teilbare Links** sind dagegen ein begrenzter Snapshot ausgewählter Einstellungen. Die URL enthält `?config=` mit einem UTF-8-JSON-Payload, der als Base64url (ohne `=`-Padding) kodiert ist. Die Nutzlast hat das Schema `[1, werte, land, region, monatstrennstreifen]`: `1` ist die Payload-Version; `werte` ist ein geordnetes Feld-Array in der unten aufgeführten Reihenfolge; `land` und `region` sind Länder- und Regionscode; `monatstrennstreifen` enthält die Einstellungen für Ein- und Zweimonatslayout. Diese Liste beschreibt zugleich die Reihenfolge im Array:
+
+* **Kalender und Geometrie:** `year` (ganzzahlig 1900–2100), `hVisible` (10–150 cm), `bVisible` (15–200 cm), `pufferLeft` und `pufferRight` (je 0–100 cm).
+* **Aufbau und Anzeigen:** `pufferLeftContent` (`blank`, `title`, `year_overview` oder `notes`), `pufferRightContent` (`blank` oder `notes`), `bannerCustomTitle` (Text bis 500 Zeichen), `monthLayout` (`single` oder `double`), `subColumns` (1–4), `guideLinesCount` (0–3), `guideLinesStyle` (`dashed`, `dotted` oder `solid`), `showKW`, `showMoon` und `showCropMarks` (jeweils boolesch).
+* **Typografie und Linien:** `headerStyle` (`uppercase`, `titlecase` oder `numbered`), `headerAlign` (`center` oder `left`), `fontFamily` (`sans`, `serif`, `mono`, `architect` oder `custom`), `fontHeaderScale` und `fontDayScale` (je 0,5–3), `lineGrid` (0,05–2 mm) und `lineBorder` (0,1–5 mm).
+* **Farben:** `paperColor`, `colorHeaderBg`, `colorHeaderText`, `colorGrid`, `colorText`, `colorSaturdayBg`, `colorSaturdayText`, `colorSundayBg`, `colorSundayText`, `colorWeekendBg` und `colorWeekendText`. Farbwerte müssen `#RRGGBB` oder `#RRGGBBAA` sein.
+* **Darstellung und Farbwelt:** `designStyle` (`classic`, `midcentury`, `bauhaus`, `gantt`, `zen` oder `kursbuch`), `themeKey` (gültiger Farbwelt-Schlüssel, `null` oder leerer Text) und `categoryColors` mit den erforderlichen Einträgen `public`, `vacation` und `custom`. Die Farbwelt-Schlüssel sind `wood`, `minimal`, `architect`, `sage`, `modern`, `coastal` und `warm`; auch die Kategorie-Farbwerte müssen `#RRGGBB` oder `#RRGGBBAA` sein.
+* **CAD und QR:** `backpanelOffsetHeightMm` und `backpanelOffsetWidthMm` (je −100 bis 100 mm), `qrEnabled` (boolesch), `qrGapMm` (0–100 mm) und `showVacations` (boolesch).
+* **Kopf- und Kalenderwochenanzeige:** `monthHeaderTextColor`, `monthHeaderTextSize` (0,5–3), `calendarWeekTextColor`, `calendarWeekTextSize` (0,5–3) und `moonOpacity` (0–1).
+
+Dieses Beispiel erzeugt aus dem oben gezeigten Vorlagenobjekt einen aktuellen Jahreslink. `preset` ist dabei der Wert unter dem gewünschten Vorlagennamen, nicht das äußere Objekt mit dem Vorlagennamen als Schlüssel. Die 46 Feldnamen müssen in genau dieser Reihenfolge in `werte` stehen:
+
+```js
+const shareFieldOrder = [
+  'year', 'hVisible', 'bVisible', 'pufferLeft', 'pufferRight',
+  'pufferLeftContent', 'pufferRightContent', 'bannerCustomTitle', 'monthLayout',
+  'subColumns', 'guideLinesCount', 'guideLinesStyle', 'showKW', 'showMoon',
+  'showCropMarks', 'headerStyle', 'headerAlign', 'fontFamily', 'fontHeaderScale',
+  'fontDayScale', 'lineGrid', 'lineBorder', 'paperColor', 'colorHeaderBg',
+  'colorHeaderText', 'colorGrid', 'colorText', 'colorSaturdayBg',
+  'colorSaturdayText', 'colorSundayBg', 'colorSundayText', 'colorWeekendBg',
+  'colorWeekendText', 'designStyle', 'themeKey', 'categoryColors',
+  'backpanelOffsetHeightMm', 'backpanelOffsetWidthMm', 'qrEnabled', 'qrGapMm',
+  'showVacations', 'monthHeaderTextColor', 'monthHeaderTextSize',
+  'calendarWeekTextColor', 'calendarWeekTextSize', 'moonOpacity'
+];
+const separators = ['single', 'double'].map(layout => {
+  const item = preset.monthSeparators[layout];
+  return [item.enabled, item.widthMm, item.colorMode, item.color, item.header];
+});
+const payload = [
+  1,
+  shareFieldOrder.map(name => preset[name]),
+  preset.country,
+  preset.bundesland,
+  separators
+];
+const bytes = new TextEncoder().encode(JSON.stringify(payload));
+let binary = '';
+bytes.forEach(byte => { binary += String.fromCharCode(byte); });
+const encoded = btoa(binary)
+  .replace(/\+/g, '-')
+  .replace(/\//g, '_')
+  .replace(/=+$/, '');
+const url = `https://koljal.github.io/ChronoScroll/?config=${encoded}`;
+console.log(url);
+```
+
+`land`/`region` sind ein geprüftes Paar: Deutschland (`DE`: `NW`, `BW`, `BY`, `BE`, `BB`, `HB`, `HH`, `HE`, `MV`, `NI`, `RP`, `SL`, `SN`, `ST`, `SH`, `TH`), Österreich (`AT`: `W`, `B`, `K`, `NOE`, `OOE`, `S`, `ST`, `T`, `V`) oder Schweiz (`CH`: `ZH`, `BE`, `LU`, `BS`, `BL`, `SG`, `GR`, `AG`, `GE`). Die Monatstrennstreifen enthalten je einen Eintrag für `single` und `double`; jeder Eintrag ist ein Array in der Reihenfolge `[enabled, widthMm, colorMode, color, header]`. `enabled` und `header` sind boolesch, `widthMm` liegt zwischen 0,1 und 20 mm, `colorMode` ist `custom` oder `paper` und `color` folgt demselben Hex-Farbformat.
+
+Beim Erstellen eines Links werden die Felder und Wertebereiche geprüft; ein Kalenderjahr für einen Folgejahres-Link muss daher spätestens 2099 sein. Der Folgejahres-Link erhöht `year` um eins und ersetzt im individuellen Titel erkannte Vorkommen des bisherigen Jahres. Die kodierte Konfiguration darf höchstens 8192 Zeichen lang sein. Beim Öffnen werden nur genau ein `config`-Parameter und die unterstützte Payload-Version 1 verarbeitet. Fehlerhafte Payloads, doppelte Parameter und nicht unterstützte Versionen werden ignoriert; ungültige Einzelwerte oder Regionen werden nicht übernommen, während andere gültige Werte wiederhergestellt werden können. Ältere kürzere Feld-Arrays erhalten für fehlende Darstellungs- und Farbweltfelder die klassischen beziehungsweise keine Farbwelt-Defaults.
+
+Nicht im Link enthalten sind insbesondere individuelle, importierte und gespeicherte Terminlisten, Such- und Filterzustände, Zoom und Ansichtsposition sowie hochgeladene Schriftdateien. Beim Öffnen werden Feiertage für das gewählte Jahr und die Region neu berechnet; Ferien werden entsprechend `showVacations` erzeugt. Die Base64url-Kodierung ist keine Verschlüsselung: Die übertragenen Einstellungen stehen im Link und können darin gelesen werden.
+
 * **RGB-Plotter-PDF für Endlosplotter:**
   * Generiert über **jsPDF** eine millimetergenaue Vektor-PDF mit dem Kalendernamen als Dateinamen, exakt einer Seite, eingebetteten TrueType-Schnitten (normal, fett, kursiv), deutschen Monatsnamen (`Januar` bis `Dezember`), deutschen Tageskürzeln (`Mo` bis `So`) und Randbeschriftungen.
   * Im rechten Montagepuffer steht ein vektorieller QR-Code mit demselben Folgejahres-Link wie im Tab „Vorlagen & Teilen“. Die Rollenmaße ändern sich nicht; bei zu schmalem Puffer, unvollständigem Inhalt, nicht verfügbarem Schriftschnitt oder nicht platzierbarem Titel meldet der Export einen Fehler statt eine unvollständige Datei zu speichern.
