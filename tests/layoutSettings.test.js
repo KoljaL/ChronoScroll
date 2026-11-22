@@ -177,6 +177,7 @@ test('header controls, separator settings and next-year links update correctly',
   vm.createContext(context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/themePresets.js'), 'utf8'), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/shareConfig.js'), 'utf8'), context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/builtInPresets.js'), 'utf8'), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js/app.js'), 'utf8'), context);
   context.window.location.search = '?mode=calendar&tab=style';
   start();
@@ -456,4 +457,22 @@ test('header controls, separator settings and next-year links update correctly',
   start();
   assert.equal(get('app-container').classList.contains('cad-mode'), false);
   assert.equal(tabs[0].getAttribute('aria-selected'), 'true');
+
+  const builtIns = context.window.CronoBuiltInPresets;
+  const source = builtIns[0].state;
+  source.holidays = [{ id: 'builtin', title: 'A "quoted" event', start: '2027-01-01', end: '2027-01-01', type: 'custom', color: '#123456' }];
+  const before = JSON.stringify(source);
+  const saved = storage.cronoscroll_v2_presets;
+  const builtInList = get('built-in-presets-list');
+  assert.equal(builtInList.children.length, builtIns.length);
+  assert.equal(builtInList.children[0].children.length, 2);
+  builtInList.children[0].children[1].dispatch('click');
+  assert.equal(latestState.bannerCustomTitle, source.bannerCustomTitle);
+  assert.equal(latestState.holidays[0].title, 'A "quoted" event');
+  assert.ok(get('holiday-list').children[0].html.includes('A &quot;quoted&quot; event'));
+  change('color-category-custom', '#abcdef', 'input');
+  assert.equal(JSON.stringify(source), before);
+  assert.equal(storage.cronoscroll_v2_presets, saved);
+  builtInList.children[0].children[1].dispatch('click');
+  assert.equal(latestState.holidays[0].color, source.holidays[0].color);
 });

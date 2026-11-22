@@ -632,7 +632,13 @@
             </div>
 
             <div class="border-t border-slate-800 pt-3 space-y-2">
-              <h4 class="text-xs font-semibold text-slate-300">Gespeicherte Vorlagen</h4>
+              <h4 class="text-xs font-semibold text-slate-300">Integrierte Vorlagen</h4>
+              <p class="text-[11px] text-slate-400">Schreibgeschützte Vorlagen; Änderungen können lokal gespeichert werden.</p>
+              <div id="built-in-presets-list" class="space-y-2"></div>
+            </div>
+
+            <div class="border-t border-slate-800 pt-3 space-y-2">
+              <h4 class="text-xs font-semibold text-slate-300">Lokal gespeicherte Vorlagen</h4>
               <div id="presets-list" class="space-y-2">
                 <!-- Preset items list -->
               </div>
@@ -792,7 +798,7 @@
         </div>
         <div class="status-brand">
           <span class="build-label">Build: </span>
-          <span id="build-date"><!-- BUILD_DATE -->22.11.2026 19:57<!-- /BUILD_DATE --></span>
+          <span id="build-date"><!-- BUILD_DATE -->22.11.2026 20:21<!-- /BUILD_DATE --></span>
           <a class="status-logo-link" href="https://github.com/KoljaL/ChronoScroll" target="_blank" rel="noopener noreferrer" aria-label="ChronoScroll auf GitHub (öffnet einen neuen Tab)">
             <span class="sr-only">Code: </span>
             <img src="./img/logo.svg" alt="" width="18" height="18" />
@@ -855,6 +861,7 @@
     <script src="js/fontManager.js"></script>
     <script src="js/themePresets.js"></script>
     <script src="js/designPresets.js"></script>
+    <script src="js/builtInPresets.js"></script>
     <script src="js/canvasRenderer.js"></script>
     <script src="js/shareConfig.js"></script>
     <script src="js/pdfExport.js"></script>

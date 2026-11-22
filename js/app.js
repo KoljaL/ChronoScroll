@@ -30,6 +30,12 @@
       ? String(parseInt(color.slice(7, 9), 16) / 255 * 100) : '100';
   }
 
+  function escapeHtmlAttribute(value) {
+    return String(value).replace(/[&<>"']/g, char => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    })[char]);
+  }
+
   // Zentraler App State
   const state = {
     year: 2027,
@@ -595,29 +601,31 @@
 
     filtered.forEach((h) => {
       const item = document.createElement('div');
+      const title = escapeHtmlAttribute(h.title);
+      const id = escapeHtmlAttribute(h.id);
       item.className = 'bg-slate-950 border border-slate-800 rounded-lg p-2.5 space-y-2 text-xs transition hover:border-slate-700';
       item.innerHTML = `
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-2 w-2/3">
             <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${h.color}"></span>
-            <input type="text" value="${h.title}" data-id="${h.id}" data-field="title" aria-label="Terminbezeichnung" class="holiday-input bg-transparent font-semibold text-slate-200 focus:outline-none focus:border-b border-amber-500 w-full truncate">
+            <input type="text" value="${title}" data-id="${id}" data-field="title" aria-label="Terminbezeichnung" class="holiday-input bg-transparent font-semibold text-slate-200 focus:outline-none focus:border-b border-amber-500 w-full truncate">
           </div>
-          <button data-id="${h.id}" title="Löschen" class="btn-delete-holiday text-slate-500 hover:text-rose-400 p-1 cursor-pointer">
+          <button data-id="${id}" title="Löschen" class="btn-delete-holiday text-slate-500 hover:text-rose-400 p-1 cursor-pointer">
             <i class="fa-solid fa-trash-can"></i>
           </button>
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="text-[10px] text-slate-400">Beginn</label>
-            <input type="date" value="${h.start}" data-id="${h.id}" data-field="start" aria-label="Beginn" class="holiday-input bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-slate-200 w-full font-mono text-[11px]">
+            <input type="date" value="${h.start}" data-id="${id}" data-field="start" aria-label="Beginn" class="holiday-input bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-slate-200 w-full font-mono text-[11px]">
           </div>
           <div>
             <label class="text-[10px] text-slate-400">Ende</label>
-            <input type="date" value="${h.end}" data-id="${h.id}" data-field="end" aria-label="Ende" class="holiday-input bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-slate-200 w-full font-mono text-[11px]">
+            <input type="date" value="${h.end}" data-id="${id}" data-field="end" aria-label="Ende" class="holiday-input bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-slate-200 w-full font-mono text-[11px]">
           </div>
         </div>
         <div class="flex items-center space-x-2 pt-0.5">
-          <input type="color" value="${h.color.slice(0, 7)}" data-color-alpha="${h.color.length === 9 ? parseInt(h.color.slice(7), 16) / 255 * 100 : 100}" data-id="${h.id}" data-field="color" aria-label="Farbe dieses Termins" class="holiday-input w-5 h-5 rounded cursor-pointer bg-transparent">
+          <input type="color" value="${h.color.slice(0, 7)}" data-color-alpha="${h.color.length === 9 ? parseInt(h.color.slice(7), 16) / 255 * 100 : 100}" data-id="${id}" data-field="color" aria-label="Farbe dieses Termins" class="holiday-input w-5 h-5 rounded cursor-pointer bg-transparent">
           <span class="text-[9px] px-1.5 py-0.5 rounded ml-auto font-mono ${h.type === 'public' ? 'bg-amber-500/20 text-amber-400' : h.type === 'vacation' ? 'bg-sky-500/20 text-sky-400' : 'bg-slate-800 text-slate-300'}">${h.type === 'public' ? 'Feiertag' : h.type === 'vacation' ? 'Ferien' : 'Eigener Termin'}</span>
         </div>
       `;
@@ -692,6 +700,69 @@
   function savePresets(p) {
     localStorage.setItem('cronoscroll_v2_presets', JSON.stringify(p));
   }
+  function applyPreset(name, data) {
+    const preset = data.fontFamily === 'custom' && !window.CronoFonts.hasCustomFont() ? { ...data, fontFamily: 'sans' } : data;
+    if (preset !== data) {
+      setFontStatus('Diese Vorlage verwendet eine eigene Schrift. Bitte lade die TTF-Datei erneut hoch.', true);
+    }
+    Object.assign(
+      state,
+      {
+        ...presetDefaults,
+        categoryColors: defaultCategoryColors(),
+        bannerCustomTitle: name,
+        holidays: [],
+        monthHeaderTextColor: preset.colorHeaderText || presetDefaults.monthHeaderTextColor,
+      },
+      preset,
+    );
+    state.categoryColors = { ...defaultCategoryColors(), ...preset.categoryColors };
+    if (!Array.isArray(preset.holidays)) loadDefaultHolidays();
+    if (!state.showVacations) {
+      state.holidays = state.holidays.filter((event) => event.type !== 'vacation');
+    }
+    localStorage.setItem('cronoscroll_design_style', state.designStyle);
+    localStorage.setItem('cronoscroll_theme', state.themeKey || '');
+    const defaults = defaultMonthSeparators();
+    state.monthSeparators = {
+      single: { ...defaults.single, ...(preset.monthSeparators && preset.monthSeparators.single) },
+      double: { ...defaults.double, ...(preset.monthSeparators && preset.monthSeparators.double) },
+    };
+    syncInputsFromState();
+    renderHolidaysList();
+    renderPreview();
+  }
+
+  function renderBuiltInPresetsList() {
+    const container = document.getElementById('built-in-presets-list');
+    if (!container) return;
+    const presets = window.CronoBuiltInPresets;
+    if (!Array.isArray(presets)) {
+      container.textContent = 'Der integrierte Vorlagenkatalog konnte nicht geladen werden.';
+      return;
+    }
+    container.innerHTML = '';
+    if (!presets.length) {
+      container.textContent = 'Keine integrierten Vorlagen verfügbar.';
+      return;
+    }
+    presets.forEach(({ name, state: preset }) => {
+      const item = document.createElement('div');
+      item.className = 'bg-slate-950 border border-slate-800 rounded-lg p-2.5 flex items-center justify-between text-xs';
+      const label = document.createElement('span');
+      label.className = 'font-medium text-slate-200';
+      label.textContent = name;
+      const load = document.createElement('button');
+      load.type = 'button';
+      load.className = 'btn-load-built-in-preset bg-slate-800 hover:bg-slate-700 text-amber-400 px-2 py-1 rounded text-[11px] transition cursor-pointer';
+      load.textContent = 'Laden';
+      load.addEventListener('click', () => applyPreset(name, JSON.parse(JSON.stringify(preset))));
+      item.appendChild(label);
+      item.appendChild(load);
+      container.appendChild(item);
+    });
+  }
+
   function renderPresetsList() {
     const presets = getPresets();
     const container = document.getElementById('presets-list');
@@ -731,38 +802,7 @@
       btn.addEventListener('click', (e) => {
         const name = e.currentTarget.getAttribute('data-name');
         const data = presets[name];
-        if (data) {
-          const preset = data.fontFamily === 'custom' && !window.CronoFonts.hasCustomFont() ? { ...data, fontFamily: 'sans' } : data;
-          if (preset !== data) {
-            setFontStatus('Diese Vorlage verwendet eine eigene Schrift. Bitte lade die TTF-Datei erneut hoch.', true);
-          }
-          Object.assign(
-            state,
-            {
-              ...presetDefaults,
-              categoryColors: defaultCategoryColors(),
-              bannerCustomTitle: name,
-              holidays: [],
-              monthHeaderTextColor: preset.colorHeaderText || presetDefaults.monthHeaderTextColor,
-            },
-            preset,
-          );
-          state.categoryColors = { ...defaultCategoryColors(), ...preset.categoryColors };
-          if (!Array.isArray(preset.holidays)) loadDefaultHolidays();
-          if (!state.showVacations) {
-            state.holidays = state.holidays.filter((event) => event.type !== 'vacation');
-          }
-          localStorage.setItem('cronoscroll_design_style', state.designStyle);
-          localStorage.setItem('cronoscroll_theme', state.themeKey || '');
-          const defaults = defaultMonthSeparators();
-          state.monthSeparators = {
-            single: { ...defaults.single, ...(preset.monthSeparators && preset.monthSeparators.single) },
-            double: { ...defaults.double, ...(preset.monthSeparators && preset.monthSeparators.double) },
-          };
-          syncInputsFromState();
-          renderHolidaysList();
-          renderPreview();
-        }
+        if (data) applyPreset(name, data);
       });
     });
 
@@ -1465,6 +1505,7 @@
     renderThemeOptions();
     syncInputsFromState();
     renderHolidaysList();
+    renderBuiltInPresetsList();
     renderPresetsList();
     const activateTab = bindEvents();
     if (initialMode) setAppMode(initialMode);

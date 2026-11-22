@@ -50,6 +50,23 @@ window.CronoShare = (function() {
     ['colorMode', choice('custom', 'paper')], ['color', color], ['header', boolean]
   ];
 
+  function validateCalendarSettings(state) {
+    const errors = [];
+    fields.forEach(([name, valid]) => {
+      if (!valid(state[name])) errors.push(name);
+    });
+    if (!Object.hasOwn(regions, state.country) || !regions[state.country].includes(state.bundesland)) {
+      errors.push('country/bundesland');
+    }
+    ['single', 'double'].forEach(layout => {
+      const separator = state.monthSeparators && state.monthSeparators[layout];
+      separatorFields.forEach(([name, valid]) => {
+        if (!valid(separator && separator[name])) errors.push(`monthSeparators.${layout}.${name}`);
+      });
+    });
+    return errors;
+  }
+
   function encode(value) {
     const bytes = new TextEncoder().encode(JSON.stringify(value));
     let binary = '';
@@ -147,5 +164,8 @@ window.CronoShare = (function() {
     }
   }
 
-  return { createCurrentUrl, createNextYearUrl, restore };
+  return {
+    createCurrentUrl, createNextYearUrl, restore, validateCalendarSettings,
+    calendarSettingNames: [...fields.map(([name]) => name), 'country', 'bundesland', 'monthSeparators']
+  };
 })();
