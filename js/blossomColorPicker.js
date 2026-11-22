@@ -106,7 +106,7 @@
 
   function positionPortal(record) {
     if (!record.portaled) return;
-    const rect = record.placeholder.getBoundingClientRect();
+    const rect = record.anchor.getBoundingClientRect();
     record.host.style.left = `${rect.left}px`;
     record.host.style.top = `${rect.top}px`;
     record.host.style.width = `${record.size}px`;
@@ -116,12 +116,10 @@
   function openPortal(record) {
     if (!isConnected(record) || record.input.disabled) return;
     if (!record.portaled) {
-      const rect = record.placeholder.getBoundingClientRect();
       record.portaled = true;
+      record.anchor.classList.add('is-active');
       document.body.appendChild(record.host);
       record.host.classList.add('is-portaled');
-      record.host.style.left = `${rect.left}px`;
-      record.host.style.top = `${rect.top}px`;
     }
     positionPortal(record);
   }
@@ -133,6 +131,7 @@
     record.host.removeAttribute('style');
     record.host.style.width = `${record.size}px`;
     record.host.style.height = `${record.size}px`;
+    record.anchor.classList.remove('is-active');
     if (record.placeholder.isConnected) record.placeholder.appendChild(record.host);
   }
 
@@ -215,6 +214,9 @@
     host.style.width = `${size}px`;
     host.style.height = `${size}px`;
     host.setAttribute('data-blossom-color-picker', '');
+    const anchor = document.createElement('span');
+    anchor.className = 'cronoscroll-color-anchor';
+    anchor.setAttribute('aria-hidden', 'true');
     const textInput = document.createElement('input');
     textInput.type = 'text';
     textInput.className = 'cronoscroll-color-value';
@@ -227,12 +229,14 @@
     input.dataset.blossomPicker = 'true';
     placeholder.appendChild(input);
     placeholder.appendChild(textInput);
+    placeholder.appendChild(anchor);
     placeholder.appendChild(host);
 
     const record = {
       input,
       placeholder,
       host,
+      anchor,
       textInput,
       picker: null,
       size,

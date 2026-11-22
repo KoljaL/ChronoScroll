@@ -50,6 +50,7 @@ class FakeElement {
     this.labels = [];
     this.textContent = '';
     this.isConnectedOverride = null;
+    this.rect = { left: 12, top: 34, width: 28, height: 28 };
   }
 
   get isConnected() {
@@ -131,7 +132,7 @@ class FakeElement {
   }
 
   getBoundingClientRect() {
-    return { left: 12, top: 34, width: 28, height: 28 };
+    return this.rect;
   }
 }
 
@@ -233,6 +234,9 @@ function setup(populateDocument) {
     removeEventListener(type, listener) {
       listeners[type] = (listeners[type] || []).filter((item) => item !== listener);
     },
+    dispatchEvent(event) {
+      (listeners[event.type] || []).forEach((listener) => listener(event));
+    },
   };
   window.window = window;
   const context = {
@@ -247,6 +251,9 @@ function setup(populateDocument) {
     window,
     document,
     FakePicker,
+    dispatchWindowEvent(type) {
+      window.dispatchEvent(new FakeEvent(type));
+    },
     observer(mutation) {
       observerCallback([mutation]);
     },
@@ -288,6 +295,7 @@ test('Blossom adapter uses the same core and host size for existing and dynamic 
     assert.equal(placeholder.style['--blossom-picker-size'], '26px');
     assert.equal(host.style.width, '26px');
     assert.equal(host.style.height, '26px');
+    assert.equal(placeholder.children[2].className, 'cronoscroll-color-anchor');
 
     host.children[0].setAttribute('aria-expanded', 'true');
     host.dispatchEvent(new ui.window.Event('click', { bubbles: true }));
@@ -296,9 +304,45 @@ test('Blossom adapter uses the same core and host size for existing and dynamic 
     assert.equal(host.style.height, '26px');
     picker.options.onCollapse();
     assert.equal(host.parentNode, placeholder);
+    assert.equal(placeholder.children[2].classList.contains('is-active'), false);
     assert.equal(host.style.width, '26px');
     assert.equal(host.style.height, '26px');
   });
+});
+
+test('Blossom portal follows the independent circle anchor and returns to its inline slot', () => {
+  const ui = setup((document) => {
+    document.body.appendChild(colorInput(document));
+  });
+  const input = ui.document.querySelector('input[type="color"]');
+  const placeholder = input.parentNode;
+  const anchor = placeholder.children[2];
+  const host = placeholder.children[3];
+  const picker = ui.FakePicker.instances[0];
+  placeholder.rect = { left: 4, top: 8, width: 220, height: 30 };
+  anchor.rect = { left: 148, top: 11, width: 26, height: 26 };
+
+  host.children[0].setAttribute('aria-expanded', 'true');
+  host.dispatchEvent(new ui.window.Event('click', { bubbles: true }));
+  assert.equal(host.style.left, '148px');
+  assert.equal(host.style.top, '11px');
+  assert.equal(anchor.classList.contains('is-active'), true);
+
+  anchor.rect = { left: 176, top: 52, width: 26, height: 26 };
+  ui.dispatchWindowEvent('scroll');
+  assert.equal(host.style.left, '176px');
+  assert.equal(host.style.top, '52px');
+
+  anchor.rect = { left: 192, top: 68, width: 26, height: 26 };
+  ui.dispatchWindowEvent('resize');
+  assert.equal(host.style.left, '192px');
+  assert.equal(host.style.top, '68px');
+
+  picker.options.onCollapse();
+  assert.equal(host.parentNode, placeholder);
+  assert.equal(placeholder.children[3], host);
+  assert.equal(anchor.classList.contains('is-active'), false);
+  assert.equal(host.classList.contains('is-portaled'), false);
 });
 
 test('Blossom adapter initializes existing inputs and forwards picker changes', () => {
@@ -318,8 +362,9 @@ test('Blossom adapter initializes existing inputs and forwards picker changes', 
   assert.equal(input.classList.contains('cronoscroll-color-input-native'), true);
   assert.equal(input.parentNode.children[0], input);
   assert.equal(input.parentNode.children[1].type, 'text');
-  assert.equal(input.parentNode.children[2], picker.container);
-  assert.equal(input.parentNode.children.length, 3);
+  assert.equal(input.parentNode.children[2].className, 'cronoscroll-color-anchor');
+  assert.equal(input.parentNode.children[3], picker.container);
+  assert.equal(input.parentNode.children.length, 4);
   assert.equal(picker.container.listeners.pointerdown, undefined);
   picker.container.children[0].setAttribute('aria-expanded', 'true');
   picker.container.dispatchEvent(new ui.window.Event('click', { bubbles: true }));

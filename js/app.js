@@ -618,7 +618,6 @@
         </div>
         <div class="flex items-center space-x-2 pt-0.5">
           <input type="color" value="${h.color.slice(0, 7)}" data-color-alpha="${h.color.length === 9 ? parseInt(h.color.slice(7), 16) / 255 * 100 : 100}" data-id="${h.id}" data-field="color" aria-label="Farbe dieses Termins" class="holiday-input w-5 h-5 rounded cursor-pointer bg-transparent">
-          <span class="text-[10px] text-slate-400">Farbe im Kalender</span>
           <span class="text-[9px] px-1.5 py-0.5 rounded ml-auto font-mono ${h.type === 'public' ? 'bg-amber-500/20 text-amber-400' : h.type === 'vacation' ? 'bg-sky-500/20 text-sky-400' : 'bg-slate-800 text-slate-300'}">${h.type === 'public' ? 'Feiertag' : h.type === 'vacation' ? 'Ferien' : 'Eigener Termin'}</span>
         </div>
       `;
