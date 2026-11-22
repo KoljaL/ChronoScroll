@@ -2,12 +2,7 @@
   'use strict';
 
   const CONFIG = Object.freeze({
-    colors: Object.freeze([
-      '#ffffff', '#f8fafc', '#f1f5f9', '#e2e8f0', '#cbd5e1', '#0f172a',
-      '#fef08a', '#fed7aa', '#fecaca', '#fbcfe8', '#e9d5ff', '#ddd6fe',
-      '#bfdbfe', '#bae6fd', '#a7f3d0', '#bbf7d0', '#86efac', '#fde68a',
-      '#d97706', '#0284c7', '#16a34a', '#64748b', '#e11d48',
-    ]),
+    colors: Object.freeze(['#ffffff', '#f8fafc', '#f1f5f9', '#e2e8f0', '#cbd5e1', '#0f172a', '#fef08a', '#fed7aa', '#fecaca', '#fbcfe8', '#e9d5ff', '#ddd6fe', '#bfdbfe', '#bae6fd', '#a7f3d0', '#bbf7d0', '#86efac', '#fde68a', '#d97706', '#0284c7', '#16a34a', '#64748b', '#e11d48']),
     sizes: Object.freeze({
       core: 26,
       petal: 36,
@@ -20,8 +15,8 @@
       showShadeSlider: true,
       showCoreColor: true,
       adaptivePositioning: true,
-      circularBarWidth: 10,
-      sliderWidth: 10,
+      circularBarWidth: 20,
+      sliderWidth: 20,
       sliderOffset: 22,
       petalShape: 'circle',
       petalStyle: 'solid',
@@ -73,9 +68,7 @@
   function pickerValue(hex, alpha = 100) {
     const hsl = hexToHsl(hex);
     const toSlider = window.BlossomColorPicker && window.BlossomColorPicker.lightnessToSliderValue;
-    const slider = typeof toSlider === 'function'
-      ? toSlider(hsl.lightness)
-      : (100 - Math.max(20, Math.min(100, hsl.lightness))) / 80 * 100;
+    const slider = typeof toSlider === 'function' ? toSlider(hsl.lightness) : ((100 - Math.max(20, Math.min(100, hsl.lightness))) / 80) * 100;
     return {
       hue: hsl.hue,
       saturation: slider,
@@ -90,7 +83,9 @@
     const explicit = input.getAttribute('aria-label') || input.getAttribute('title');
     if (explicit) return explicit;
     if (input.labels && input.labels.length) {
-      const text = Array.from(input.labels).map((label) => label.textContent.trim()).find(Boolean);
+      const text = Array.from(input.labels)
+        .map((label) => label.textContent.trim())
+        .find(Boolean);
       if (text) return text;
     }
     if (input.id) {
@@ -137,20 +132,17 @@
 
   function dispatchColorEvent(record, type) {
     const options = { bubbles: true };
-    const event = typeof window.Event === 'function'
-      ? new window.Event(type, options)
-      : new Event(type, options);
+    const event = typeof window.Event === 'function' ? new window.Event(type, options) : new Event(type, options);
     record.input.dispatchEvent(event);
   }
 
   function alphaFor(input) {
     const value = Number(input.dataset.colorAlpha);
-    return input.dataset.colorAlpha === undefined || !Number.isFinite(value)
-      ? 100 : Math.max(0, Math.min(100, value));
+    return input.dataset.colorAlpha === undefined || !Number.isFinite(value) ? 100 : Math.max(0, Math.min(100, value));
   }
 
   function displayValue(input) {
-    const alpha = Math.round(alphaFor(input) * 255 / 100);
+    const alpha = Math.round((alphaFor(input) * 255) / 100);
     return `${normalizeHex(input.value)}${alpha === 255 ? '' : alpha.toString(16).padStart(2, '0')}`;
   }
 
@@ -259,8 +251,7 @@
       }
       textInput.removeAttribute('aria-invalid');
       input.value = textInput.value.slice(0, 7).toLowerCase();
-      input.dataset.colorAlpha = textInput.value.length === 9
-        ? String(parseInt(textInput.value.slice(7), 16) / 255 * 100) : '100';
+      input.dataset.colorAlpha = textInput.value.length === 9 ? String((parseInt(textInput.value.slice(7), 16) / 255) * 100) : '100';
       dispatchColorEvent(record, 'input');
       dispatchColorEvent(record, 'change');
     };

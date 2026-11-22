@@ -1093,7 +1093,7 @@ body {
   line-height: 1.25rem;
 }
 
-.cronoscroll-color-value[aria-invalid="true"] {
+.cronoscroll-color-value[aria-invalid='true'] {
   border-color: var(--err-border);
 }
 
@@ -1119,6 +1119,10 @@ body {
   outline-offset: 2px;
 }
 
+.bcp-bg-solid {
+  --bcp-surface: var(--bg-surface);
+}
+
 .cronoscroll-blossom-host {
   --bcp-focus-ring: var(--accent);
   --bcp-focus-ring-gap: var(--bg-surface);
@@ -1126,12 +1130,12 @@ body {
   --bcp-trigger-shadow-hover: 0 0 0 1px var(--accent), 0 4px 14px rgb(15 23 42 / 0.28);
 }
 
-.cronoscroll-blossom-host .bcp-container:has(.bcp-trigger-btn[aria-expanded="true"]) {
+.cronoscroll-blossom-host .bcp-container:has(.bcp-trigger-btn[aria-expanded='true']) {
   position: relative;
   isolation: isolate;
 }
 
-.cronoscroll-blossom-host .bcp-container:has(.bcp-trigger-btn[aria-expanded="true"])::before {
+.cronoscroll-blossom-host .bcp-container:has(.bcp-trigger-btn[aria-expanded='true'])::before {
   position: absolute;
   z-index: -1;
   top: 50%;
@@ -1140,8 +1144,10 @@ body {
   aspect-ratio: 1;
   border-radius: 50%;
   background: var(--bg-surface);
-  box-shadow: 0 12px 32px rgb(15 23 42 / 0.28), 0 2px 8px rgb(15 23 42 / 0.16);
-  content: "";
+  box-shadow:
+    0 12px 32px rgb(15 23 42 / 0.28),
+    0 2px 8px rgb(15 23 42 / 0.16);
+  content: '';
   pointer-events: none;
   transform: translate(-50%, -50%);
 }
