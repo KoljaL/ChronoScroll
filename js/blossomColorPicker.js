@@ -2,11 +2,34 @@
   'use strict';
 
   const CONFIG = Object.freeze({
-    colors: Object.freeze(['#ffffff', '#f8fafc', '#f1f5f9', '#e2e8f0', '#cbd5e1', '#0f172a', '#fef08a', '#fed7aa', '#fecaca', '#fbcfe8', '#e9d5ff', '#ddd6fe', '#bfdbfe', '#bae6fd', '#a7f3d0', '#bbf7d0', '#86efac', '#fde68a', '#d97706', '#0284c7', '#16a34a', '#64748b', '#e11d48']),
     sizes: Object.freeze({
       core: 26,
       petal: 36,
     }),
+    sizes: Object.freeze({
+      core: 26,
+      petal: 36,
+    }),
+    sizes: Object.freeze({
+      core: 26,
+      petal: 36,
+    }),
+    colors: Object.freeze([
+      '#333333', // Dunkelgrau / Schwarz (Schrift, Linien, graue Flächen)
+      '#4d4d4d', // Mittelgrau (Basis für Schwarz, Linien & Wochenend-Grau)
+      '#b22222', // Ziegelrot / Karmin (Klassische Sonn- & Feiertage)
+      '#d55e00', // Okabe-Ito Rotorange (Feiertage / Herbst)
+      '#e69f00', // Okabe-Ito Goldorange (Schulferien)
+      '#d9b310', // Gedämpftes Sonnengelb (Ferien / Sommer)
+      '#669933', // Mattes Blattgrün
+      '#009e73', // Okabe-Ito Blaugrün (Freizeit / Natur)
+      '#2b8cbe', // Gedämpftes Cyan / Petrol
+      '#56b4e9', // Okabe-Ito Himmelblau (Wochenenden / Urlaub)
+      '#0072b2', // Okabe-Ito Tiefblau (Büro / Termine)
+      '#5e4fa2', // Gedämpftes Indigo
+      '#88419d', // Mattes Violett
+      '#cc79a7', // Okabe-Ito Beere / Rosé
+    ]),
     options: Object.freeze({
       animationDuration: 180,
       openOnHover: false,
