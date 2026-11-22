@@ -1036,7 +1036,7 @@ body {
   position: relative;
   display: inline-flex;
   width: auto;
-  min-height: var(--blossom-picker-size, 28px);
+  min-height: var(--blossom-picker-size, 26px);
   max-width: 100%;
   flex: 0 1 auto;
   gap: 0.4rem;
@@ -1123,6 +1123,9 @@ body {
 
 .cronoscroll-blossom-host .bcp-trigger-btn {
   display: block;
+  box-sizing: border-box;
+  width: 26px;
+  height: 26px;
 }
 
 @media (max-width: 350px) {

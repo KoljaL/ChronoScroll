@@ -9,9 +9,7 @@
       '#d97706', '#0284c7', '#16a34a', '#64748b', '#e11d48',
     ]),
     sizes: Object.freeze({
-      default: 28,
-      compact: 20,
-      modal: 32,
+      core: 26,
       petal: 36,
     }),
     options: Object.freeze({
@@ -86,13 +84,6 @@
       alpha,
       layer: hsl.lightness >= 80 ? 'inner' : 'outer',
     };
-  }
-
-  function sizeFor(input) {
-    const className = typeof input.className === 'string' ? input.className : '';
-    if (/(?:^|\s)w-5(?:\s|$)/.test(className)) return CONFIG.sizes.compact;
-    if (/(?:^|\s)w-8(?:\s|$)/.test(className)) return CONFIG.sizes.modal;
-    return CONFIG.sizes.default;
   }
 
   function labelFor(input) {
@@ -215,7 +206,7 @@
       throw new Error('BlossomColorPicker wurde nicht geladen.');
     }
 
-    const size = sizeFor(input);
+    const size = CONFIG.sizes.core;
     const placeholder = document.createElement('span');
     placeholder.className = 'cronoscroll-color-picker';
     placeholder.style.setProperty('--blossom-picker-size', `${size}px`);

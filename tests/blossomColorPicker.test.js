@@ -263,6 +263,44 @@ function colorInput(document, id = 'color') {
   return input;
 }
 
+test('Blossom adapter uses the same core and host size for existing and dynamic inputs', () => {
+  const inputs = [];
+  const ui = setup((document) => {
+    for (const className of ['w-5 h-5', 'w-8 h-8', 'w-7 h-7', '']) {
+      const input = colorInput(document);
+      input.className = className;
+      document.body.appendChild(input);
+      inputs.push(input);
+    }
+  });
+  const dynamicInput = colorInput(ui.document, 'dynamic-color');
+  dynamicInput.className = 'w-8 h-8';
+  ui.document.body.appendChild(dynamicInput);
+  ui.observer({ type: 'childList', addedNodes: [dynamicInput], removedNodes: [] });
+  inputs.push(dynamicInput);
+
+  assert.equal(ui.FakePicker.instances.length, inputs.length);
+  inputs.forEach((input, index) => {
+    const picker = ui.FakePicker.instances[index];
+    const placeholder = input.parentNode;
+    const host = picker.container;
+    assert.equal(picker.options.coreSize, 26);
+    assert.equal(placeholder.style['--blossom-picker-size'], '26px');
+    assert.equal(host.style.width, '26px');
+    assert.equal(host.style.height, '26px');
+
+    host.children[0].setAttribute('aria-expanded', 'true');
+    host.dispatchEvent(new ui.window.Event('click', { bubbles: true }));
+    assert.equal(host.parentNode, ui.document.body);
+    assert.equal(host.style.width, '26px');
+    assert.equal(host.style.height, '26px');
+    picker.options.onCollapse();
+    assert.equal(host.parentNode, placeholder);
+    assert.equal(host.style.width, '26px');
+    assert.equal(host.style.height, '26px');
+  });
+});
+
 test('Blossom adapter initializes existing inputs and forwards picker changes', () => {
   let input;
   const ui = setup((document) => {
