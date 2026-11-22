@@ -109,8 +109,9 @@ window.CronoDesigns = (function() {
     const circle = (cx, cy, r, fill = false) =>
       commands.push({ type: 'circle', x: cx, y: cy, r, fill,
         fillColor: highlight, strokeColor: gridColor });
-    const daySize = Math.min(3.2 * (state.fontDayScale || 1), h * 0.55, w * 0.16);
-    const headerSize = Math.min((style === 'bauhaus' ? 5 : 3.2) * (state.fontHeaderScale || 1) * (state.monthHeaderTextSize || 1), h * 0.65);
+    const daySize = Math.min(5 * (state.fontDayScale || 1), h * 0.55, w * 0.16);
+    const headerSize = Math.min(5.5 * (state.fontHeaderScale || 1) * (state.monthHeaderTextSize || 1), h * 0.65);
+    const weekSize = daySize * 0.75 * (state.calendarWeekTextSize || 1);
     const headerY = h * (style === 'gantt' ? 0.35 : 0.52);
     if (style === 'midcentury') rect(x, 0, fullWidth, h, true, 0.15, headerBg);
     let headerTitle = month.label.toUpperCase();
@@ -132,7 +133,7 @@ window.CronoDesigns = (function() {
         const lane = (w - strip) / 3;
         ['PROJEKTE', 'MATERIAL', 'TERMINE'].forEach((label, i) => {
           text(label, cx + strip + lane * (i + 0.5), h * 0.78,
-            Math.min(1.7, h * 0.18), lane - 1, { align: 'center' });
+            Math.min(3.75, h * 0.375), lane - 1, { align: 'center' });
         });
         for (let i = 0; i <= 3; i++) line(cx + strip + i * lane, h, cx + strip + i * lane, geo.hVisibleMm);
       }
@@ -158,9 +159,9 @@ window.CronoDesigns = (function() {
         line(cx, y, cx + w, y, 0.25 * 25.4 / 72);
         text(date + ' ' + day.dayName, cx + 2, cy, daySize, strip - 3, { textColor: dayTextColor });
         if (state.showKW && day.isoWeek) {
-          const r = Math.min(2.1, h * 0.23, Math.max(0.1, (w - strip - 1) / 2));
+          const r = Math.min(3.75, h * 0.375, Math.max(0.1, (w - strip - 1) / 2));
           circle(cx + strip + r, cy, r);
-          text(day.isoWeek, cx + strip + r, cy, Math.min(1.6 * (state.calendarWeekTextSize || 1), r), 2 * r - 0.3, { align: 'center', textColor: state.calendarWeekTextColor || textColor });
+          text(day.isoWeek, cx + strip + r, cy, Math.min(weekSize, r), 2 * r - 0.3, { align: 'center', textColor: state.calendarWeekTextColor || textColor });
           detailStart = strip + 2 * r + 1;
         }
         if (day.dayNum === 1) {
@@ -176,14 +177,14 @@ window.CronoDesigns = (function() {
           textColor: weekend ? contrastText(weekendBg, dayTextColor) : dayTextColor
         });
         text(day.dayName.toUpperCase().split('').join(' '), cx + strip * 0.48, cy,
-          daySize * 0.75, strip * 0.48, {
+          daySize, strip * 0.48, {
             textColor: weekend ? contrastText(weekendBg, dayTextColor) : dayTextColor
           });
       } else if (style === 'gantt') {
         const laneStart = Math.min(15, w * 0.28);
         text(date + ' ' + day.dayName, cx + 1, cy, daySize, laneStart - 2, { textColor: dayTextColor });
         if (state.showKW && day.isoWeek) {
-          text('KW ' + day.isoWeek, cx + laneStart + 1, cy, daySize * 0.7 * (state.calendarWeekTextSize || 1),
+          text('KW ' + day.isoWeek, cx + laneStart + 1, cy, weekSize,
             Math.max(0.1, (w - laneStart) / 3 - 2), { textColor: state.calendarWeekTextColor || textColor });
         }
         if (day.dayName === 'Mo') {
@@ -206,13 +207,13 @@ window.CronoDesigns = (function() {
         const ordinal = Math.floor((utc - Date.UTC(month.year, 0, 1)) / 86400000) + 1;
         const counterWidth = Math.min(8, w * 0.15);
         line(cx + counterWidth, y, cx + counterWidth, y + h);
-        text(String(ordinal).padStart(3, '0'), cx + counterWidth / 2, cy, daySize * 0.75, counterWidth - 1, { align: 'center' });
+        text(String(ordinal).padStart(3, '0'), cx + counterWidth / 2, cy, daySize, counterWidth - 1, { align: 'center' });
         text(date + ' ' + day.dayName, cx + counterWidth + 1, cy, daySize,
           strip - counterWidth - 1, { textColor: dayTextColor });
       }
 
       if (state.showKW && day.isoWeek && style !== 'midcentury' && style !== 'gantt' && w - strip > 20) {
-        text('KW ' + day.isoWeek, cx + strip + 1, cy, daySize * 0.7 * (state.calendarWeekTextSize || 1), 9, { textColor: state.calendarWeekTextColor || textColor });
+        text('KW ' + day.isoWeek, cx + strip + 1, cy, weekSize, 9, { textColor: state.calendarWeekTextColor || textColor });
         detailStart += 10;
       }
       if (state.showMoon && day.moonPhase && w - detailStart > 9) {
@@ -222,7 +223,7 @@ window.CronoDesigns = (function() {
         detailStart += 2 * r + 1;
       }
       if (day.holiday && day.holiday.title && w - detailStart > 8) {
-        text(day.holiday.title, cx + w - 2, cy, daySize * 0.8, w - detailStart - 2, { align: 'right' });
+        text(day.holiday.title, cx + w - 2, cy, daySize * 0.85, w - detailStart - 2, { align: 'right' });
       }
     });
     return commands;

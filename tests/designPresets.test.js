@@ -54,6 +54,73 @@ test('all special designs apply header and calendar-week controls', () => {
   }
 });
 
+test('all special designs meet classic default text sizes within their layout bounds', () => {
+  const geo = geometry.calculate(state);
+  const month = {
+    ...months[2],
+    days: [{
+      dayNum: 1, dayName: 'Mo', isValid: true, isoWeek: 9,
+      holiday: { title: 'Feiertag' }
+    }]
+  };
+  for (const designStyle of designs.styles) {
+    const commands = designs.monthCommands({
+      ...state, designStyle, showKW: true, fontDayScale: 1,
+      fontHeaderScale: 1, monthHeaderTextSize: 1, calendarWeekTextSize: 1
+    }, geo, month, 2, 0);
+    const header = commands.find(command => command.type === 'text' && command.value === month.label.toUpperCase());
+    const day = commands.find(command => command.type === 'text' &&
+      (command.value === '01 Mo' || command.value === '01'));
+    const week = commands.find(command => command.type === 'text' &&
+      (command.value === '9' || command.value === 'KW 9'));
+    const holiday = commands.find(command => command.type === 'text' && command.value === 'Feiertag');
+    assert.ok(header.size >= 5.5, `${designStyle} header: ${header.size}`);
+    assert.ok(day.size >= 5, `${designStyle} day: ${day.size}`);
+    assert.ok(week.size >= 3.75, `${designStyle} week: ${week.size}`);
+    assert.ok(holiday.size >= 4.25, `${designStyle} holiday: ${holiday.size}`);
+  }
+});
+
+test('special-design text sizes reach canvas, PDF and SVG renderers', () => {
+  const geo = geometry.calculate(state);
+  const month = {
+    ...months[2],
+    days: [{
+      dayNum: 1, dayName: 'Mo', isValid: true, isoWeek: 9,
+      holiday: { title: 'Feiertag' }
+    }]
+  };
+  const commands = designs.monthCommands({
+    ...state, designStyle: 'midcentury', showKW: true, fontDayScale: 1,
+    fontHeaderScale: 1, monthHeaderTextSize: 1, calendarWeekTextSize: 1
+  }, geo, month, 2, 0);
+  const canvasFonts = [];
+  designs.drawCanvas({
+    save() {}, restore() {}, setLineDash() {}, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {}, fill() {},
+    fillRect() {}, strokeRect() {}, arc() {},
+    fillText() { canvasFonts.push(this.font); }
+  }, commands, 2, 'sans');
+  assert.ok(canvasFonts.includes('10px sans'));
+  assert.ok(canvasFonts.some(font => font.includes('11px sans')));
+  assert.ok(canvasFonts.includes('7.5px sans'));
+
+  const pdfSizes = [];
+  designs.drawPdf({
+    setDrawColor() {}, setFillColor() {}, setTextColor() {}, setLineWidth() {},
+    setLineDashPattern() {}, line() {}, rect() {}, circle() {},
+    setFont() {}, setFontSize(size) { pdfSizes.push(size); },
+    getTextWidth: () => 0, text() {}
+  }, commands, 'sans');
+  for (const sizeMm of [5, 5.5, 3.75]) {
+    assert.ok(pdfSizes.some(size => Math.abs(size - sizeMm * 72 / 25.4) < 1e-9));
+  }
+
+  const svg = designs.svgCommands(commands, 'sans').join('');
+  for (const sizeMm of ['5', '5.5', '3.75']) {
+    assert.ok(svg.includes(`font-size="${sizeMm}"`));
+  }
+});
+
 test('all designs use the original coordinates and stay within the roll in both layouts', () => {
   for (const designStyle of designs.styles) {
     for (const monthLayout of ['single', 'double']) {

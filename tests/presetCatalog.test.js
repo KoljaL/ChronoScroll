@@ -36,6 +36,15 @@ test('validates version, calendar fields, optional state and holiday snapshots',
   assert.ok(validatePreset(invalid).some(error => error.startsWith('holidays')));
 });
 
+test('built-in presets do not scale calendar labels below the classic default', () => {
+  for (const [name, preset] of Object.entries(source)) {
+    assert.ok(preset.fontDayScale >= 1, `${name}: fontDayScale`);
+    assert.ok(preset.fontHeaderScale >= 1, `${name}: fontHeaderScale`);
+    assert.ok(preset.monthHeaderTextSize >= 1, `${name}: monthHeaderTextSize`);
+    assert.ok(preset.calendarWeekTextSize >= 1, `${name}: calendarWeekTextSize`);
+  }
+});
+
 test('reports invalid files and entries while generating a deterministic usable catalog', t => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'chronoscroll-presets-'));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
