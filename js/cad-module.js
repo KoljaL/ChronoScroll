@@ -41,7 +41,7 @@
           group: '2. Papierbahn',
           items: [
             { key: 'paperLength', label: 'Länge der Papierbahn', min: 0, max: 12000, step: 1, default: 2260, unit: 'mm' },
-            { key: 'paperThickness', label: 'Papierstärke (80 g/m² ≈ 0.10)', min: 0.05, max: 0.25, step: 0.01, default: 0.10, unit: 'mm' }
+            { key: 'paperThickness', label: 'Papierstärke', tooltip: 'Richtwert: 80 g/m² ≈ 0,10 mm', min: 0.05, max: 0.25, step: 0.01, default: 0.10, unit: 'mm' }
           ]
         },
         {
@@ -49,6 +49,7 @@
           items: [
             { key: 'rodDiameter', label: 'Durchmesser Wickelstäbe', min: 15, max: 40, step: 1, default: 25, unit: 'mm' },
             { key: 'sideClearance', label: 'Seitlicher Luftspalt zur Rückwand', min: 2, max: 30, step: 1, default: 10, unit: 'mm' },
+            { key: 'minSideGapMm', label: 'Min. Seiten-Restspalt', tooltip: 'Warnschwelle für Restspalt bei voller Rolle', min: 0.5, max: 5.0, step: 0.5, default: 1.0, unit: 'mm' },
             { key: 'rodOffsetZ', label: 'Tiefenposition Stabachse (Z)', min: 12, max: 35, step: 1, default: 20, unit: 'mm' }
           ]
         },
@@ -58,7 +59,9 @@
             { key: 'railHeight', label: 'Höhe Querleisten (von vorne)', min: 15, max: 45, step: 1, default: 20, unit: 'mm' },
             { key: 'railDepth', label: 'Tiefe Querleisten (Z-Richtung)', min: 25, max: 60, step: 1, default: 40, unit: 'mm' },
             { key: 'railEndMargin', label: 'Leistenüberstand ab Stabachse', min: 15, max: 50, step: 1, default: 20, unit: 'mm' },
-            { key: 'blindHoleDepth', label: 'Tiefe Sacklöcher in Leisten', min: 5, max: 25, step: 1, default: 10, unit: 'mm' }
+            { key: 'blindHoleDepth', label: 'Tiefe Sacklöcher in Leisten', min: 5, max: 25, step: 1, default: 10, unit: 'mm' },
+            { key: 'blindHoleClearanceMm', label: 'Bohrspiel Sackloch', tooltip: 'Aufmaß auf Stabdurchmesser für den Bohrer', min: 0.0, max: 2.0, step: 0.1, default: 0.0, unit: 'mm' },
+            { key: 'rodAxialPlayMm', label: 'Axialspiel Wickelstab', tooltip: 'Gesamtspiel oben + unten in den Sacklöchern', min: 0.5, max: 5.0, step: 0.5, default: 2.0, unit: 'mm' }
           ]
         },
         {
@@ -183,6 +186,10 @@
         calendarDimensions = next;
         if (usingCalendarDimensions) {
           PHYSICAL_KEYS.forEach(key => { state[key] = next[key]; });
+          const thickness = Number(dimensions && dimensions.paperThickness);
+          if (Number.isFinite(thickness)) {
+            state.paperThickness = Math.min(META_MAP.paperThickness.max, Math.max(META_MAP.paperThickness.min, thickness));
+          }
           notify();
         }
       }
@@ -263,8 +270,12 @@
         const rodRadius = p.rodDiameter / 2;
         const radialBuildUp = maxRollRadius - rodRadius;
 
-        const upperStack = p.gliderThickness + p.coinThickness + 1.5;
-        const lowerStack = p.gliderThickness + 0.5;
+        const blindHoleClearanceMm = p.blindHoleClearanceMm ?? 0.0;
+        const rodAxialPlayMm = p.rodAxialPlayMm ?? 2.0;
+        const minSideGapMm = p.minSideGapMm ?? 1.0;
+        const drillDiameterMm = p.rodDiameter + blindHoleClearanceMm;
+        const upperStack = p.gliderThickness + p.coinThickness + (rodAxialPlayMm * 0.75);
+        const lowerStack = p.gliderThickness + (rodAxialPlayMm * 0.25);
         const rodCutLength = panelHeight + 2 * p.blindHoleDepth - upperStack - lowerStack;
 
         const backpanelFrontZ = p.backpanelOffsetZ;
@@ -308,10 +319,10 @@
             level: 'error',
             text: `Seitliche Kollision: Volle Rolle (Ø ${maxRollDiameter.toFixed(2)} mm) überlappt um ${Math.abs(remainingSideGap).toFixed(2)} mm mit der Rückwandkante!`
           });
-        } else if (remainingSideGap < 1.0) {
+        } else if (remainingSideGap < minSideGapMm) {
           checks.push({
             level: 'error',
-            text: `Seitlicher Restspalt bei voller Rolle zu gering (${remainingSideGap.toFixed(2)} mm < 1,0 mm).`
+            text: `Seitlicher Restspalt bei voller Rolle zu gering (${remainingSideGap.toFixed(2)} mm < ${minSideGapMm.toFixed(1).replace('.', ',')} mm).`
           });
         }
 
@@ -349,6 +360,7 @@
           axisDistance, totalWidth, totalHeight, totalHeightWithNuts,
           maxRollDiameter, maxRollRadius, rodRadius, radialBuildUp,
           rodCutLength, remainingSideGap,
+          blindHoleClearanceMm, rodAxialPlayMm, minSideGapMm, drillDiameterMm,
           z: { backpanelFrontZ, backpanelBackZ, rollFrontZ, rollBackZ },
           tangents: { coreLeft: tangentCoreLeft, coreRight: tangentCoreRight, fullLeft: tangentFullLeft, fullRight: tangentFullRight },
           checks
@@ -982,14 +994,15 @@
         const container = cadElement('parameter-groups-container');
         container.innerHTML = '';
 
-        ParameterStore.SCHEMA.forEach(group => {
-          const groupDiv = document.createElement('div');
-          groupDiv.className = 'param-group';
+        ParameterStore.SCHEMA.forEach((group, groupIndex) => {
+          const groupDetails = document.createElement('details');
+          groupDetails.className = 'param-group cad-param-accordion';
+          groupDetails.open = groupIndex < 2;
 
-          const titleDiv = document.createElement('div');
-          titleDiv.className = 'param-group-title';
-          titleDiv.textContent = group.group;
-          groupDiv.appendChild(titleDiv);
+          const titleSummary = document.createElement('summary');
+          titleSummary.className = 'param-group-title';
+          titleSummary.textContent = group.group;
+          groupDetails.appendChild(titleSummary);
 
           group.items.forEach(item => {
             const itemDiv = document.createElement('div');
@@ -1002,6 +1015,9 @@
             label.className = 'param-label';
             label.setAttribute('for', `cad-input-num-${item.key}`);
             label.textContent = item.label;
+            if (item.tooltip) {
+              label.title = item.tooltip;
+            }
 
             const inputWrap = document.createElement('div');
             inputWrap.className = 'param-input-wrap';
@@ -1016,6 +1032,7 @@
 
             const unitSpan = document.createElement('span');
             unitSpan.className = 'param-unit';
+            unitSpan.id = `cad-unit-${item.key}`;
             unitSpan.textContent = item.unit;
 
             inputWrap.appendChild(numInput);
@@ -1029,7 +1046,7 @@
             if (isPhysical) {
               numInput.readOnly = true;
               numInput.classList.add('cad-physical-input');
-              numInput.setAttribute('aria-describedby', 'cad-sync-status');
+              numInput.setAttribute('aria-describedby', `cad-unit-${item.key} cad-sync-status`);
               syncNote = document.createElement('p');
               syncNote.className = 'cad-sync-note';
               const onInput = (e) => ParameterStore.setParam(item.key, e.target.value);
@@ -1040,6 +1057,7 @@
               numInput.addEventListener('input', onInput);
               numInput.addEventListener('change', onCommit);
             } else {
+              numInput.setAttribute('aria-describedby', `cad-unit-${item.key}`);
               rangeInput = document.createElement('input');
               rangeInput.type = 'range';
               rangeInput.id = `cad-input-range-${item.key}`;
@@ -1047,7 +1065,7 @@
               rangeInput.max = item.max;
               rangeInput.step = item.step;
               rangeInput.value = item.default;
-              rangeInput.setAttribute('aria-label', item.label);
+              rangeInput.setAttribute('aria-label', `${item.label} (Schieberegler)`);
 
               const onInput = (e) => ParameterStore.setParam(item.key, e.target.value);
               const onCommit = (e) => {
@@ -1066,10 +1084,10 @@
             itemDiv.appendChild(labelRow);
             if (rangeInput) itemDiv.appendChild(rangeInput);
             if (syncNote) itemDiv.appendChild(syncNote);
-            groupDiv.appendChild(itemDiv);
+            groupDetails.appendChild(itemDiv);
           });
 
-          container.appendChild(groupDiv);
+          container.appendChild(groupDetails);
         });
       }
 
@@ -1118,7 +1136,7 @@
       function renderBOM(p, geom) {
         const rows = [
           ['2×', 'Horizontale Tragleisten', `${geom.totalWidth.toFixed(1)} × ${p.railDepth} × ${p.railHeight} mm`, 'Holz; oben und unten'],
-          ['2×', 'Wickelstäbe', `Ø ${p.rodDiameter} × ${geom.rodCutLength.toFixed(1)} mm`, 'Rundstab; Zuschnittlänge'],
+          ['2×', 'Wickelstäbe', `Ø ${p.rodDiameter} × ${geom.rodCutLength.toFixed(1)} mm`, geom.blindHoleClearanceMm > 0 ? `Rundstab; Sackloch-Bohrer Ø ${geom.drillDiameterMm.toFixed(1)} mm` : 'Rundstab; Zuschnittlänge'],
           ['1×', 'Rückwand / Schreibplatte', `${p.windowWidth + p.backpanelOffsetWidthMm} × ${p.windowHeight + p.backpanelOffsetHeightMm} × ${p.backpanelThickness} mm`, 'Multiplex oder Acrylglas'],
           ['1×', 'Papierbahn', `${p.windowHeight} × ${p.paperLength} mm`, 'Breite × Länge'],
           ['4×', 'PTFE-Möbelgleiter', `${p.gliderThickness} mm stark`, 'Je zwei pro Wickelstab'],
@@ -1334,6 +1352,10 @@
       }
 
       function triggerUpdate() {
+        if (cadUpdateFrameId !== null && typeof cancelAnimationFrame === 'function') {
+          cancelAnimationFrame(cadUpdateFrameId);
+          cadUpdateFrameId = null;
+        }
         const svgEl = cadElement('drawing-svg');
         const state = ParameterStore.getState();
         const geom = GeometryEngine.analyze(state);
@@ -1584,9 +1606,23 @@
           'tb-title-input', 'tb-material-input', 'tb-dwg-input', 'tb-author-input'].forEach(id => {
           const elNode = cadElement(id);
           if (elNode) {
-            elNode.addEventListener('input', triggerUpdate);
+            elNode.addEventListener('input', scheduleUpdate);
             elNode.addEventListener('change', triggerUpdate);
           }
+        });
+      }
+
+      let cadUpdateFrameId = null;
+
+      function scheduleUpdate() {
+        if (typeof requestAnimationFrame !== 'function') {
+          triggerUpdate();
+          return;
+        }
+        if (cadUpdateFrameId !== null) return;
+        cadUpdateFrameId = requestAnimationFrame(() => {
+          cadUpdateFrameId = null;
+          triggerUpdate();
         });
       }
 
@@ -1600,7 +1636,7 @@
 
         ParameterStore.subscribe(nextState => {
           syncFormValues(nextState);
-          triggerUpdate();
+          scheduleUpdate();
         });
 
         if (!window.CronoScrollCADBridge) {

@@ -13,6 +13,10 @@ window.CronoGeometry = (function() {
     const right = parseFloat(state.pufferRight ?? state.puffer);
     const pufferLeft = Math.max(0, Number.isFinite(left) ? left : 15.0); // cm
     const pufferRight = Math.max(0, Number.isFinite(right) ? right : 15.0); // cm
+    const rawWindLeft = parseFloat(state.windingAllowanceLeftMm ?? 0);
+    const rawWindRight = parseFloat(state.windingAllowanceRightMm ?? 0);
+    const windingAllowanceLeftMm = Math.min(200, Math.max(0, Number.isFinite(rawWindLeft) ? rawWindLeft : 0));
+    const windingAllowanceRightMm = Math.min(200, Math.max(0, Number.isFinite(rawWindRight) ? rawWindRight : 0));
     
     // Monatspalten-Breite (exakt 1/3 der Sichtbreite)
     const bMonth = bVisible / 3;
@@ -30,7 +34,7 @@ window.CronoGeometry = (function() {
     }
     
     // Gesamte Bannerlänge für 14 Monate (Dezember Vorjahr + 12 Zieljahr + Januar Folgejahr)
-    const lTotal = (14 * bMonth) + pufferLeft + pufferRight;
+    const lTotal = (14 * bMonth) + pufferLeft + pufferRight + (windingAllowanceLeftMm + windingAllowanceRightMm) / 10;
     
     // Unterteilung für Mehrpersonen-/Familienkalender
     const subColumns = Math.max(1, Math.min(6, parseInt(state.subColumns) || 1));
@@ -65,6 +69,8 @@ window.CronoGeometry = (function() {
     const hDayMm = hDay * 10;
     const pufferLeftMm = pufferLeft * 10;
     const pufferRightMm = pufferRight * 10;
+    const leadInMm = pufferLeftMm + windingAllowanceLeftMm;
+    const leadOutMm = pufferRightMm + windingAllowanceRightMm;
     const lTotalMm = lTotal * 10;
     const dayColumnWidthMm = dayColumnWidth * 10;
     const subColumnWidthMm = subColumnWidth * 10;
@@ -107,6 +113,10 @@ window.CronoGeometry = (function() {
       hDayMm,
       pufferLeftMm,
       pufferRightMm,
+      windingAllowanceLeftMm,
+      windingAllowanceRightMm,
+      leadInMm,
+      leadOutMm,
       lTotalMm,
       dayColumnWidthMm,
       subColumnWidthMm,
@@ -169,9 +179,10 @@ window.CronoGeometry = (function() {
     if (!Number.isFinite(count) || count <= 0 || !Number.isFinite(size) || moduleSize < 0.25) {
       throw new Error('Der rechte Montagepuffer ist für QR-Code und Abstand zu schmal. Bitte den Nachlauf vergrößern oder den QR-Code deaktivieren.');
     }
+    const leadOutMm = geo.leadOutMm ?? geo.pufferRightMm;
     return {
       qr, count, size, moduleSize,
-      x: geo.lTotalMm - geo.pufferRightMm + gap,
+      x: geo.lTotalMm - leadOutMm + gap,
       y: (geo.hVisibleMm - size) / 2
     };
   }

@@ -55,6 +55,15 @@ window.CronoShare = (function() {
     fields.forEach(([name, valid]) => {
       if (!valid(state[name])) errors.push(name);
     });
+    const optionalPhase3Fields = [
+      ['paperGrammage', number(60, 250)],
+      ['windingAllowanceLeftMm', number(0, 200)],
+      ['windingAllowanceRightMm', number(0, 200)],
+      ['cropMarkStyle', choice('none', 'corners', 'lines')],
+    ];
+    optionalPhase3Fields.forEach(([name, valid]) => {
+      if (state[name] !== undefined && !valid(state[name])) errors.push(name);
+    });
     if (!Object.hasOwn(regions, state.country) || !regions[state.country].includes(state.bundesland)) {
       errors.push('country/bundesland');
     }

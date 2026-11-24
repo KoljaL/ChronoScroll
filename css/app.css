@@ -450,12 +450,218 @@ body {
   display: flex;
 }
 
-#app-container .calendar-tabpanel > :is(div, section) {
-  padding: 0.85rem 0.9rem;
+#app-container .calendar-tabpanel > :is(div, section, details.sidebar-accordion) {
   background: var(--bg-surface);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-md);
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+#app-container .calendar-tabpanel > :is(div, section) {
+  padding: 0.85rem 0.9rem;
+}
+
+.sidebar-accordion {
+  overflow: hidden;
+}
+
+.sidebar-accordion-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.65rem 0.9rem;
+  background: var(--bg-subtle);
+  color: var(--accent-text);
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  transition: background-color 0.15s ease;
+}
+
+.sidebar-accordion-summary::-webkit-details-marker {
+  display: none;
+}
+
+.sidebar-accordion-summary::before {
+  content: '▸';
+  display: inline-block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  transition: transform 0.15s ease;
+}
+
+.sidebar-accordion[open] > .sidebar-accordion-summary::before {
+  transform: rotate(90deg);
+}
+
+.sidebar-accordion-summary:hover {
+  background: var(--bg-muted);
+}
+
+.sidebar-accordion-summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.sidebar-accordion[open] > .sidebar-accordion-summary {
+  border-bottom: 1px solid var(--border-light);
+}
+
+.sidebar-accordion-body {
+  padding: 0.8rem 0.9rem;
+}
+
+/* Sticky Live-Geometrie-Inspector */
+.calendar-geometry-inspector {
+  flex: 0 0 auto;
+  padding: 0.55rem 0.75rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+}
+
+.inspector-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.inspector-cell {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.45rem;
+  min-width: 0;
+}
+
+.inspector-label {
+  display: block;
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inspector-value {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+/* Einheitliche Formularelemente & Zustaende */
+.cs-label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.cs-info-tip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  cursor: help;
+  line-height: 1;
+}
+
+.cs-info-tip:hover {
+  color: var(--accent-text);
+}
+
+.cs-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cs-unit {
+  position: absolute;
+  right: 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.cs-input,
+.cs-select {
+  width: 100%;
+  min-height: 2rem;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.78rem;
+  color: var(--text-primary);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.cs-input-with-unit {
+  padding-right: 2.35rem;
+  text-align: right;
+}
+
+.cs-file-input {
+  width: 100%;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.cs-file-input::file-selector-button {
+  margin-right: 0.5rem;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-muted);
+  color: var(--text-primary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.cs-file-input::file-selector-button:hover {
+  background-color: var(--border-light);
+  border-color: var(--border-strong);
+}
+
+.cs-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.76rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.cs-checkbox-row:has(:disabled) {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cs-checkbox {
+  width: 0.95rem;
+  height: 0.95rem;
+  accent-color: var(--accent);
+  cursor: pointer;
 }
 
 .calendar-preview-card {
@@ -1244,9 +1450,24 @@ body {
 :is(#app-sidebar, .modal-overlay) :is(input, select) {
   accent-color: var(--accent);
 }
-:is(#app-sidebar, .modal-overlay) :is(input, select):focus-visible {
+:is(#app-sidebar, .modal-overlay) :is(input[type='text'], input[type='number'], select):hover:not(:disabled):not(:read-only) {
+  border-color: var(--border-strong);
+}
+:is(#app-sidebar, .modal-overlay) :is(input, select, button):focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+  border-color: var(--accent);
+}
+:is(#app-sidebar, .modal-overlay) :is(button):active:not(:disabled) {
+  transform: translateY(1px);
+}
+:is(#app-sidebar, .modal-overlay) :is(input, select, button):disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+:is(#app-sidebar, .modal-overlay) :is(input, select)[aria-invalid='true'] {
+  border-color: var(--err-border);
+  box-shadow: 0 0 0 2px var(--err-soft);
 }
 
 .theme-toggle {

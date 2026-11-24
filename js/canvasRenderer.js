@@ -354,8 +354,11 @@ window.CronoCanvas = (function() {
     const baseFont = getBaseFontFamily(state.fontFamily);
     const monthWidthPx = geo.bMonth * pxPerCm;
     const dayHeightPx = geo.hDay * pxPerCm;
-    const leadInPx = geo.pufferLeft * pxPerCm;
-    const leadOutPx = geo.pufferRight * pxPerCm;
+    const leadInPx = ((geo.leadInMm ?? geo.pufferLeftMm) / 10) * pxPerCm;
+    const leadOutPx = ((geo.leadOutMm ?? geo.pufferRightMm) / 10) * pxPerCm;
+    const cropStyle = ['none', 'corners', 'lines'].includes(state.cropMarkStyle)
+      ? state.cropMarkStyle
+      : (state.showCropMarks ? 'corners' : 'none');
 
     let targetWidthPx = 0;
     let targetHeightPx = state.hVisible * pxPerCm;
@@ -398,12 +401,24 @@ window.CronoCanvas = (function() {
       }
 
       // Schnittmarken
-      if (state.showCropMarks) {
+      if (cropStyle === 'corners') {
         const cropColor = design ? state.colorText : design;
         drawCropMark(ctx, 0, 0, 10, 3, cropColor);
         drawCropMark(ctx, targetWidthPx, 0, 10, 3, cropColor);
         drawCropMark(ctx, 0, targetHeightPx, 10, 3, cropColor);
         drawCropMark(ctx, targetWidthPx, targetHeightPx, 10, 3, cropColor);
+      } else if (cropStyle === 'lines') {
+        ctx.save();
+        ctx.strokeStyle = (design ? state.colorText : null) || '#0f172a';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.moveTo(0.5, 0);
+        ctx.lineTo(0.5, targetHeightPx);
+        ctx.moveTo(targetWidthPx - 0.5, 0);
+        ctx.lineTo(targetWidthPx - 0.5, targetHeightPx);
+        ctx.stroke();
+        ctx.restore();
       }
 
       ctx.restore();
@@ -497,7 +512,7 @@ window.CronoCanvas = (function() {
       }
 
       // Schnittmarken
-      if (state.showCropMarks) {
+      if (cropStyle === 'corners') {
         const cropColor = design ? state.colorText : design;
         const viewportStartPx = leadInPx + (state.currentMonthIndex * monthWidthPx);
         const viewportEndPx = viewportStartPx + (geo.bVisible * pxPerCm);
@@ -505,6 +520,20 @@ window.CronoCanvas = (function() {
         drawCropMark(ctx, viewportEndPx, 0, 10, 3, cropColor);
         drawCropMark(ctx, viewportStartPx, targetHeightPx, 10, 3, cropColor);
         drawCropMark(ctx, viewportEndPx, targetHeightPx, 10, 3, cropColor);
+      } else if (cropStyle === 'lines') {
+        const viewportStartPx = leadInPx + (state.currentMonthIndex * monthWidthPx);
+        const viewportEndPx = viewportStartPx + (geo.bVisible * pxPerCm);
+        ctx.save();
+        ctx.strokeStyle = (design ? state.colorText : null) || '#0f172a';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.moveTo(viewportStartPx, 0);
+        ctx.lineTo(viewportStartPx, targetHeightPx);
+        ctx.moveTo(viewportEndPx, 0);
+        ctx.lineTo(viewportEndPx, targetHeightPx);
+        ctx.stroke();
+        ctx.restore();
       }
 
       if (showViewportOverlay) {
@@ -665,7 +694,7 @@ window.CronoCanvas = (function() {
         xInMonth = xCss - (col * monthWidthPx);
       }
     } else {
-      const leadInPx = geo.pufferLeft * pxPerCm;
+      const leadInPx = ((geo.leadInMm ?? geo.pufferLeftMm) / 10) * pxPerCm;
       const xAfterLead = xCss - leadInPx;
       if (xAfterLead >= 0) {
         const col = Math.floor(xAfterLead / monthWidthPx);

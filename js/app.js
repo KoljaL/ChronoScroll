@@ -45,6 +45,9 @@
     backpanelOffsetWidthMm: 4.0,
     pufferLeft: 15.0, // cm
     pufferRight: 15.0, // cm
+    windingAllowanceLeftMm: 0,
+    windingAllowanceRightMm: 0,
+    paperGrammage: 80, // g/m²
     pufferLeftContent: 'blank', // 'blank', 'title', 'year_overview', 'notes'
     pufferRightContent: 'blank', // 'blank', 'notes'
     bannerCustomTitle: 'CRONOSCROLL 2027',
@@ -62,6 +65,7 @@
     showKW: true,
     showMoon: true,
     showCropMarks: false,
+    cropMarkStyle: 'none', // 'none', 'corners', 'lines'
     headerStyle: 'uppercase', // 'uppercase', 'titlecase', 'numbered'
     headerAlign: 'center',
     monthHeaderTextColor: '#0f172a',
@@ -140,6 +144,7 @@
         windowWidth: geo.bVisible * 10,
         windowHeight: geo.hVisible * 10,
         paperLength: geo.lTotal * 10,
+        paperThickness: Math.min(0.25, Math.max(0.05, Number(((state.paperGrammage ?? 80) * 0.00125).toFixed(4)))),
       },
       calendarPreview: {
         monthLayout: state.monthLayout,
@@ -355,8 +360,44 @@
     });
   }
 
+  let renderFrameId = null;
+  let coverageTimerId = null;
+  let nextYearLinkTimerId = null;
+
+  function scheduleNextYearLink() {
+    if (nextYearLinkTimerId !== null && typeof clearTimeout === 'function') {
+      clearTimeout(nextYearLinkTimerId);
+    }
+    if (typeof setTimeout !== 'function') {
+      updateNextYearLink();
+      return;
+    }
+    nextYearLinkTimerId = setTimeout(() => {
+      nextYearLinkTimerId = null;
+      updateNextYearLink();
+    }, 250);
+  }
+
+  function scheduleCoverageStatus() {
+    if (coverageTimerId !== null && typeof clearTimeout === 'function') {
+      clearTimeout(coverageTimerId);
+    }
+    if (typeof setTimeout !== 'function') {
+      updateCoverageStatus();
+      return;
+    }
+    coverageTimerId = setTimeout(() => {
+      coverageTimerId = null;
+      updateCoverageStatus();
+    }, 400);
+  }
+
   function renderPreview() {
-    updateNextYearLink();
+    if (renderFrameId !== null && typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(renderFrameId);
+      renderFrameId = null;
+    }
+    scheduleNextYearLink();
     window.CronoCanvas.render(canvas, container, state, {
       qrErrorHandler(error) {
         const status = document.getElementById('qr-status');
@@ -364,8 +405,20 @@
       }
     });
     publishCadSnapshot();
-    updateCoverageStatus();
+    scheduleCoverageStatus();
     invalidateStaleCoverageAdvice();
+  }
+
+  function scheduleRenderPreview() {
+    if (typeof requestAnimationFrame !== 'function') {
+      renderPreview();
+      return;
+    }
+    if (renderFrameId !== null) return;
+    renderFrameId = requestAnimationFrame(() => {
+      renderFrameId = null;
+      renderPreview();
+    });
   }
 
   function renderThemeOptions() {
@@ -459,6 +512,9 @@
     setChecked('checkbox-show-vacations', state.showVacations);
     setVal('input-puffer-left', state.pufferLeft);
     setVal('input-puffer-right', state.pufferRight);
+    setVal('input-winding-allowance-left', state.windingAllowanceLeftMm);
+    setVal('input-winding-allowance-right', state.windingAllowanceRightMm);
+    setVal('input-paper-grammage', state.paperGrammage);
     setVal('select-puffer-left-content', state.pufferLeftContent);
     setVal('select-puffer-right-content', state.pufferRightContent);
     setVal('input-custom-title', state.bannerCustomTitle);
@@ -476,6 +532,7 @@
     setChecked('checkbox-show-kw', state.showKW);
     setChecked('checkbox-show-moon', state.showMoon);
     setChecked('checkbox-show-cropmarks', state.showCropMarks);
+    setVal('select-crop-mark-style', state.cropMarkStyle);
     setVal('select-header-style', state.headerStyle);
     setVal('select-header-align', state.headerAlign);
     setColor('input-month-header-text-color', state.monthHeaderTextColor);
@@ -522,7 +579,23 @@
     setVal('select-country', state.country);
     updateRegionDropdown();
     setVal('select-bundesland', state.bundesland);
+    syncDependentControls();
     if (window.CronoBlossomColorPicker) window.CronoBlossomColorPicker.sync();
+  }
+
+  function syncDependentControls() {
+    const setDisabled = (id, disabled) => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = !!disabled;
+    };
+    const sep = state.monthSeparators[state.monthLayout === 'double' ? 'double' : 'single'];
+    setDisabled('input-qr-gap', !state.qrEnabled);
+    setDisabled('input-month-separator-width', !sep.enabled);
+    setDisabled('color-month-separator', !sep.enabled);
+    setDisabled('checkbox-month-separator-header', !sep.enabled);
+    setDisabled('input-calendar-week-text-color', !state.showKW);
+    setDisabled('input-calendar-week-text-size', !state.showKW);
+    setDisabled('input-moon-opacity', !state.showMoon);
   }
 
   function updateRegionDropdown() {
@@ -700,6 +773,28 @@
   function savePresets(p) {
     localStorage.setItem('cronoscroll_v2_presets', JSON.stringify(p));
   }
+  function normalizePhase3Settings(rawPreset = {}) {
+    const clampNum = (val, min, max, fallback) => {
+      const n = Number(val);
+      return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+    };
+    const paperGrammage = clampNum(rawPreset.paperGrammage ?? 80, 60, 250, 80);
+    const windingAllowanceLeftMm = clampNum(rawPreset.windingAllowanceLeftMm ?? 0, 0, 200, 0);
+    const windingAllowanceRightMm = clampNum(rawPreset.windingAllowanceRightMm ?? 0, 0, 200, 0);
+    const validCropStyles = ['none', 'corners', 'lines'];
+    const legacyCropStyle = rawPreset.showCropMarks ? 'corners' : 'none';
+    const cropMarkStyle = validCropStyles.includes(rawPreset.cropMarkStyle)
+      ? rawPreset.cropMarkStyle
+      : legacyCropStyle;
+    return {
+      paperGrammage,
+      windingAllowanceLeftMm,
+      windingAllowanceRightMm,
+      cropMarkStyle,
+      showCropMarks: cropMarkStyle !== 'none',
+    };
+  }
+
   function applyPreset(name, data) {
     const preset = data.fontFamily === 'custom' && !window.CronoFonts.hasCustomFont() ? { ...data, fontFamily: 'sans' } : data;
     if (preset !== data) {
@@ -716,6 +811,7 @@
       },
       preset,
     );
+    Object.assign(state, normalizePhase3Settings(preset));
     state.categoryColors = { ...defaultCategoryColors(), ...preset.categoryColors };
     if (!Array.isArray(preset.holidays)) loadDefaultHolidays();
     if (!state.showVacations) {
@@ -916,7 +1012,7 @@
       if (el)
         el.addEventListener('input', (e) => {
           state[prop] = parseFloat(e.target.value) || 0;
-          renderPreview();
+          scheduleRenderPreview();
         });
     };
     bindNum('input-h-visible', 'hVisible');
@@ -927,6 +1023,9 @@
     bindNum('input-moon-opacity', 'moonOpacity');
     bindNum('input-puffer-left', 'pufferLeft');
     bindNum('input-puffer-right', 'pufferRight');
+    bindNum('input-winding-allowance-left', 'windingAllowanceLeftMm');
+    bindNum('input-winding-allowance-right', 'windingAllowanceRightMm');
+    bindNum('input-paper-grammage', 'paperGrammage');
     bindNum('input-font-header-scale', 'fontHeaderScale');
     bindNum('input-font-day-scale', 'fontDayScale');
     bindNum('input-line-grid', 'lineGrid');
@@ -952,12 +1051,12 @@
     document.getElementById('input-custom-title').addEventListener('input', (e) => {
       state.bannerCustomTitle = e.target.value;
       document.getElementById('input-preset-name').value = state.bannerCustomTitle;
-      renderPreview();
+      scheduleRenderPreview();
     });
     document.getElementById('input-preset-name').addEventListener('input', (e) => {
       state.bannerCustomTitle = e.target.value;
       document.getElementById('input-custom-title').value = state.bannerCustomTitle;
-      renderPreview();
+      scheduleRenderPreview();
     });
     document.getElementById('select-month-layout').addEventListener('change', (e) => {
       state.monthLayout = e.target.value;
@@ -967,6 +1066,8 @@
     const currentSeparator = () => state.monthSeparators[state.monthLayout === 'double' ? 'double' : 'single'];
     document.getElementById('checkbox-month-separator').addEventListener('change', (e) => {
       currentSeparator().enabled = e.target.checked;
+      syncDependentControls();
+      if (window.CronoBlossomColorPicker) window.CronoBlossomColorPicker.sync();
       renderPreview();
     });
     document.getElementById('input-month-separator-width').addEventListener('input', (e) => {
@@ -979,12 +1080,12 @@
       }
       e.target.removeAttribute('aria-invalid');
       currentSeparator().widthMm = width;
-      renderPreview();
+      scheduleRenderPreview();
     });
     document.getElementById('color-month-separator').addEventListener('input', (e) => {
       currentSeparator().colorMode = 'custom';
       currentSeparator().color = colorInputValue(e.target);
-      renderPreview();
+      scheduleRenderPreview();
     });
     document.getElementById('checkbox-month-separator-header').addEventListener('change', (e) => {
       currentSeparator().header = e.target.checked;
@@ -992,15 +1093,19 @@
     });
     document.getElementById('checkbox-show-kw').addEventListener('change', (e) => {
       state.showKW = e.target.checked;
+      syncDependentControls();
+      if (window.CronoBlossomColorPicker) window.CronoBlossomColorPicker.sync();
       renderPreview();
     });
     document.getElementById('checkbox-show-moon').addEventListener('change', (e) => {
       state.showMoon = e.target.checked;
+      syncDependentControls();
       renderPreview();
     });
     const checkboxQr = document.getElementById('checkbox-show-qr');
     if (checkboxQr) checkboxQr.addEventListener('change', (e) => {
       state.qrEnabled = e.target.checked;
+      syncDependentControls();
       renderPreview();
     });
     const checkboxVacations = document.getElementById('checkbox-show-vacations');
@@ -1012,8 +1117,21 @@
     });
     document.getElementById('checkbox-show-cropmarks').addEventListener('change', (e) => {
       state.showCropMarks = e.target.checked;
+      state.cropMarkStyle = e.target.checked ? (state.cropMarkStyle === 'lines' ? 'lines' : 'corners') : 'none';
+      const cropSelect = document.getElementById('select-crop-mark-style');
+      if (cropSelect) cropSelect.value = state.cropMarkStyle;
       renderPreview();
     });
+    const cropMarkSelect = document.getElementById('select-crop-mark-style');
+    if (cropMarkSelect) {
+      cropMarkSelect.addEventListener('change', (e) => {
+        state.cropMarkStyle = ['none', 'corners', 'lines'].includes(e.target.value) ? e.target.value : 'none';
+        state.showCropMarks = state.cropMarkStyle !== 'none';
+        const cropChk = document.getElementById('checkbox-show-cropmarks');
+        if (cropChk) cropChk.checked = state.showCropMarks;
+        renderPreview();
+      });
+    }
     document.getElementById('select-header-style').addEventListener('change', (e) => {
       state.headerStyle = e.target.value;
       renderPreview();
@@ -1318,8 +1436,13 @@
     function activateTabFromUrl() {
       const requestedTab = new URLSearchParams(window.location.search).get('tab');
       if (!['geometry', 'layout', 'style', 'holidays', 'presets'].includes(requestedTab)) return;
-      const tabButton = Array.from(document.querySelectorAll('.tab-btn'))
-        .find((button) => button.getAttribute('data-tab') === `tab-${requestedTab}`);
+      const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
+      let tabButton = tabButtons.find((button) => button.getAttribute('data-tab') === `tab-${requestedTab}`);
+      if (!tabButton && requestedTab === 'layout') {
+        tabButton = tabButtons.find((button) => button.getAttribute('data-tab') === 'tab-style');
+      } else if (!tabButton && requestedTab === 'presets') {
+        tabButton = tabButtons.find((button) => button.getAttribute('data-tab') === 'tab-holidays');
+      }
       if (tabButton) activateTab(tabButton);
     }
     document.querySelectorAll('.tab-btn').forEach((btn, index, buttons) => {

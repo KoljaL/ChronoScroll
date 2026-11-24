@@ -15,8 +15,8 @@ window.CronoVector = (function() {
 
     const wMm = geo.lTotalMm;
     const hMm = geo.hVisibleMm;
-    const leadInMm = geo.pufferLeftMm;
-    const leadOutMm = geo.pufferRightMm;
+    const leadInMm = geo.leadInMm ?? geo.pufferLeftMm;
+    const leadOutMm = geo.leadOutMm ?? geo.pufferRightMm;
     const designFontKey = design ? window.CronoDesigns.fontKey(state) : null;
     const designFont = design
       ? window.CronoEmbeddedFonts[designFontKey === 'architect' || designFontKey === 'custom' ? 'sans' : designFontKey]
@@ -171,6 +171,26 @@ window.CronoVector = (function() {
     // Rahmen
     if (state.designStyle !== 'zen') {
       svg.push(design ? `  <rect x="0" y="0" width="${wMm}" height="${hMm}" fill="none" stroke="${state.colorText}" stroke-width="${state.lineBorder}"/>` : `  <rect x="0" y="0" width="${wMm}" height="${hMm}" class="border-line"/>`);
+    }
+    const cropStyle = ['none', 'corners', 'lines'].includes(state.cropMarkStyle)
+      ? state.cropMarkStyle
+      : (state.showCropMarks ? 'corners' : 'none');
+    if (cropStyle !== 'none') {
+      const cropStroke = (design ? state.colorText : null) || '#0f172a';
+      const viewportStartMm = leadInMm + (state.currentMonthIndex * geo.bMonthMm);
+      const viewportEndMm = viewportStartMm + geo.bVisibleMm;
+      if (cropStyle === 'lines') {
+        svg.push(`  <line x1="${viewportStartMm}" y1="0" x2="${viewportStartMm}" y2="${hMm}" stroke="${cropStroke}" stroke-width="0.2" stroke-dasharray="1.5,1"/>`);
+        svg.push(`  <line x1="${viewportEndMm}" y1="0" x2="${viewportEndMm}" y2="${hMm}" stroke="${cropStroke}" stroke-width="0.2" stroke-dasharray="1.5,1"/>`);
+      } else {
+        const len = 4;
+        [viewportStartMm, viewportEndMm].forEach((x) => {
+          svg.push(`  <line x1="${x}" y1="0" x2="${x}" y2="${len}" stroke="${cropStroke}" stroke-width="0.2"/>`);
+          svg.push(`  <line x1="${x - len / 2}" y1="1.5" x2="${x + len / 2}" y2="1.5" stroke="${cropStroke}" stroke-width="0.2"/>`);
+          svg.push(`  <line x1="${x}" y1="${hMm}" x2="${x}" y2="${hMm - len}" stroke="${cropStroke}" stroke-width="0.2"/>`);
+          svg.push(`  <line x1="${x - len / 2}" y1="${hMm - 1.5}" x2="${x + len / 2}" y2="${hMm - 1.5}" stroke="${cropStroke}" stroke-width="0.2"/>`);
+        });
+      }
     }
     svg.push(`</g>`);
     svg.push(`</svg>`);
