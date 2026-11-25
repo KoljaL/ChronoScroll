@@ -102,7 +102,9 @@ Alle Abmessungen leiten sich dynamisch von der montierten Schreibplatte ab:
 | **Sichtfensterhöhe**            | $H_{\text{visible}}$ | Papierbahnbreite (Zeilenraum)                                                                                                       | $30{,}0\text{ cm}$                      |
 | **Tagesfeld-Höhe**              | $H_{\text{day}}$     | Einspaltig: $\frac{H_{\text{visible}}}{32}$; zweispaltig: $\frac{H_{\text{visible}}}{17}$ *(1 Kopfzeile + 16 Tageszeilen je Liste)* | $0{,}94\text{ cm}$ / $1{,}76\text{ cm}$ |
 | **Wickel-Puffer**               | $\text{Puffer}$      | Freiraum für Befestigung an den Rundstäben                                                                                          | je $15{,}0\text{ cm}$                   |
-| **Gesamte Bannerlänge**         | $L_{\text{total}}$   | $L_{\text{total}} = (14 \times B_{\text{month}}) + (2 \times \text{Puffer})$                                                        | $226{,}00\text{ cm}$                    |
+| **Wickelzugabe links / rechts** | —                    | Optionaler Zusatz zum Puffer für aufgewickelt bleibendes Papier; verlängert `leadInMm` / `leadOutMm`                                | je $0\text{ mm}$                        |
+| **Papiergrammatur**             | —                    | Deklarativer Wert (60–250 g/m²); dient dem CAD-Modul als Näherung für die Papierdicke und beeinflusst den Rollendurchmesser         | $80\text{ g/m}^2$                       |
+| **Gesamte Bannerlänge**         | $L_{\text{total}}$   | $L_{\text{total}} = (14 \times B_{\text{month}}) + 2 \times (\text{Puffer} + \text{Wickelzugabe})$                                 | $226{,}00\text{ cm}$                    |
 
 > [!TIP]
 > **Zwei Monatslayouts:** Im klassischen Layout steht jeder Tag in einer Zeile. Alternativ verteilen sich die Tage **1–15 links** und **16–31 rechts**; ein Tagesfeld wird dann bei 30 cm Sichthöhe etwa **1,76 cm hoch**. Beide Layouts verwenden dieselbe Monatsbreite von 14 cm, Sichthöhe von 30 cm und Bannerlänge.
@@ -354,6 +356,42 @@ Für eine eigene Schrift im Bereich **Erscheinung → Typografie** eine TTF-Date
 Der QR-Code wird lokal mit [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) ([MIT-Lizenz](./js/qrcode.LICENSE.txt), Copyright Kazuhiko Arase) erzeugt; die Konfiguration wird nicht an einen QR-Dienst gesendet. Der Folgejahres-Link öffnet die öffentliche Anwendung und überträgt keine individuellen oder importierten Termine. Ein zum Kalenderjahr passender Jahresbestandteil im individuellen Titel wird auf das Folgejahr gesetzt. Die Jahresauswahl reicht bis 2100; für 2100 ist deshalb kein Folgejahres-Link verfügbar.
 
 Die eingebetteten PT-Serif-Dateien stammen aus der Google-Fonts-Auslieferung (Version 19: [normal](https://fonts.gstatic.com/s/ptserif/v19/EJRVQgYoZZY2vCFuvDFR.ttf), [fett](https://fonts.gstatic.com/s/ptserif/v19/EJRSQgYoZZY2vCFuvAnt65qV.ttf), [kursiv](https://fonts.gstatic.com/s/ptserif/v19/EJRTQgYoZZY2vCFuvAFTzro.ttf)). Sie enthalten GPOS-Kerning ohne die zu große ältere `kern`-Tabelle. Bei eigenen TTF-Dateien weist CronoScroll auf erkennbar übergroße Kerning-Untertabellen hin; die Datei wird nicht verändert und andere Font-Probleme lassen sich nicht vollständig vorab erkennen.
+
+---
+
+## 🧪 Entwicklung & Tests
+
+Die Anwendung benötigt keinen Build-Schritt. Für die Testsuite gilt:
+
+```bash
+# Alle 79 Unit-Tests (Node.js native test runner, keine externen Abhängigkeiten):
+node --test tests/*.test.js
+# oder kurz:
+npm test
+
+# Nur für realPdfExport.test.js (benötigt jsPDF aus devDependencies):
+npm install          # einmalig; installiert jspdf@2.5.1 + 20 Hilfspakete
+npm test             # alle 79 Tests einschließlich der 4 echten PDF-Tests
+```
+
+> [!NOTE]
+> `realPdfExport.test.js` lädt jsPDF als ES-Modul aus `node_modules/`. Alle übrigen 12 Testdateien laufen ohne `node_modules` direkt per `node --test`. Im Browser-Produktionsbetrieb wird jsPDF weiterhin über CDN eingebunden.
+
+**Testzahl:** 79 Tests in 13 Dateien (Stand Phase 4–5-Refactoring).
+
+**Neue Parameter (Phase 4.3):**
+
+| Eingabe-ID / Schlüssel | Bereich | Standard | Wirkung |
+|---|---|---|---|
+| `input-winding-allowance-left` | 0–200 mm | 0 | Verlängert Vorlauf (`leadInMm`) |
+| `input-winding-allowance-right` | 0–200 mm | 0 | Verlängert Nachlauf (`leadOutMm`) |
+| `input-paper-grammage` | 60–250 g/m² | 80 | Papierdicke-Näherung für CAD-Rollendurchmesser |
+| `select-crop-mark-style` | none / corners / lines | none | Schnittmarken in Vorschau, PDF und SVG |
+| `blindHoleClearanceMm` (CAD) | — | 0 | Bohrtoleranz Sackloch; BOM zeigt Bohrdurchmesser |
+| `rodAxialPlayMm` (CAD) | — | 0 | Axialspiel Rundstab |
+| `minSideGapMm` (CAD) | — | 0 | Kollisionswarnschwelle seitlicher Restspalt |
+
+**Rendering-Optimierungen (Phase 4.2):** `scheduleRenderPreview()` und `scheduleUpdate()` (CAD) nutzen einen `requestAnimationFrame`-Guard; `scheduleCoverageStatus()` debounced 400 ms, `scheduleNextYearLink()` debounced 250 ms.
 
 
 
