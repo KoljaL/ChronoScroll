@@ -317,24 +317,27 @@
     state.holidays.forEach((event) => {
       if (categoryForEvent(event) === category) event.color = color;
     });
+    setColorInput(document.getElementById(`color-category-${category}`), color);
+    setColorInput(document.getElementById(`color-category-${category}-entries`), color);
+    if (window.CronoBlossomColorPicker) window.CronoBlossomColorPicker.sync();
     renderHolidaysList();
     renderPreview();
   }
 
+  const DESIGN_STYLE_OPTIONS = [
+    { value: 'classic', title: 'Klassisch', description: 'Freie Gestaltung mit Kalenderkopf und Tagesraster' },
+    { value: 'midcentury', title: 'Mid-Century', description: 'Markante Typografie im Instrumenten-Look' },
+    { value: 'bauhaus', title: 'Bauhaus', description: 'Geometrische Akzente und klare Formen' },
+    { value: 'gantt', title: 'Gantt', description: 'Wochenraster für Projekt- und Zeitplanung' },
+    { value: 'zen', title: 'Zen', description: 'Reduzierte Darstellung mit viel Weißraum' },
+    { value: 'kursbuch', title: 'Kursbuch', description: 'Fortlaufende Tagesnummern wie im Fahrplan' },
+  ];
+
   function renderDesignOptions() {
     const container = document.getElementById('design-options');
-    const select = document.getElementById('select-design-style');
-    if (!container || !select) return;
-    const descriptions = {
-      classic: 'Freie Gestaltung mit Kalenderkopf und Tagesraster',
-      midcentury: 'Markante Typografie im Instrumenten-Look',
-      bauhaus: 'Geometrische Akzente und klare Formen',
-      gantt: 'Wochenraster für Projekt- und Zeitplanung',
-      zen: 'Reduzierte Darstellung mit viel Weißraum',
-      kursbuch: 'Fortlaufende Tagesnummern wie im Fahrplan',
-    };
+    if (!container) return;
     container.innerHTML = '';
-    Array.from(select.options).forEach((option) => {
+    DESIGN_STYLE_OPTIONS.forEach((option) => {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'choice-card design-card';
@@ -342,10 +345,10 @@
       button.setAttribute('aria-pressed', 'false');
       const label = document.createElement('span');
       label.className = 'choice-card-title';
-      label.textContent = option.textContent.split(' – ')[0].split(' / ')[0];
+      label.textContent = option.title;
       const description = document.createElement('span');
       description.className = 'choice-card-description';
-      description.textContent = descriptions[option.value];
+      description.textContent = option.description;
       button.appendChild(label);
       button.appendChild(description);
       container.appendChild(button);
@@ -433,22 +436,13 @@
       button.setAttribute('data-theme', key);
       button.setAttribute('aria-pressed', 'false');
       const label = document.createElement('span');
-      label.className = 'text-xs font-semibold block text-slate-200';
+      label.className = 'choice-card-title';
       label.textContent = theme.label;
       const description = document.createElement('span');
-      description.className = 'text-[10px] text-slate-400';
+      description.className = 'choice-card-description';
       description.textContent = theme.description;
-      const swatches = document.createElement('span');
-      swatches.className = 'theme-swatches';
-      [theme.paperColor, theme.colorHeaderBg, theme.colorSaturdayBg, theme.colorSundayBg].forEach((color) => {
-        const swatch = document.createElement('span');
-        swatch.className = 'theme-swatch';
-        swatch.style.backgroundColor = color;
-        swatches.appendChild(swatch);
-      });
       button.appendChild(label);
       button.appendChild(description);
-      button.appendChild(swatches);
       container.appendChild(button);
     });
   }
@@ -457,6 +451,7 @@
     const link = document.getElementById('next-year-link');
     const button = document.getElementById('btn-copy-next-year-link');
     const status = document.getElementById('next-year-link-status');
+    if (!link || !button) return;
     let currentLink = document.getElementById('current-year-link');
     if (!currentLink && link && link.parentElement) {
       currentLink = document.createElement('a');
@@ -574,6 +569,9 @@
     setColor('color-category-public', state.categoryColors.public);
     setColor('color-category-vacation', state.categoryColors.vacation);
     setColor('color-category-custom', state.categoryColors.custom);
+    setColor('color-category-public-entries', state.categoryColors.public);
+    setColor('color-category-vacation-entries', state.categoryColors.vacation);
+    setColor('color-category-custom-entries', state.categoryColors.custom);
 
     // Land & Region
     setVal('select-country', state.country);
@@ -1040,14 +1038,20 @@
     });
 
     // Puffer & Layout
-    document.getElementById('select-puffer-left-content').addEventListener('change', (e) => {
-      state.pufferLeftContent = e.target.value;
-      renderPreview();
-    });
-    document.getElementById('select-puffer-right-content').addEventListener('change', (e) => {
-      state.pufferRightContent = e.target.value;
-      renderPreview();
-    });
+    const pufferLeftSelect = document.getElementById('select-puffer-left-content');
+    if (pufferLeftSelect) {
+      pufferLeftSelect.addEventListener('change', (e) => {
+        state.pufferLeftContent = e.target.value;
+        renderPreview();
+      });
+    }
+    const pufferRightSelect = document.getElementById('select-puffer-right-content');
+    if (pufferRightSelect) {
+      pufferRightSelect.addEventListener('change', (e) => {
+        state.pufferRightContent = e.target.value;
+        renderPreview();
+      });
+    }
     document.getElementById('input-custom-title').addEventListener('input', (e) => {
       state.bannerCustomTitle = e.target.value;
       document.getElementById('input-preset-name').value = state.bannerCustomTitle;
@@ -1158,16 +1162,19 @@
       state.fontFamily = e.target.value;
       renderPreview();
     });
-    document.getElementById('select-design-style').addEventListener('change', (e) => {
-      state.designStyle = e.target.value;
-      localStorage.setItem('cronoscroll_design_style', state.designStyle);
-      syncChoiceCards();
-      renderPreview();
-    });
+    const designSelect = document.getElementById('select-design-style');
+    if (designSelect) {
+      designSelect.addEventListener('change', (e) => {
+        state.designStyle = e.target.value;
+        localStorage.setItem('cronoscroll_design_style', state.designStyle);
+        syncChoiceCards();
+        renderPreview();
+      });
+    }
     document.querySelectorAll('.design-card').forEach((button) => {
       button.addEventListener('click', () => {
         state.designStyle = button.getAttribute('data-design-style');
-        document.getElementById('select-design-style').value = state.designStyle;
+        if (designSelect) designSelect.value = state.designStyle;
         localStorage.setItem('cronoscroll_design_style', state.designStyle);
         syncChoiceCards();
         renderPreview();
@@ -1215,10 +1222,16 @@
       ['color-category-public', 'public'],
       ['color-category-vacation', 'vacation'],
       ['color-category-custom', 'custom'],
+      ['color-category-public-entries', 'public'],
+      ['color-category-vacation-entries', 'vacation'],
+      ['color-category-custom-entries', 'custom'],
     ].forEach(([id, category]) => {
-      document.getElementById(id).addEventListener('input', (event) => {
-        applyCategoryColor(category, colorInputValue(event.target));
-      });
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', (event) => {
+          applyCategoryColor(category, colorInputValue(event.target));
+        });
+      }
     });
 
     // 3. 1-Klick Theme Buttons
@@ -1365,16 +1378,48 @@
       }
     });
 
-    // 9. Vorlagen-Verwaltung
-    document.getElementById('btn-copy-next-year-link').addEventListener('click', async () => {
-      const status = document.getElementById('next-year-link-status');
-      try {
-        await navigator.clipboard.writeText(window.CronoShare.createNextYearUrl(state));
-        status.textContent = 'Link kopiert.';
-      } catch (error) {
-        status.textContent = `Link konnte nicht kopiert werden: ${error.message}`;
-      }
-    });
+    // 9. Vorlagen-Verwaltung & Header-Share
+    const headerShareBtn = document.getElementById('btn-header-share');
+    if (headerShareBtn) {
+      let headerShareTimerId = null;
+      headerShareBtn.addEventListener('click', async () => {
+        const toast = document.getElementById('header-share-status');
+        const showToast = (msg) => {
+          if (!toast) return;
+          toast.textContent = msg;
+          toast.hidden = false;
+          if (headerShareTimerId !== null && typeof clearTimeout === 'function') {
+            clearTimeout(headerShareTimerId);
+          }
+          if (typeof setTimeout === 'function') {
+            headerShareTimerId = setTimeout(() => {
+              headerShareTimerId = null;
+              toast.hidden = true;
+              toast.textContent = '';
+            }, 2200);
+          }
+        };
+        try {
+          const url = window.CronoShare.createCurrentUrl(state);
+          await navigator.clipboard.writeText(url);
+          showToast('Link kopiert');
+        } catch (error) {
+          showToast(`Kopieren fehlgeschlagen: ${error.message}`);
+        }
+      });
+    }
+    const copyNextYearBtn = document.getElementById('btn-copy-next-year-link');
+    if (copyNextYearBtn) {
+      copyNextYearBtn.addEventListener('click', async () => {
+        const status = document.getElementById('next-year-link-status');
+        try {
+          await navigator.clipboard.writeText(window.CronoShare.createNextYearUrl(state));
+          if (status) status.textContent = 'Link kopiert.';
+        } catch (error) {
+          if (status) status.textContent = `Link konnte nicht kopiert werden: ${error.message}`;
+        }
+      });
+    }
     document.getElementById('btn-save-preset').addEventListener('click', () => {
       const input = document.getElementById('input-preset-name');
       const name = input.value.trim();
@@ -1524,11 +1569,14 @@
       if (document.getElementById('app-container').classList.contains('cad-mode')) return;
       adjustManualZoom(-0.2);
     });
-    document.getElementById('btn-zoom-reset').addEventListener('click', () => {
-      if (document.getElementById('app-container').classList.contains('cad-mode')) return;
-      state.zoom = 1.0;
-      renderPreview();
-    });
+    const btnZoomReset = document.getElementById('btn-zoom-reset');
+    if (btnZoomReset) {
+      btnZoomReset.addEventListener('click', () => {
+        if (document.getElementById('app-container').classList.contains('cad-mode')) return;
+        state.zoom = 1.0;
+        renderPreview();
+      });
+    }
     btnFitBanner.addEventListener('click', () => {
       if (document.getElementById('app-container').classList.contains('cad-mode')) return;
       if (state.viewMode !== 'banner') return;

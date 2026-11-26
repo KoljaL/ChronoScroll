@@ -322,7 +322,8 @@
 
     .cad-accordion-summary::after {
       content: '▸';
-      font-size: 0.72rem;
+      font-size: 0.95rem;
+      line-height: 1;
       color: var(--text-muted);
       transition: transform 0.15s ease;
     }

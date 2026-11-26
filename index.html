@@ -1,278 +1,305 @@
 <!doctype html>
 <html lang="de" class="h-full">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ChronoScroll — Endlos-Rollkalender Generator</title>
 
-    <script src="js/uiTheme.js"></script>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChronoScroll — Endlos-Rollkalender Generator</title>
 
-    <!-- Tailwind CSS & Icons -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+  <script src="js/uiTheme.js"></script>
 
-    <!-- jsPDF Vektor-Engine -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/svg2pdf.js@2.9.0/dist/svg2pdf.umd.min.js"></script>
+  <!-- Tailwind CSS & Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
 
-    <!-- Blossom Color Picker -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@dayflow/blossom-color-picker@2.5.1/dist/styles.css" />
-    <script src="https://cdn.jsdelivr.net/npm/@dayflow/blossom-color-picker@2.5.1/dist/index.js"></script>
+  <!-- jsPDF Vektor-Engine -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/svg2pdf.js@2.9.0/dist/svg2pdf.umd.min.js"></script>
 
-    <!-- QR-Code Generator -->
-    <script type="text/javascript" src="js/qrcode.js"></script>
+  <!-- Blossom Color Picker -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@dayflow/blossom-color-picker@2.5.1/dist/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@dayflow/blossom-color-picker@2.5.1/dist/index.js"></script>
 
-    <!-- Eigenes Stylesheet -->
-    <link rel="stylesheet" href="css/app.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="css/cad-styles.css" />
-    <link rel="icon" href="img/icons/favicon.ico" sizes="any" />
-    <link rel="icon" type="image/svg+xml" href="img/icons/favicon.svg" />
-    <link rel="icon" type="image/png" sizes="96x96" href="img/icons/favicon-96x96.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="img/icons/apple-touch-icon.png" />
-    <link rel="manifest" href="img/icons/chronoscroll.webmanifest" />
-  </head>
-  <body class="select-none">
-    <!-- HAUPT-CONTAINER (CSS-GRID) -->
-    <div id="app-container">
-      <!-- 1. HEADER (KOPFZEILE) -->
-      <header id="app-header" class="bg-slate-900 border-b border-slate-800 px-4 shadow-md">
-        <div class="header-brand">
-          <img class="header-logo" src="img/icons/chronoscroll-logo.svg" alt="ChronoScroll-Logo" width="300" height="230" />
-          <h1 class="header-title">ChronoScroll</h1>
-        </div>
+  <!-- QR-Code Generator -->
+  <script type="text/javascript" src="js/qrcode.js"></script>
 
-        <div class="mode-switch" role="group" aria-label="Arbeitsmodus">
-          <button type="button" id="btn-mode-calendar" class="mode-switch-button active" aria-label="Kalender-Editor" aria-pressed="true" data-app-mode="calendar">
-            <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
-            <span>Kalender-Editor</span>
-          </button>
-          <button type="button" id="btn-mode-cad" class="mode-switch-button" aria-label="CAD-Konstruktion" aria-pressed="false" data-app-mode="cad">
-            <i class="fa-solid fa-compass-drafting" aria-hidden="true"></i>
-            <span>CAD-Konstruktion</span>
-          </button>
-        </div>
+  <!-- Eigenes Stylesheet -->
+  <link rel="stylesheet" href="css/app.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="css/cad-styles.css" />
+  <link rel="icon" href="img/icons/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/svg+xml" href="img/icons/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="96x96" href="img/icons/favicon-96x96.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="img/icons/apple-touch-icon.png" />
+  <link rel="manifest" href="img/icons/chronoscroll.webmanifest" />
+</head>
 
-        <div class="header-controls">
-          <div id="header-calendar-nav" class="header-nav-slot" role="group" aria-label="Kalenderansicht und Monatsnavigation">
-            <div class="header-view-switch" role="group" aria-label="Kalenderansicht">
-              <button type="button" id="btn-mode-plate" class="header-tool-button view-mode-button active" aria-label="3-Monats-Ansicht" title="3-Monats-Ansicht" aria-pressed="true">
-                <i class="fa-solid fa-chalkboard" aria-hidden="true"></i>
-              </button>
-              <button type="button" id="btn-mode-banner" class="header-tool-button view-mode-button" aria-label="Ganze Druckrolle (14 Monate)" title="Ganze Druckrolle (14 Monate)" aria-pressed="false">
-                <i class="fa-solid fa-scroll" aria-hidden="true"></i>
-              </button>
-            </div>
-            <div id="plate-nav-controls" class="header-month-navigation" role="group" aria-label="Monatsnavigation">
-              <button type="button" id="btn-prev-month" class="header-tool-button" aria-label="Einen Monat zurück" title="1 Monat zurückrollen (Taste ←)">
-                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
-              </button>
-              <button type="button" id="btn-next-month" class="header-tool-button" aria-label="Einen Monat vor" title="1 Monat vorwärtsrollen (Taste →)">
-                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
-              </button>
-            </div>
-          </div>
+<body class="select-none">
+  <!-- HAUPT-CONTAINER (CSS-GRID) -->
+  <div id="app-container">
+    <!-- 1. HEADER (KOPFZEILE) -->
+    <header id="app-header" class="bg-slate-900 border-b border-slate-800 px-4 shadow-md">
+      <a href="index.html" class="header-brand">
+        <img class="header-logo" src="img/icons/chronoscroll-logo.svg" alt="ChronoScroll-Logo" width="300"
+          height="230" />
+        <h1 class="header-title">ChronoScroll</h1>
+      </a>
 
-          <div class="header-zoom-controls" role="group" aria-label="Zoom der aktiven Ansicht">
-            <span class="header-zoom-readout" id="preview-scale-indicator" aria-live="polite">100%</span>
-            <button type="button" id="btn-zoom-out" class="header-tool-button" aria-label="Verkleinern" title="Verkleinern">
-              <i class="fa-solid fa-minus" aria-hidden="true"></i>
-            </button>
-            <button type="button" id="btn-zoom-reset" class="header-tool-button" aria-label="Zoom zurücksetzen" title="Zoom zurücksetzen">
-              <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
-            </button>
-            <button type="button" id="btn-zoom-fit-banner" class="header-tool-button header-fit-button header-control-hidden" aria-label="Ansicht einpassen" title="Rolle einpassen">
-              <i class="fa-solid fa-expand" aria-hidden="true"></i>
-            </button>
-            <button type="button" id="btn-zoom-in" class="header-tool-button" aria-label="Vergrößern" title="Vergrößern">
-              <i class="fa-solid fa-plus" aria-hidden="true"></i>
-            </button>
-          </div>
-
-          <div class="header-export-slot">
-            <div id="calendar-export-group" class="header-export-group calendar-export-group">
-              <button type="button" id="btn-export-pdf" aria-label="RGB-Plotter-PDF exportieren" title="RGB-Plotter-PDF exportieren. Die Drucksoftware beziehungsweise der Druckdienstleister führt die Ausgabe-Farbkonvertierung aus." class="header-export-primary">
-                <i class="fa-solid fa-file-pdf" aria-hidden="true"></i>
-                <span>PDF</span>
-              </button>
-              <div class="export-dropdown">
-                <button type="button" id="calendar-export-menu-toggle" class="header-tool-button export-dropdown-toggle" aria-label="Weitere Kalender-Exportformate" title="Weitere Kalender-Exportformate" aria-haspopup="menu" aria-expanded="false" aria-controls="calendar-export-menu">
-                  <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
-                </button>
-                <div id="calendar-export-menu" class="export-dropdown-menu" role="menu" aria-label="Kalender exportieren" hidden>
-                  <p class="export-dropdown-note" role="note"><strong>RGB-Plotter-PDF</strong><br />Die Drucksoftware beziehungsweise der Druckdienstleister führt die Ausgabe-Farbkonvertierung aus.</p>
-                  <button type="button" id="btn-export-svg" class="export-dropdown-item" role="menuitem"><i class="fa-solid fa-vector-square text-sky-400" aria-hidden="true"></i> SVG</button>
-                  <button type="button" id="btn-export-png" class="export-dropdown-item" role="menuitem"><i class="fa-regular fa-image text-emerald-400" aria-hidden="true"></i> 300-DPI-PNG</button>
-                </div>
-              </div>
-            </div>
-            <div id="cad-export-group" class="header-export-group">
-              <button type="button" id="cad-btn-export-pdf" class="header-export-primary" aria-label="CAD-Zeichnung als PDF exportieren" title="CAD-Zeichnung als PDF exportieren"><i class="fa-solid fa-file-pdf" aria-hidden="true"></i> <span>PDF</span></button>
-              <div class="export-dropdown">
-                <button type="button" id="cad-export-menu-toggle" class="header-tool-button export-dropdown-toggle" aria-label="Weitere CAD-Exportformate" title="Weitere CAD-Exportformate" aria-haspopup="menu" aria-expanded="false" aria-controls="cad-export-menu">
-                  <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
-                </button>
-                <div id="cad-export-menu" class="export-dropdown-menu" role="menu" aria-label="CAD exportieren" hidden>
-                  <button type="button" id="cad-btn-export-svg" class="export-dropdown-item" role="menuitem"><i class="fa-solid fa-vector-square text-sky-400" aria-hidden="true"></i> SVG</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Dark Mode" aria-pressed="false" title="Darstellung wechseln">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
-            <mask id="theme-toggle-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="32">
-              <rect width="32" height="32" fill="black" />
-              <circle cx="16" cy="16" r="8.5" fill="white" />
-              <circle id="moon-cutout" cx="16" cy="16" r="9.5" fill="black" />
-            </mask>
-            <g class="moon-shape" mask="url(#theme-toggle-mask)"><circle cx="16" cy="16" r="8.5" /></g>
-            <g class="sun-beams" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-              <path d="M16 4.5v-3 M16 30.5v-3 M1.5 16h3 M27.5 16h3 M23.4 8.6l2.5-2.5 M6 26l2.5-2.5 M6 6l2.5 2.5 M23.4 23.4l2.5 2.5" />
-            </g>
-          </svg>
+      <div class="mode-switch" role="group" aria-label="Arbeitsmodus">
+        <button type="button" id="btn-mode-calendar" class="mode-switch-button active" aria-label="Kalender"
+          aria-pressed="true" data-app-mode="calendar">
+          <span>Kalender</span>
         </button>
-      </header>
+        <button type="button" id="btn-mode-cad" class="mode-switch-button" aria-label="Konstruktion"
+          aria-pressed="false" data-app-mode="cad">
+          <span>Konstruktion</span>
+        </button>
+      </div>
 
-      <!-- 2. LINKE SIDEBAR: TABS & EINSTELLUNGEN -->
-      <aside id="app-sidebar" class="workspace-sidebar calendar-sidebar" aria-label="Kalender-Parameter">
-        <!-- REITER-NAVIGATION (3 Workflow-Bereiche) -->
-        <div class="card calendar-tabs-card">
-          <div role="tablist" aria-label="Kalendereinstellungen" class="calendar-tablist flex text-xs font-medium shrink-0">
-            <button type="button" role="tab" id="tab-button-geometry" aria-controls="tab-geometry" aria-selected="true" tabindex="0" data-tab="tab-geometry" class="tab-btn flex-1 py-2.5 px-2 text-center text-amber-400 border-b-2 border-amber-400 font-semibold transition whitespace-nowrap"><i class="fa-solid fa-ruler-combined mr-1" aria-hidden="true"></i>Format &amp; Maße</button>
-            <button type="button" role="tab" id="tab-button-style" aria-controls="tab-style" aria-selected="false" tabindex="-1" data-tab="tab-style" class="tab-btn flex-1 py-2.5 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-sliders mr-1" aria-hidden="true"></i>Aufbau &amp; Design</button>
-            <button type="button" role="tab" id="tab-button-holidays" aria-controls="tab-holidays" aria-selected="false" tabindex="-1" data-tab="tab-holidays" class="tab-btn flex-1 py-2.5 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap"><i class="fa-solid fa-calendar-check mr-1" aria-hidden="true"></i>Termine &amp; Vorlagen</button>
+      <div class="header-controls">
+        <div id="header-calendar-nav" class="header-nav-slot" role="group"
+          aria-label="Kalenderansicht und Monatsnavigation">
+          <div class="header-view-switch" role="group" aria-label="Kalenderansicht">
+            <button type="button" id="btn-mode-plate" class="header-tool-button view-mode-button active"
+              aria-label="3-Monats-Ansicht" title="3-Monats-Ansicht" aria-pressed="true">
+              <i class="fa-solid fa-chalkboard" aria-hidden="true"></i>
+            </button>
+            <button type="button" id="btn-mode-banner" class="header-tool-button view-mode-button"
+              aria-label="Ganze Druckrolle (14 Monate)" title="Ganze Druckrolle (14 Monate)" aria-pressed="false">
+              <i class="fa-solid fa-scroll" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div id="plate-nav-controls" class="header-month-navigation" role="group" aria-label="Monatsnavigation">
+            <button type="button" id="btn-prev-month" class="header-tool-button" aria-label="Einen Monat zurück"
+              title="1 Monat zurückrollen (Taste ←)">
+              <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+            </button>
+            <button type="button" id="btn-next-month" class="header-tool-button" aria-label="Einen Monat vor"
+              title="1 Monat vorwärtsrollen (Taste →)">
+              <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+            </button>
           </div>
         </div>
 
-        <!-- INHALT DER REITER -->
-        <div class="calendar-tabpanels">
-          <!-- TAB 1: FORMAT & MAßE -->
-          <div id="tab-geometry" role="tabpanel" aria-labelledby="tab-button-geometry" tabindex="0" class="tab-content calendar-tabpanel">
-            <details class="sidebar-accordion" open>
-              <summary class="sidebar-accordion-summary">
-                <span>Zeitraum &amp; Sichtfenster</span>
-                <span class="text-amber-400 font-mono text-[11px]" id="year-range-display">2026 – 2028</span>
-              </summary>
-              <div class="sidebar-accordion-body space-y-3">
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label for="input-year" class="cs-label">
-                      Zieljahr
-                      <span class="cs-info-tip" title="Umfasst 14 Monate: Dezember des Vorjahres bis Januar des Folgejahres." aria-label="Hinweis: 14 Monate (Dezember Vorjahr bis Januar Folgejahr)">ⓘ</span>
-                    </label>
-                    <input type="number" id="input-year" value="2027" min="1900" max="2100" class="cs-input font-mono" />
-                  </div>
-                  <div>
-                    <label for="input-custom-title" class="cs-label">Kalendername</label>
-                    <input type="text" id="input-custom-title" value="CRONOSCROLL 2027" placeholder="z.B. Familie Mustermann" class="cs-input" />
-                  </div>
-                </div>
+        <div class="header-zoom-controls" role="group" aria-label="Zoom der aktiven Ansicht">
+          <button type="button" id="btn-zoom-out" class="header-tool-button" aria-label="Verkleinern"
+            title="Verkleinern">
+            <i class="fa-solid fa-minus" aria-hidden="true"></i>
+          </button>
+          <span class="header-zoom-readout" id="preview-scale-indicator" aria-live="polite">100%</span>
+          <button type="button" id="btn-zoom-in" class="header-tool-button" aria-label="Vergrößern" title="Vergrößern">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+          </button>
+          <button type="button" id="btn-zoom-fit-banner"
+            class="header-tool-button header-fit-button header-control-hidden" aria-label="Ansicht einpassen"
+            title="Rolle einpassen">
+            <i class="fa-solid fa-expand" aria-hidden="true"></i>
+          </button>
+          <!--
+            <button id="btn-zoom-reset" class="header-tool-button" aria-label="Zoom zurücksetzen" title="Zoom zurücksetzen"></button>
+            -->
+        </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label for="input-h-visible" class="cs-label">Sichtfenster Höhe</label>
-                    <div class="cs-input-group">
-                      <input type="number" id="input-h-visible" value="30.0" step="0.1" min="10" max="150" aria-describedby="unit-h-visible" class="cs-input font-mono cs-input-with-unit" />
-                      <span id="unit-h-visible" class="cs-unit">cm</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label for="input-b-visible" class="cs-label">Sichtfenster Breite</label>
-                    <div class="cs-input-group">
-                      <input type="number" id="input-b-visible" value="42.0" step="0.1" min="15" max="200" aria-describedby="unit-b-visible" class="cs-input font-mono cs-input-with-unit" />
-                      <span id="unit-b-visible" class="cs-unit">cm</span>
-                    </div>
-                  </div>
-                </div>
+        <div class="header-export-slot">
+          <div id="calendar-export-group" class="header-export-group calendar-export-group">
+            <button type="button" id="btn-export-pdf" aria-label="RGB-Plotter-PDF exportieren"
+              title="RGB-Plotter-PDF exportieren. Die Drucksoftware beziehungsweise der Druckdienstleister führt die Ausgabe-Farbkonvertierung aus."
+              class="header-export-primary">
+              <i class="fa-solid fa-file-pdf" aria-hidden="true"></i>
+              <span>PDF</span>
+            </button>
+            <div class="export-dropdown">
+              <button type="button" id="calendar-export-menu-toggle" class="header-tool-button export-dropdown-toggle"
+                aria-label="Weitere Kalender-Exportformate" title="Weitere Kalender-Exportformate" aria-haspopup="menu"
+                aria-expanded="false" aria-controls="calendar-export-menu">
+                <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+              </button>
+              <div id="calendar-export-menu" class="export-dropdown-menu" role="menu" aria-label="Kalender exportieren"
+                hidden>
+                <p class="export-dropdown-note" role="note"><strong>RGB-Plotter-PDF</strong><br />Die Drucksoftware
+                  beziehungsweise der Druckdienstleister führt die Ausgabe-Farbkonvertierung aus.</p>
+                <button type="button" id="btn-export-svg" class="export-dropdown-item" role="menuitem"><i
+                    class="fa-solid fa-vector-square text-sky-400" aria-hidden="true"></i> SVG</button>
+                <button type="button" id="btn-export-png" class="export-dropdown-item" role="menuitem"><i
+                    class="fa-regular fa-image text-emerald-400" aria-hidden="true"></i> 300-DPI-PNG</button>
+              </div>
+            </div>
+          </div>
+          <div id="cad-export-group" class="header-export-group">
+            <button type="button" id="cad-btn-export-pdf" class="header-export-primary"
+              aria-label="CAD-Zeichnung als PDF exportieren" title="CAD-Zeichnung als PDF exportieren"><i
+                class="fa-solid fa-file-pdf" aria-hidden="true"></i> <span>PDF</span></button>
+            <div class="export-dropdown">
+              <button type="button" id="cad-export-menu-toggle" class="header-tool-button export-dropdown-toggle"
+                aria-label="Weitere CAD-Exportformate" title="Weitere CAD-Exportformate" aria-haspopup="menu"
+                aria-expanded="false" aria-controls="cad-export-menu">
+                <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+              </button>
+              <div id="cad-export-menu" class="export-dropdown-menu" role="menu" aria-label="CAD exportieren" hidden>
+                <button type="button" id="cad-btn-export-svg" class="export-dropdown-item" role="menuitem"><i
+                    class="fa-solid fa-vector-square text-sky-400" aria-hidden="true"></i> SVG</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
+        <div class="header-share-wrap">
+          <button type="button" id="btn-header-share" class="header-tool-button" aria-label="Konfigurations-Link teilen"
+            title="Konfigurations-Link kopieren">
+            <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+          </button>
+          <span id="header-share-status" class="header-share-toast" role="status" aria-live="polite" hidden></span>
+        </div>
+      </div>
+
+      <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Dark Mode" aria-pressed="false"
+        title="Darstellung wechseln">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+          <mask id="theme-toggle-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="32">
+            <rect width="32" height="32" fill="black" />
+            <circle cx="16" cy="16" r="8.5" fill="white" />
+            <circle id="moon-cutout" cx="16" cy="16" r="9.5" fill="black" />
+          </mask>
+          <g class="moon-shape" mask="url(#theme-toggle-mask)">
+            <circle cx="16" cy="16" r="8.5" />
+          </g>
+          <g class="sun-beams" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <path
+              d="M16 4.5v-3 M16 30.5v-3 M1.5 16h3 M27.5 16h3 M23.4 8.6l2.5-2.5 M6 26l2.5-2.5 M6 6l2.5 2.5 M23.4 23.4l2.5 2.5" />
+          </g>
+        </svg>
+      </button>
+    </header>
+
+    <!-- 2. LINKE SIDEBAR: TABS & EINSTELLUNGEN -->
+    <aside id="app-sidebar" class="workspace-sidebar calendar-sidebar" aria-label="Kalender-Parameter">
+      <!-- REITER-NAVIGATION (4 Workflow-Bereiche) -->
+      <div class="card calendar-tabs-card">
+        <div role="tablist" aria-label="Kalendereinstellungen"
+          class="calendar-tablist flex text-xs font-medium shrink-0">
+          <button type="button" role="tab" id="tab-button-geometry" aria-controls="tab-geometry" aria-selected="true"
+            tabindex="0" data-tab="tab-geometry"
+            class="tab-btn flex-1 py-2.5 px-2 text-center text-amber-400 border-b-2 border-amber-400 font-semibold transition whitespace-nowrap">Format</button>
+          <button type="button" role="tab" id="tab-button-style" aria-controls="tab-style" aria-selected="false"
+            tabindex="-1" data-tab="tab-style"
+            class="tab-btn flex-1 py-2.5 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Design</button>
+          <button type="button" role="tab" id="tab-button-holidays" aria-controls="tab-holidays" aria-selected="false"
+            tabindex="-1" data-tab="tab-holidays"
+            class="tab-btn flex-1 py-2.5 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Einträge</button>
+          <button type="button" role="tab" id="tab-button-presets" aria-controls="tab-presets" aria-selected="false"
+            tabindex="-1" data-tab="tab-presets"
+            class="tab-btn flex-1 py-2.5 px-2 text-center text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Vorlagen</button>
+        </div>
+      </div>
+
+      <!-- INHALT DER REITER -->
+      <div class="calendar-tabpanels">
+        <!-- TAB 1: FORMAT & MAßE -->
+        <div id="tab-geometry" role="tabpanel" aria-labelledby="tab-button-geometry" tabindex="0"
+          class="tab-content calendar-tabpanel">
+          <details class="sidebar-accordion" open>
+            <summary class="sidebar-accordion-summary">
+              <span>Zeitraum &amp; Sichtfenster</span>
+              <span class="text-amber-400 font-mono text-[11px]" id="year-range-display">2026 – 2028</span>
+            </summary>
+            <div class="sidebar-accordion-body space-y-3">
+              <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label for="input-paper-grammage" class="cs-label">
-                    Papiergrammatur
-                    <span class="cs-info-tip" title="Beeinflusst den Rollendurchmesser im CAD (80 g/m² ≈ 0,10 mm)." aria-label="Hinweis zur Papiergrammatur">ⓘ</span>
+                  <label for="input-year" class="cs-label">
+                    Zieljahr
+                    <span class="cs-info-tip"
+                      title="Umfasst 14 Monate: Dezember des Vorjahres bis Januar des Folgejahres."
+                      aria-label="Hinweis: 14 Monate (Dezember Vorjahr bis Januar Folgejahr)">ⓘ</span>
                   </label>
+                  <input type="number" id="input-year" value="2027" min="1900" max="2100" class="cs-input font-mono" />
+                </div>
+                <div>
+                  <label for="input-custom-title" class="cs-label">Kalendername</label>
+                  <input type="text" id="input-custom-title" value="CRONOSCROLL 2027"
+                    placeholder="z.B. Familie Mustermann" class="cs-input" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label for="input-h-visible" class="cs-label">Sichtfenster Höhe</label>
                   <div class="cs-input-group">
-                    <input type="number" id="input-paper-grammage" value="80" step="10" min="60" max="250" aria-describedby="unit-paper-grammage" class="cs-input font-mono cs-input-with-unit" />
-                    <span id="unit-paper-grammage" class="cs-unit">g/m²</span>
+                    <input type="number" id="input-h-visible" value="30.0" step="0.1" min="10" max="150"
+                      aria-describedby="unit-h-visible" class="cs-input font-mono cs-input-with-unit" />
+                    <span id="unit-h-visible" class="cs-unit">cm</span>
+                  </div>
+                </div>
+                <div>
+                  <label for="input-b-visible" class="cs-label">Sichtfenster Breite</label>
+                  <div class="cs-input-group">
+                    <input type="number" id="input-b-visible" value="42.0" step="0.1" min="15" max="200"
+                      aria-describedby="unit-b-visible" class="cs-input font-mono cs-input-with-unit" />
+                    <span id="unit-b-visible" class="cs-unit">cm</span>
                   </div>
                 </div>
               </div>
-            </details>
 
-            <details class="sidebar-accordion" open>
-              <summary class="sidebar-accordion-summary">
-                <span>Vor- &amp; Nachlauf</span>
-                <span class="cs-info-tip" title="Montagereserve zum Befestigen und Einrollen auf den Holzstäben." aria-label="Hinweis zu Vor- und Nachlauf">ⓘ</span>
-              </summary>
-              <div class="sidebar-accordion-body space-y-3">
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label for="input-puffer-left" class="cs-label">Vorlauf (links)</label>
-                    <div class="cs-input-group">
-                      <input type="number" id="input-puffer-left" value="15.0" step="0.5" min="0" max="100" aria-describedby="unit-puffer-left" class="cs-input font-mono cs-input-with-unit" />
-                      <span id="unit-puffer-left" class="cs-unit">cm</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label for="input-puffer-right" class="cs-label">Nachlauf (rechts)</label>
-                    <div class="cs-input-group">
-                      <input type="number" id="input-puffer-right" value="15.0" step="0.5" min="0" max="100" aria-describedby="unit-puffer-right" class="cs-input font-mono cs-input-with-unit" />
-                      <span id="unit-puffer-right" class="cs-unit">cm</span>
-                    </div>
-                  </div>
+              <div>
+                <label for="input-paper-grammage" class="cs-label">
+                  Papiergrammatur
+                  <span class="cs-info-tip" title="Beeinflusst den Rollendurchmesser im CAD (80 g/m² ≈ 0,10 mm)."
+                    aria-label="Hinweis zur Papiergrammatur">ⓘ</span>
+                </label>
+                <div class="cs-input-group">
+                  <input type="number" id="input-paper-grammage" value="80" step="10" min="60" max="250"
+                    aria-describedby="unit-paper-grammage" class="cs-input font-mono cs-input-with-unit" />
+                  <span id="unit-paper-grammage" class="cs-unit">g/m²</span>
                 </div>
+              </div>
 
+              <label for="checkbox-show-cropmarks" class="cs-checkbox-row pt-2 border-t border-slate-800">
+                <input type="checkbox" id="checkbox-show-cropmarks" class="cs-checkbox" />
+                <span>Schnitt- &amp; Passermarken</span>
+                <span class="cs-info-tip" title="Crop Marks an den Sichtfensterkanten für den Rollenplotter."
+                  aria-label="Hinweis zu Schnitt- und Passermarken">ⓘ</span>
+              </label>
+              <div>
+                <label for="select-crop-mark-style" class="cs-label">Schnittmarken-Stil</label>
+                <select id="select-crop-mark-style" class="cs-select">
+                  <option value="none">Keine</option>
+                  <option value="corners">Ecken (Passermarken)</option>
+                  <option value="lines">Durchgehende Linien</option>
+                </select>
+              </div>
+            </div>
+          </details>
+
+          <details class="sidebar-accordion" open>
+            <summary class="sidebar-accordion-summary">
+              <span>Vor- &amp; Nachlauf</span>
+              <span class="cs-info-tip" title="Montagereserve zum Befestigen und Einrollen auf den Holzstäben."
+                aria-label="Hinweis zu Vor- und Nachlauf">ⓘ</span>
+            </summary>
+            <div class="sidebar-accordion-body space-y-3">
+              <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label for="select-puffer-left-content" class="cs-label">Inhalt Vorlauf (links)</label>
-                  <select id="select-puffer-left-content" class="cs-select">
-                    <option value="blank">Montage-Leerraum (Klassisch)</option>
-                    <option value="title">Großer Kalendertitel &amp; Widmung</option>
-                    <option value="year_overview">Kompakte Jahresübersicht (12 Monate)</option>
-                    <option value="notes">Notizspalten &amp; To-Do-Checkliste</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label for="select-puffer-right-content" class="cs-label">Inhalt Nachlauf (rechts)</label>
-                  <select id="select-puffer-right-content" class="cs-select">
-                    <option value="blank">Montage-Leerraum (Klassisch)</option>
-                    <option value="notes">Jahres-Rückblick &amp; Notizen</option>
-                  </select>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
-                  <div>
-                    <label for="input-winding-allowance-left" class="cs-label">
-                      Wickelzugabe links
-                      <span class="cs-info-tip" title="Unbedruckte Klebe-/Klemmzugabe für die Befestigung am linken Stab." aria-label="Hinweis zur Wickelzugabe links">ⓘ</span>
-                    </label>
-                    <div class="cs-input-group">
-                      <input type="number" id="input-winding-allowance-left" value="0" step="5" min="0" max="200" aria-describedby="unit-winding-allowance-left" class="cs-input font-mono cs-input-with-unit" />
-                      <span id="unit-winding-allowance-left" class="cs-unit">mm</span>
-                    </div>
+                  <label for="input-puffer-left" class="cs-label">Vorlauf (links)</label>
+                  <div class="cs-input-group">
+                    <input type="number" id="input-puffer-left" value="15.0" step="0.5" min="0" max="100"
+                      aria-describedby="unit-puffer-left" class="cs-input font-mono cs-input-with-unit" />
+                    <span id="unit-puffer-left" class="cs-unit">cm</span>
                   </div>
-                  <div>
-                    <label for="input-winding-allowance-right" class="cs-label">
-                      Wickelzugabe rechts
-                      <span class="cs-info-tip" title="Unbedruckte Klebe-/Klemmzugabe für die Befestigung am rechten Stab." aria-label="Hinweis zur Wickelzugabe rechts">ⓘ</span>
-                    </label>
-                    <div class="cs-input-group">
-                      <input type="number" id="input-winding-allowance-right" value="0" step="5" min="0" max="200" aria-describedby="unit-winding-allowance-right" class="cs-input font-mono cs-input-with-unit" />
-                      <span id="unit-winding-allowance-right" class="cs-unit">mm</span>
-                    </div>
+                </div>
+                <div>
+                  <label for="input-puffer-right" class="cs-label">Nachlauf (rechts)</label>
+                  <div class="cs-input-group">
+                    <input type="number" id="input-puffer-right" value="15.0" step="0.5" min="0" max="100"
+                      aria-describedby="unit-puffer-right" class="cs-input font-mono cs-input-with-unit" />
+                    <span id="unit-puffer-right" class="cs-unit">cm</span>
                   </div>
                 </div>
               </div>
-            </details>
 
-            <details class="sidebar-accordion">
-              <summary class="sidebar-accordion-summary">
-                <span>QR-Code &amp; Plotter-Ausgabe</span>
-              </summary>
-              <div class="sidebar-accordion-body space-y-3">
+              <div class="pt-2 border-t border-slate-800 space-y-3">
                 <label for="checkbox-show-qr" class="cs-checkbox-row">
                   <input type="checkbox" id="checkbox-show-qr" checked class="cs-checkbox" />
                   <span>QR-Code im Nachlauf einbetten</span>
@@ -280,677 +307,750 @@
                 <div>
                   <label for="input-qr-gap" class="cs-label">Abstand zum letzten Monat</label>
                   <div class="cs-input-group">
-                    <input type="number" id="input-qr-gap" value="40" step="1" min="0" max="100" aria-describedby="unit-qr-gap" class="cs-input font-mono cs-input-with-unit" />
+                    <input type="number" id="input-qr-gap" value="40" step="1" min="0" max="100"
+                      aria-describedby="unit-qr-gap" class="cs-input font-mono cs-input-with-unit" />
                     <span id="unit-qr-gap" class="cs-unit">mm</span>
                   </div>
                   <p id="qr-status" role="status" aria-live="polite" class="text-[11px] text-amber-400 mt-1"></p>
                 </div>
-
-                <label for="checkbox-show-cropmarks" class="cs-checkbox-row pt-1 border-t border-slate-800">
-                  <input type="checkbox" id="checkbox-show-cropmarks" class="cs-checkbox" />
-                  <span>Schnitt- &amp; Passermarken</span>
-                  <span class="cs-info-tip" title="Crop Marks an den Sichtfensterkanten für den Rollenplotter." aria-label="Hinweis zu Schnitt- und Passermarken">ⓘ</span>
-                </label>
-                <div>
-                  <label for="select-crop-mark-style" class="cs-label">Schnittmarken-Stil</label>
-                  <select id="select-crop-mark-style" class="cs-select">
-                    <option value="none">Keine</option>
-                    <option value="corners">Ecken (Passermarken)</option>
-                    <option value="lines">Durchgehende Linien</option>
-                  </select>
-                </div>
               </div>
-            </details>
+            </div>
+          </details>
+
+          <!-- LIVE-GEOMETRIE-INSPECTOR -->
+          <div class="card calendar-geometry-inspector" aria-label="Abgeleitete Geometrie">
+            <div class="inspector-grid">
+              <div class="inspector-cell">
+                <span class="inspector-label">Monatsbreite</span>
+                <span id="calc-b-month" class="inspector-value text-amber-400">14.00 cm</span>
+              </div>
+              <div class="inspector-cell">
+                <span class="inspector-label">Tageshöhe</span>
+                <span id="calc-h-day" class="inspector-value text-amber-400">1.000 cm</span>
+              </div>
+              <div class="inspector-cell">
+                <span class="inspector-label">Gesamtlänge</span>
+                <span id="calc-l-total" class="inspector-value text-emerald-400">226.00 cm</span>
+              </div>
+            </div>
           </div>
+        </div>
 
-          <!-- TAB 2: AUFBAU, TYPO & FARBEN -->
-          <div id="tab-style" role="tabpanel" aria-labelledby="tab-button-style" tabindex="0" class="tab-content calendar-tabpanel hidden">
-            <details class="sidebar-accordion" open>
-              <summary class="sidebar-accordion-summary">
-                <span>Stil &amp; Farbpalette</span>
-              </summary>
-              <div class="sidebar-accordion-body space-y-3">
-                <section class="choice-section space-y-2" aria-labelledby="design-style-heading">
-                  <div class="flex items-center justify-between gap-2">
-                    <label id="design-style-heading" for="select-design-style" class="cs-label mb-0">Darstellung</label>
-                    <span class="cs-info-tip" title="Legt Struktur und Zeichenformen fest. Farben werden unabhängig gewählt." aria-label="Hinweis zur Darstellung">ⓘ</span>
-                  </div>
-                  <select id="select-design-style" aria-label="Darstellung" class="cs-select">
-                    <option value="classic">Klassisch</option>
-                    <option value="midcentury">Mid-Century – Labor &amp; Messinstrument</option>
-                    <option value="bauhaus">Bauhaus / Schweizer Typografie</option>
-                    <option value="gantt">Gantt – Projekt-Timeline</option>
-                    <option value="zen">Zen – minimalistischer Streifen</option>
-                    <option value="kursbuch">Kursbuch – Fahrplan</option>
-                  </select>
-                  <div id="design-options" class="choice-grid" role="group" aria-labelledby="design-style-heading"></div>
-                </section>
+        <!-- TAB 2: AUFBAU, TYPO & FARBEN -->
+        <div id="tab-style" role="tabpanel" aria-labelledby="tab-button-style" tabindex="0"
+          class="tab-content calendar-tabpanel hidden">
+          <details class="sidebar-accordion" open>
+            <summary class="sidebar-accordion-summary">
+              <span>Stil &amp; Farbpalette</span>
+            </summary>
+            <div class="sidebar-accordion-body space-y-3">
+              <section class="choice-section space-y-2" aria-labelledby="design-style-heading">
+                <div class="flex items-center justify-between gap-2">
+                  <span id="design-style-heading" class="cs-label mb-0">Darstellung</span>
+                  <span class="cs-info-tip"
+                    title="Legt Struktur und Zeichenformen fest. Farben werden unabhängig gewählt."
+                    aria-label="Hinweis zur Darstellung">ⓘ</span>
+                </div>
+                <div id="design-options" class="choice-grid" role="group" aria-labelledby="design-style-heading"></div>
+              </section>
 
-                <section class="choice-section space-y-2 pt-2 border-t border-slate-800" aria-labelledby="theme-heading">
-                  <div class="flex items-center justify-between gap-2">
-                    <label id="theme-heading" for="select-theme" class="cs-label mb-0">Farb-Theme</label>
-                    <span class="cs-info-tip" title="Setzt eine bearbeitbare Palette inklusive Schrift und Stil." aria-label="Hinweis zum Farb-Theme">ⓘ</span>
-                  </div>
-                  <select id="select-theme" aria-label="Farben" class="cs-select">
-                    <option value="">Keine Farbauswahl</option>
-                    <option value="minimal">Skandinavisch Minimal</option>
-                    <option value="wood">Holz &amp; Leder</option>
-                    <option value="architect">Architektur &amp; Blueprint</option>
-                    <option value="sage">Wald &amp; Salbei</option>
-                    <option value="modern">Modern Neutral</option>
-                    <option value="coastal">Kuestenblau</option>
-                    <option value="warm">Warm Klassisch</option>
-                  </select>
-                  <div id="theme-options" class="choice-grid" role="group" aria-labelledby="theme-heading"></div>
-                </section>
+              <section class="choice-section space-y-2 pt-2 border-t border-slate-800" aria-labelledby="theme-heading">
+                <div class="flex items-center justify-between gap-2">
+                  <span id="theme-heading" class="cs-label mb-0">Theme</span>
+                  <span class="cs-info-tip" title="Setzt eine bearbeitbare Palette inklusive Schrift und Stil."
+                    aria-label="Hinweis zum Theme">ⓘ</span>
+                </div>
+                <div id="theme-options" class="choice-grid" role="group" aria-labelledby="theme-heading"></div>
+              </section>
+            </div>
+          </details>
+
+          <details class="sidebar-accordion" open>
+            <summary class="sidebar-accordion-summary">
+              <span>Spalten, Monatskopf &amp; Trennung</span>
+            </summary>
+            <div class="sidebar-accordion-body space-y-3">
+              <div>
+                <label for="select-month-layout" class="cs-label">
+                  Spalten je Monat
+                  <span class="cs-info-tip"
+                    title="1 Spalte zeigt alle Tage untereinander; 2 Spalten verteilen 1–15 und 16–31 bei gleichem Sichtfenster."
+                    aria-label="Hinweis zur Spaltenaufteilung">ⓘ</span>
+                </label>
+                <select id="select-month-layout" class="cs-select">
+                  <option value="single">1 Spalte (1–31)</option>
+                  <option value="double">2 Spalten (1–15 | 16–31)</option>
+                </select>
               </div>
-            </details>
 
-            <details class="sidebar-accordion" open>
-              <summary class="sidebar-accordion-summary">
-                <span>Spalten, Monatskopf &amp; Trennung</span>
-              </summary>
-              <div class="sidebar-accordion-body space-y-3">
+              <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
                 <div>
-                  <label for="select-month-layout" class="cs-label">
-                    Spalten je Monat
-                    <span class="cs-info-tip" title="1 Spalte zeigt alle Tage untereinander; 2 Spalten verteilen 1–15 und 16–31 bei gleichem Sichtfenster." aria-label="Hinweis zur Spaltenaufteilung">ⓘ</span>
-                  </label>
-                  <select id="select-month-layout" class="cs-select">
-                    <option value="single">1 Spalte (1–31)</option>
-                    <option value="double">2 Spalten (1–15 | 16–31)</option>
+                  <label for="select-header-style" class="cs-label">Monatskopf</label>
+                  <select id="select-header-style" class="cs-select">
+                    <option value="uppercase">GROSSBUCHSTABEN</option>
+                    <option value="titlecase">Gemischt (Januar 2027)</option>
+                    <option value="numbered">Nummeriert (01 · JANUAR)</option>
                   </select>
                 </div>
-
-                <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
-                  <div>
-                    <label for="select-header-style" class="cs-label">Monatskopf</label>
-                    <select id="select-header-style" class="cs-select">
-                      <option value="uppercase">GROSSBUCHSTABEN</option>
-                      <option value="titlecase">Gemischt (Januar 2027)</option>
-                      <option value="numbered">Nummeriert (01 · JANUAR)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label for="select-header-align" class="cs-label">Ausrichtung</label>
-                    <select id="select-header-align" class="cs-select">
-                      <option value="center">Zentriert</option>
-                      <option value="left">Linksbündig</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label for="input-month-header-text-color" class="cs-label">Kopf-Textfarbe</label>
-                    <input type="color" id="input-month-header-text-color" value="#0f172a" class="w-8 h-8 rounded bg-transparent cursor-pointer" />
-                  </div>
-                  <div>
-                    <label for="input-month-header-text-size" class="cs-label">Kopf-Textgröße</label>
-                    <div class="cs-input-group">
-                      <input type="number" id="input-month-header-text-size" value="1.0" step="0.1" min="0.5" max="3" aria-describedby="unit-header-text-size" class="cs-input font-mono cs-input-with-unit" />
-                      <span id="unit-header-text-size" class="cs-unit">×</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="pt-2 border-t border-slate-800 space-y-2">
-                  <label for="checkbox-month-separator" class="cs-checkbox-row">
-                    <input type="checkbox" id="checkbox-month-separator" class="cs-checkbox" />
-                    <span>Monatstrennstreifen</span>
-                    <span class="cs-info-tip" title="Wird getrennt je Spaltenlayout gespeichert. Die Deckkraft steuert die Transparenz." aria-label="Hinweis zum Monatstrennstreifen">ⓘ</span>
-                  </label>
-                  <div class="grid grid-cols-2 gap-3">
-                    <div>
-                      <label for="input-month-separator-width" class="cs-label">Breite</label>
-                      <div class="cs-input-group">
-                        <input type="number" id="input-month-separator-width" value="0.5" min="0.1" max="20" step="0.1" aria-describedby="unit-separator-width month-separator-width-error" class="cs-input font-mono cs-input-with-unit" />
-                        <span id="unit-separator-width" class="cs-unit">mm</span>
-                      </div>
-                      <p id="month-separator-width-error" role="alert" aria-live="polite" class="hidden text-[11px] text-rose-400 mt-1">Bitte 0,1 bis 20 mm eingeben.</p>
-                    </div>
-                    <div>
-                      <label for="color-month-separator" class="cs-label">Farbe &amp; Deckkraft</label>
-                      <input type="color" id="color-month-separator" value="#cbd5e1" aria-label="Farbe des Trennstreifens" class="w-8 h-8 rounded bg-transparent cursor-pointer" />
-                    </div>
-                  </div>
-                  <label for="checkbox-month-separator-header" class="cs-checkbox-row">
-                    <input type="checkbox" id="checkbox-month-separator-header" class="cs-checkbox" />
-                    <span>Im Monatskopf fortsetzen</span>
-                  </label>
+                <div>
+                  <label for="select-header-align" class="cs-label">Ausrichtung</label>
+                  <select id="select-header-align" class="cs-select">
+                    <option value="center">Zentriert</option>
+                    <option value="left">Linksbündig</option>
+                  </select>
                 </div>
               </div>
-            </details>
 
-            <details class="sidebar-accordion">
-              <summary class="sidebar-accordion-summary">
-                <span>Kalenderwochen &amp; Mondphasen</span>
-              </summary>
-              <div class="sidebar-accordion-body space-y-3">
-                <label for="checkbox-show-kw" class="cs-checkbox-row">
-                  <input type="checkbox" id="checkbox-show-kw" checked class="cs-checkbox" />
-                  <span>Kalenderwochen (ISO 8601)</span>
-                  <span class="cs-info-tip" title="Kalenderwochen nach DIN ISO 8601 jeweils am Montag." aria-label="Hinweis zu Kalenderwochen">ⓘ</span>
-                </label>
-                <div class="grid grid-cols-2 gap-3 pl-6">
-                  <div>
-                    <label for="input-calendar-week-text-color" class="cs-label">KW Textfarbe</label>
-                    <input type="color" id="input-calendar-week-text-color" value="#64748b" class="w-8 h-8 rounded bg-transparent cursor-pointer" />
-                  </div>
-                  <div>
-                    <label for="input-calendar-week-text-size" class="cs-label">KW Textgröße</label>
-                    <div class="cs-input-group">
-                      <input type="number" id="input-calendar-week-text-size" value="1.0" step="0.1" min="0.5" max="3" aria-describedby="unit-kw-text-size" class="cs-input font-mono cs-input-with-unit" />
-                      <span id="unit-kw-text-size" class="cs-unit">×</span>
-                    </div>
-                  </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label for="input-month-header-text-color" class="cs-label">Kopf-Textfarbe</label>
+                  <input type="color" id="input-month-header-text-color" value="#0f172a"
+                    class="w-8 h-8 rounded bg-transparent cursor-pointer" />
                 </div>
-
-                <label for="checkbox-show-moon" class="cs-checkbox-row pt-2 border-t border-slate-800">
-                  <input type="checkbox" id="checkbox-show-moon" checked class="cs-checkbox" />
-                  <span>Mondphasen-Piktogramme</span>
-                </label>
-                <div class="pl-6">
-                  <label for="input-moon-opacity" class="cs-label">Deckkraft</label>
+                <div>
+                  <label for="input-month-header-text-size" class="cs-label">Kopf-Textgröße</label>
                   <div class="cs-input-group">
-                    <input type="number" id="input-moon-opacity" value="0.89" step="0.01" min="0" max="1" aria-describedby="unit-moon-opacity" class="cs-input font-mono cs-input-with-unit" />
-                    <span id="unit-moon-opacity" class="cs-unit">0–1</span>
+                    <input type="number" id="input-month-header-text-size" value="1.0" step="0.1" min="0.5" max="3"
+                      aria-describedby="unit-header-text-size" class="cs-input font-mono cs-input-with-unit" />
+                    <span id="unit-header-text-size" class="cs-unit">×</span>
                   </div>
                 </div>
               </div>
-            </details>
 
-            <details class="sidebar-accordion">
-              <summary class="sidebar-accordion-summary">
-                <span>Typografie &amp; Schriftart</span>
-              </summary>
-              <div class="sidebar-accordion-body space-y-3">
+              <div class="pt-2 border-t border-slate-800 space-y-2">
+                <label for="checkbox-month-separator" class="cs-checkbox-row">
+                  <input type="checkbox" id="checkbox-month-separator" class="cs-checkbox" />
+                  <span>Monatstrennstreifen</span>
+                  <span class="cs-info-tip"
+                    title="Wird getrennt je Spaltenlayout gespeichert. Die Deckkraft steuert die Transparenz."
+                    aria-label="Hinweis zum Monatstrennstreifen">ⓘ</span>
+                </label>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label for="input-month-separator-width" class="cs-label">Breite</label>
+                    <div class="cs-input-group">
+                      <input type="number" id="input-month-separator-width" value="0.5" min="0.1" max="20" step="0.1"
+                        aria-describedby="unit-separator-width month-separator-width-error"
+                        class="cs-input font-mono cs-input-with-unit" />
+                      <span id="unit-separator-width" class="cs-unit">mm</span>
+                    </div>
+                    <p id="month-separator-width-error" role="alert" aria-live="polite"
+                      class="hidden text-[11px] text-rose-400 mt-1">Bitte 0,1 bis 20 mm eingeben.</p>
+                  </div>
+                  <div>
+                    <label for="color-month-separator" class="cs-label">Farbe &amp; Deckkraft</label>
+                    <input type="color" id="color-month-separator" value="#cbd5e1" aria-label="Farbe des Trennstreifens"
+                      class="w-8 h-8 rounded bg-transparent cursor-pointer" />
+                  </div>
+                </div>
+                <label for="checkbox-month-separator-header" class="cs-checkbox-row">
+                  <input type="checkbox" id="checkbox-month-separator-header" class="cs-checkbox" />
+                  <span>Im Monatskopf fortsetzen</span>
+                </label>
+              </div>
+            </div>
+          </details>
+
+          <details class="sidebar-accordion">
+            <summary class="sidebar-accordion-summary">
+              <span>Kalenderwochen &amp; Mondphasen</span>
+            </summary>
+            <div class="sidebar-accordion-body space-y-3">
+              <label for="checkbox-show-kw" class="cs-checkbox-row">
+                <input type="checkbox" id="checkbox-show-kw" checked class="cs-checkbox" />
+                <span>Kalenderwochen (ISO 8601)</span>
+                <span class="cs-info-tip" title="Kalenderwochen nach DIN ISO 8601 jeweils am Montag."
+                  aria-label="Hinweis zu Kalenderwochen">ⓘ</span>
+              </label>
+              <div class="grid grid-cols-2 gap-3 pl-6">
                 <div>
-                  <label for="select-font-family" class="cs-label">Schriftfamilie</label>
-                  <select id="select-font-family" class="cs-select">
-                    <option value="sans">Modern Sans (Lato)</option>
-                    <option value="serif">Klassisch Serif (PT Serif)</option>
-                    <option value="mono">Tech Monospace (Cousine)</option>
-                    <option value="architect">Architekt / Geometric Sans (Lato)</option>
-                    <option value="custom" id="option-custom-font" hidden>Eigene Schrift</option>
+                  <label for="input-calendar-week-text-color" class="cs-label">KW Textfarbe</label>
+                  <input type="color" id="input-calendar-week-text-color" value="#64748b"
+                    class="w-8 h-8 rounded bg-transparent cursor-pointer" />
+                </div>
+                <div>
+                  <label for="input-calendar-week-text-size" class="cs-label">KW Textgröße</label>
+                  <div class="cs-input-group">
+                    <input type="number" id="input-calendar-week-text-size" value="1.0" step="0.1" min="0.5" max="3"
+                      aria-describedby="unit-kw-text-size" class="cs-input font-mono cs-input-with-unit" />
+                    <span id="unit-kw-text-size" class="cs-unit">×</span>
+                  </div>
+                </div>
+              </div>
+
+              <label for="checkbox-show-moon" class="cs-checkbox-row pt-2 border-t border-slate-800">
+                <input type="checkbox" id="checkbox-show-moon" checked class="cs-checkbox" />
+                <span>Mondphasen-Piktogramme</span>
+              </label>
+              <div class="pl-6">
+                <label for="input-moon-opacity" class="cs-label">Deckkraft</label>
+                <div class="cs-input-group">
+                  <input type="number" id="input-moon-opacity" value="0.89" step="0.01" min="0" max="1"
+                    aria-describedby="unit-moon-opacity" class="cs-input font-mono cs-input-with-unit" />
+                  <span id="unit-moon-opacity" class="cs-unit">0–1</span>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details class="sidebar-accordion">
+            <summary class="sidebar-accordion-summary">
+              <span>Typografie &amp; Schriftart</span>
+            </summary>
+            <div class="sidebar-accordion-body space-y-3">
+              <div>
+                <label for="select-font-family" class="cs-label">Schriftfamilie</label>
+                <select id="select-font-family" class="cs-select">
+                  <option value="sans">Modern Sans (Lato)</option>
+                  <option value="serif">Klassisch Serif (PT Serif)</option>
+                  <option value="mono">Tech Monospace (Cousine)</option>
+                  <option value="architect">Architekt / Geometric Sans (Lato)</option>
+                  <option value="custom" id="option-custom-font" hidden>Eigene Schrift</option>
+                </select>
+              </div>
+              <div>
+                <label for="input-font-file" class="cs-label">
+                  Eigene Schrift (.ttf)
+                  <span class="cs-info-tip"
+                    title="Wird nur lokal verarbeitet und in den PDF-Export eingebettet (gilt für alle Schriftschnitte)."
+                    aria-label="Hinweis zu lokaler TTF-Verarbeitung">ⓘ</span>
+                </label>
+                <input id="input-font-file" type="file" accept=".ttf,font/ttf,application/x-font-ttf"
+                  aria-describedby="font-file-status" class="cs-file-input" />
+                <p id="font-file-status" class="mt-1 text-[10px] text-slate-500" role="status" aria-live="polite">Lokal
+                  (.ttf) · keine Datei gewählt</p>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label for="input-font-header-scale" class="cs-label">Skalierung Kopf</label>
+                  <div class="cs-input-group">
+                    <input type="number" id="input-font-header-scale" value="1.0" step="0.1" min="0.5" max="3.0"
+                      aria-describedby="unit-font-header-scale" class="cs-input font-mono cs-input-with-unit" />
+                    <span id="unit-font-header-scale" class="cs-unit">×</span>
+                  </div>
+                </div>
+                <div>
+                  <label for="input-font-day-scale" class="cs-label">Skalierung Tage</label>
+                  <div class="cs-input-group">
+                    <input type="number" id="input-font-day-scale" value="1.0" step="0.1" min="0.5" max="3.0"
+                      aria-describedby="unit-font-day-scale" class="cs-input font-mono cs-input-with-unit" />
+                    <span id="unit-font-day-scale" class="cs-unit">×</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details class="sidebar-accordion">
+            <summary class="sidebar-accordion-summary">
+              <span>Papier, Linien &amp; Tagesfarben</span>
+            </summary>
+            <div class="sidebar-accordion-body space-y-3">
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label for="color-paper" class="cs-label">Papierfarbe</label>
+                  <input type="color" id="color-paper" value="#ffffff"
+                    class="w-8 h-8 rounded bg-transparent cursor-pointer" />
+                </div>
+                <div>
+                  <label for="color-grid" class="cs-label">Rasterfarbe</label>
+                  <input type="color" id="color-grid" value="#cbd5e1"
+                    class="w-8 h-8 rounded bg-transparent cursor-pointer" />
+                </div>
+              </div>
+              <div>
+                <label for="input-line-grid" class="cs-label">Rasterlinie</label>
+                <div class="cs-input-group">
+                  <input type="number" id="input-line-grid" value="0.2" step="0.05" min="0.05" max="2.0"
+                    aria-describedby="unit-line-grid" class="cs-input font-mono cs-input-with-unit" />
+                  <span id="unit-line-grid" class="cs-unit">mm</span>
+                </div>
+              </div>
+
+              <div class="pt-2 border-t border-slate-800 space-y-2">
+                <div class="text-[11px] font-semibold text-slate-300">Wochenenden &amp; Werktage</div>
+                <div class="category-color-list">
+                  <label class="category-color-row" for="color-saturday-bg">
+                    <span><span class="category-color-title">Samstag · Hintergrund</span><span
+                        class="category-color-help">Zellenfüllung am Samstag</span></span>
+                    <input type="color" id="color-saturday-bg" value="#f8fafc" aria-label="Samstag Hintergrund" />
+                  </label>
+                  <label class="category-color-row" for="color-saturday-text">
+                    <span><span class="category-color-title">Samstag · Schrift</span><span
+                        class="category-color-help">Textfarbe am Samstag</span></span>
+                    <input type="color" id="color-saturday-text" value="#0f172a" aria-label="Samstag Schrift" />
+                  </label>
+                  <label class="category-color-row" for="color-sunday-bg">
+                    <span><span class="category-color-title">Sonntag · Hintergrund</span><span
+                        class="category-color-help">Zellenfüllung am Sonntag</span></span>
+                    <input type="color" id="color-sunday-bg" value="#f1f5f9" aria-label="Sonntag Hintergrund" />
+                  </label>
+                  <label class="category-color-row" for="color-sunday-text">
+                    <span><span class="category-color-title">Sonntag · Schrift</span><span
+                        class="category-color-help">Textfarbe am Sonntag</span></span>
+                    <input type="color" id="color-sunday-text" value="#e11d48" aria-label="Sonntag Schrift" />
+                  </label>
+                  <label class="category-color-row" for="color-text">
+                    <span><span class="category-color-title">Werktage · Schrift</span><span
+                        class="category-color-help">Standard-Textfarbe Montag–Freitag</span></span>
+                    <input type="color" id="color-text" value="#0f172a" aria-label="Werktage Schrift" />
+                  </label>
+                </div>
+              </div>
+
+              <div class="pt-2 border-t border-slate-800 space-y-2">
+                <div class="text-[11px] font-semibold text-slate-300">Ereigniskategorien</div>
+                <div class="category-color-list">
+                  <label class="category-color-row" for="color-category-public">
+                    <span><span class="category-color-title">Feiertage</span><span
+                        class="category-color-help">Gesetzliche und regionale Tage</span></span>
+                    <input type="color" id="color-category-public" value="#fef08a" aria-label="Farbe für Feiertage" />
+                  </label>
+                  <label class="category-color-row" for="color-category-vacation">
+                    <span><span class="category-color-title">Ferien</span><span class="category-color-help">Schulferien
+                        und Zeiträume</span></span>
+                    <input type="color" id="color-category-vacation" value="#bfdbfe" aria-label="Farbe für Ferien" />
+                  </label>
+                  <label class="category-color-row" for="color-category-custom">
+                    <span><span class="category-color-title">Eigene Termine</span><span
+                        class="category-color-help">Manuelle Einträge &amp; .ics</span></span>
+                    <input type="color" id="color-category-custom" value="#bfdbfe"
+                      aria-label="Farbe für eigene Termine" />
+                  </label>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details class="sidebar-accordion">
+            <summary class="sidebar-accordion-summary">
+              <span>Druckfarben sparen</span>
+              <span class="cs-info-tip" title="Näherungswerte ohne Druckerprofil. Es wird nichts ohne Klick geändert."
+                aria-label="Hinweis zur Druckfarben-Analyse">ⓘ</span>
+            </summary>
+            <div class="sidebar-accordion-body space-y-2">
+              <button id="btn-analyze-coverage" type="button"
+                class="w-full text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1.5 rounded border border-slate-700 transition cursor-pointer">Sparpotenzial
+                prüfen</button>
+              <div id="coverage-recommendations" class="space-y-2" aria-live="polite">
+                <p class="text-[11px] text-slate-500">Berechne Tipps, um mögliche Einsparungen anzuzeigen.</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <!-- TAB 3: TERMINE & VORLAGEN -->
+        <div id="tab-holidays" role="tabpanel" aria-labelledby="tab-button-holidays" tabindex="0"
+          class="tab-content calendar-tabpanel hidden">
+          <details class="sidebar-accordion" open>
+            <summary class="sidebar-accordion-summary">
+              <span>Feiertage, Ferien &amp; .ics</span>
+            </summary>
+            <div class="sidebar-accordion-body space-y-3">
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label for="select-country" class="cs-label">Land</label>
+                  <select id="select-country" class="cs-select">
+                    <option value="DE">Deutschland (DE)</option>
+                    <option value="AT">Österreich (AT)</option>
+                    <option value="CH">Schweiz (CH)</option>
                   </select>
                 </div>
                 <div>
-                  <label for="input-font-file" class="cs-label">
-                    Eigene Schrift (.ttf)
-                    <span class="cs-info-tip" title="Wird nur lokal verarbeitet und in den PDF-Export eingebettet (gilt für alle Schriftschnitte)." aria-label="Hinweis zu lokaler TTF-Verarbeitung">ⓘ</span>
-                  </label>
-                  <input id="input-font-file" type="file" accept=".ttf,font/ttf,application/x-font-ttf" aria-describedby="font-file-status" class="cs-file-input" />
-                  <p id="font-file-status" class="mt-1 text-[10px] text-slate-500" role="status" aria-live="polite">Lokal (.ttf) · keine Datei gewählt</p>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label for="input-font-header-scale" class="cs-label">Skalierung Kopf</label>
-                    <div class="cs-input-group">
-                      <input type="number" id="input-font-header-scale" value="1.0" step="0.1" min="0.5" max="3.0" aria-describedby="unit-font-header-scale" class="cs-input font-mono cs-input-with-unit" />
-                      <span id="unit-font-header-scale" class="cs-unit">×</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label for="input-font-day-scale" class="cs-label">Skalierung Tage</label>
-                    <div class="cs-input-group">
-                      <input type="number" id="input-font-day-scale" value="1.0" step="0.1" min="0.5" max="3.0" aria-describedby="unit-font-day-scale" class="cs-input font-mono cs-input-with-unit" />
-                      <span id="unit-font-day-scale" class="cs-unit">×</span>
-                    </div>
-                  </div>
+                  <label for="select-bundesland" class="cs-label">Bundesland</label>
+                  <select id="select-bundesland" class="cs-select">
+                    <!-- Dynamisch befüllt -->
+                  </select>
                 </div>
               </div>
-            </details>
 
-            <details class="sidebar-accordion">
-              <summary class="sidebar-accordion-summary">
-                <span>Papier, Linien &amp; Tagesfarben</span>
-              </summary>
-              <div class="sidebar-accordion-body space-y-3">
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label for="color-paper" class="cs-label">Papierfarbe</label>
-                    <input type="color" id="color-paper" value="#ffffff" class="w-8 h-8 rounded bg-transparent cursor-pointer" />
-                  </div>
-                  <div>
-                    <label for="color-grid" class="cs-label">Rasterfarbe</label>
-                    <input type="color" id="color-grid" value="#cbd5e1" class="w-8 h-8 rounded bg-transparent cursor-pointer" />
-                  </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                  <div>
-                    <label for="input-line-grid" class="cs-label">Rasterlinie</label>
-                    <div class="cs-input-group">
-                      <input type="number" id="input-line-grid" value="0.2" step="0.05" min="0.05" max="2.0" aria-describedby="unit-line-grid" class="cs-input font-mono cs-input-with-unit" />
-                      <span id="unit-line-grid" class="cs-unit">mm</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label for="input-line-border" class="cs-label">Rahmenlinie</label>
-                    <div class="cs-input-group">
-                      <input type="number" id="input-line-border" value="0.6" step="0.1" min="0.1" max="5.0" aria-describedby="unit-line-border" class="cs-input font-mono cs-input-with-unit" />
-                      <span id="unit-line-border" class="cs-unit">mm</span>
-                    </div>
-                  </div>
-                </div>
+              <label for="checkbox-show-vacations" class="cs-checkbox-row">
+                <input type="checkbox" id="checkbox-show-vacations" class="cs-checkbox" />
+                <span>Schulferien erzeugen</span>
+                <span class="cs-info-tip"
+                  title="Ferien werden erst nach Aktivierung für das gewählte Bundesland berechnet."
+                  aria-label="Hinweis zu Schulferien">ⓘ</span>
+              </label>
 
-                <div class="pt-2 border-t border-slate-800 space-y-2">
-                  <div class="text-[11px] font-semibold text-slate-300">Wochenenden &amp; Werktage</div>
-                  <div class="grid grid-cols-2 gap-3">
-                    <div>
-                      <label for="color-saturday-bg" class="cs-label">Sa · Hintergrund</label>
-                      <input type="color" id="color-saturday-bg" value="#f8fafc" class="w-8 h-8 rounded bg-transparent cursor-pointer" />
-                    </div>
-                    <div>
-                      <label for="color-saturday-text" class="cs-label">Sa · Schrift</label>
-                      <input type="color" id="color-saturday-text" value="#0f172a" class="w-8 h-8 rounded bg-transparent cursor-pointer" />
-                    </div>
-                    <div>
-                      <label for="color-sunday-bg" class="cs-label">So · Hintergrund</label>
-                      <input type="color" id="color-sunday-bg" value="#f1f5f9" class="w-8 h-8 rounded bg-transparent cursor-pointer" />
-                    </div>
-                    <div>
-                      <label for="color-sunday-text" class="cs-label">So · Schrift</label>
-                      <input type="color" id="color-sunday-text" value="#e11d48" class="w-8 h-8 rounded bg-transparent cursor-pointer" />
-                    </div>
-                  </div>
-                  <div>
-                    <label for="color-text" class="cs-label">Werktage · Schrift</label>
-                    <input type="color" id="color-text" value="#0f172a" class="w-8 h-8 rounded bg-transparent cursor-pointer" />
-                  </div>
-                </div>
+              <button id="btn-load-feiertage" type="button"
+                class="w-full text-xs bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 px-2 py-1.5 rounded border border-amber-500/30 transition flex items-center justify-center space-x-1 cursor-pointer">
+                <i class="fa-solid fa-sync text-[10px]" aria-hidden="true"></i>
+                <span>Feiertage &amp; Ferien aktualisieren</span>
+              </button>
 
-                <div class="pt-2 border-t border-slate-800 space-y-2">
-                  <div class="text-[11px] font-semibold text-slate-300">Ereigniskategorien</div>
-                  <div class="category-color-list">
-                    <label class="category-color-row" for="color-category-public">
-                      <span><span class="category-color-title">Feiertage</span><span class="category-color-help">Gesetzliche und regionale Tage</span></span>
-                      <input type="color" id="color-category-public" value="#fef08a" aria-label="Farbe für Feiertage" />
-                    </label>
-                    <label class="category-color-row" for="color-category-vacation">
-                      <span><span class="category-color-title">Ferien</span><span class="category-color-help">Schulferien und Zeiträume</span></span>
-                      <input type="color" id="color-category-vacation" value="#bfdbfe" aria-label="Farbe für Ferien" />
-                    </label>
-                    <label class="category-color-row" for="color-category-custom">
-                      <span><span class="category-color-title">Eigene Termine</span><span class="category-color-help">Manuelle Einträge &amp; .ics</span></span>
-                      <input type="color" id="color-category-custom" value="#bfdbfe" aria-label="Farbe für eigene Termine" />
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </details>
-
-            <details class="sidebar-accordion">
-              <summary class="sidebar-accordion-summary">
-                <span>Druckfarben sparen</span>
-                <span class="cs-info-tip" title="Näherungswerte ohne Druckerprofil. Es wird nichts ohne Klick geändert." aria-label="Hinweis zur Druckfarben-Analyse">ⓘ</span>
-              </summary>
-              <div class="sidebar-accordion-body space-y-2">
-                <button id="btn-analyze-coverage" type="button" class="w-full text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1.5 rounded border border-slate-700 transition cursor-pointer">Sparpotenzial prüfen</button>
-                <div id="coverage-recommendations" class="space-y-2" aria-live="polite">
-                  <p class="text-[11px] text-slate-500">Berechne Tipps, um mögliche Einsparungen anzuzeigen.</p>
-                </div>
-              </div>
-            </details>
-          </div>
-
-          <!-- TAB 3: TERMINE & VORLAGEN -->
-          <div id="tab-holidays" role="tabpanel" aria-labelledby="tab-button-holidays" tabindex="0" class="tab-content calendar-tabpanel hidden">
-            <details class="sidebar-accordion" open>
-              <summary class="sidebar-accordion-summary">
-                <span>Feiertage, Ferien &amp; .ics</span>
-              </summary>
-              <div class="sidebar-accordion-body space-y-3">
+              <div class="pt-2 border-t border-slate-800 space-y-2">
+                <input type="file" id="input-ics-file" accept=".ics" aria-label="Kalenderdatei (.ics) importieren"
+                  class="hidden" />
                 <div class="grid grid-cols-2 gap-2">
-                  <div>
-                    <label for="select-country" class="cs-label">Land</label>
-                    <select id="select-country" class="cs-select">
-                      <option value="DE">Deutschland (DE)</option>
-                      <option value="AT">Österreich (AT)</option>
-                      <option value="CH">Schweiz (CH)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label for="select-bundesland" class="cs-label">Bundesland</label>
-                    <select id="select-bundesland" class="cs-select">
-                      <!-- Dynamisch befüllt -->
-                    </select>
-                  </div>
-                </div>
-
-                <label for="checkbox-show-vacations" class="cs-checkbox-row">
-                  <input type="checkbox" id="checkbox-show-vacations" class="cs-checkbox" />
-                  <span>Schulferien erzeugen</span>
-                  <span class="cs-info-tip" title="Ferien werden erst nach Aktivierung für das gewählte Bundesland berechnet." aria-label="Hinweis zu Schulferien">ⓘ</span>
-                </label>
-
-                <button id="btn-load-feiertage" type="button" class="w-full text-xs bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 px-2 py-1.5 rounded border border-amber-500/30 transition flex items-center justify-center space-x-1 cursor-pointer">
-                  <i class="fa-solid fa-sync text-[10px]" aria-hidden="true"></i>
-                  <span>Feiertage &amp; Ferien aktualisieren</span>
-                </button>
-
-                <div class="pt-2 border-t border-slate-800 space-y-2">
-                  <input type="file" id="input-ics-file" accept=".ics" aria-label="Kalenderdatei (.ics) importieren" class="hidden" />
-                  <div class="grid grid-cols-2 gap-2">
-                    <button id="btn-import-ics" type="button" class="text-xs bg-sky-500/20 text-sky-400 hover:bg-sky-500/30 px-2 py-1.5 rounded border border-sky-500/30 transition flex items-center justify-center space-x-1 cursor-pointer">
-                      <i class="fa-solid fa-file-import text-[10px]" aria-hidden="true"></i>
-                      <span>.ics Import</span>
-                    </button>
-                    <button id="btn-export-ics" type="button" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1.5 rounded border border-slate-700 transition flex items-center justify-center space-x-1 cursor-pointer">
-                      <i class="fa-solid fa-file-export text-[10px]" aria-hidden="true"></i>
-                      <span>.ics Export</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </details>
-
-            <details class="sidebar-accordion" open>
-              <summary class="sidebar-accordion-summary">
-                <span>Terminsuche &amp; Liste</span>
-              </summary>
-              <div class="sidebar-accordion-body space-y-2">
-                <div class="flex items-center space-x-1 text-[11px]" role="group" aria-label="Terminfilter">
-                  <button type="button" data-filter="all" aria-pressed="true" class="btn-filter-holiday flex-1 py-1 rounded bg-amber-500 text-slate-950 font-bold transition">Alle</button>
-                  <button type="button" data-filter="public" aria-pressed="false" class="btn-filter-holiday flex-1 py-1 rounded bg-slate-800 text-slate-300 transition">Feiertage</button>
-                  <button type="button" data-filter="vacation" aria-pressed="false" class="btn-filter-holiday flex-1 py-1 rounded bg-slate-800 text-slate-300 transition">Ferien</button>
-                  <button type="button" data-filter="custom" aria-pressed="false" class="btn-filter-holiday flex-1 py-1 rounded bg-slate-800 text-slate-300 transition">Eigene</button>
-                </div>
-
-                <div class="flex items-center space-x-2">
-                  <div class="relative flex-1">
-                    <input type="text" id="input-holiday-search" aria-label="Termine suchen" placeholder="Name oder Datum suchen …" class="cs-input pl-7" />
-                    <i class="fa-solid fa-search absolute left-2.5 top-2.5 text-[10px] text-slate-500" aria-hidden="true"></i>
-                  </div>
-                  <button id="btn-add-holiday" type="button" class="text-xs bg-amber-500 text-slate-950 font-bold px-2.5 py-1.5 rounded shadow transition flex items-center space-x-1 cursor-pointer shrink-0">
-                    <i class="fa-solid fa-plus text-[10px]" aria-hidden="true"></i>
-                    <span>Neu</span>
+                  <button id="btn-import-ics" type="button"
+                    class="text-xs bg-sky-500/20 text-sky-400 hover:bg-sky-500/30 px-2 py-1.5 rounded border border-sky-500/30 transition flex items-center justify-center space-x-1 cursor-pointer">
+                    <i class="fa-solid fa-file-import text-[10px]" aria-hidden="true"></i>
+                    <span>.ics Import</span>
+                  </button>
+                  <button id="btn-export-ics" type="button"
+                    class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1.5 rounded border border-slate-700 transition flex items-center justify-center space-x-1 cursor-pointer">
+                    <i class="fa-solid fa-file-export text-[10px]" aria-hidden="true"></i>
+                    <span>.ics Export</span>
                   </button>
                 </div>
-
-                <div id="holiday-list" class="space-y-2 max-h-72 overflow-y-auto pr-1">
-                  <!-- Dynamisch generiert -->
-                </div>
               </div>
-            </details>
+            </div>
+          </details>
 
-            <details class="sidebar-accordion">
-              <summary class="sidebar-accordion-summary">
-                <span>Vorlagen &amp; Teilen-Link</span>
-                <span class="cs-info-tip" title="Der Link überträgt Einstellungen, aber keine eigenen Termine oder lokalen Schriftdateien." aria-label="Hinweis zu Teilen-Link und Vorlagen">ⓘ</span>
-              </summary>
-              <div class="sidebar-accordion-body space-y-3">
-                <div class="space-y-1.5">
-                  <div class="text-xs font-semibold text-slate-300">Einstellungen teilen</div>
-                  <a id="next-year-link" class="block text-xs text-amber-400 break-all" target="_blank" rel="noopener noreferrer"></a>
-                  <button id="btn-copy-next-year-link" type="button" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs">Link kopieren</button>
-                  <p id="next-year-link-status" class="text-xs text-slate-400" role="status" aria-live="polite"></p>
-                </div>
-
-                <div class="pt-2 border-t border-slate-800 space-y-1.5">
-                  <label for="input-preset-name" class="cs-label">Vorlage lokal speichern</label>
-                  <div class="flex space-x-2">
-                    <input type="text" id="input-preset-name" placeholder="Name (z.B. NRW 32x42 cm)" class="cs-input flex-1" />
-                    <button id="btn-save-preset" type="button" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs transition cursor-pointer shrink-0">Speichern</button>
-                  </div>
-                </div>
-
-                <div class="pt-2 border-t border-slate-800 space-y-1.5">
-                  <div class="text-xs font-semibold text-slate-300">Integrierte Vorlagen</div>
-                  <div id="built-in-presets-list" class="space-y-2"></div>
-                </div>
-
-                <div class="pt-2 border-t border-slate-800 space-y-1.5">
-                  <div class="text-xs font-semibold text-slate-300">Lokal gespeicherte Vorlagen</div>
-                  <div id="presets-list" class="space-y-2"></div>
-                </div>
+          <details class="sidebar-accordion" open>
+            <summary class="sidebar-accordion-summary">
+              <span>Terminsuche &amp; Liste</span>
+            </summary>
+            <div class="sidebar-accordion-body space-y-2">
+              <div class="flex items-center space-x-1 text-[11px]" role="group" aria-label="Terminfilter">
+                <button type="button" data-filter="all" aria-pressed="true"
+                  class="btn-filter-holiday flex-1 py-1 rounded bg-amber-500 text-slate-950 font-bold transition">Alle</button>
+                <button type="button" data-filter="public" aria-pressed="false"
+                  class="btn-filter-holiday flex-1 py-1 rounded bg-slate-800 text-slate-300 transition">Feiertage</button>
+                <button type="button" data-filter="vacation" aria-pressed="false"
+                  class="btn-filter-holiday flex-1 py-1 rounded bg-slate-800 text-slate-300 transition">Ferien</button>
+                <button type="button" data-filter="custom" aria-pressed="false"
+                  class="btn-filter-holiday flex-1 py-1 rounded bg-slate-800 text-slate-300 transition">Eigene</button>
               </div>
-            </details>
-          </div>
+
+              <div class="flex items-center space-x-2">
+                <div class="relative flex-1">
+                  <input type="text" id="input-holiday-search" aria-label="Termine suchen"
+                    placeholder="Name oder Datum suchen …" class="cs-input pl-7" />
+                  <i class="fa-solid fa-search absolute left-2.5 top-2.5 text-[10px] text-slate-500"
+                    aria-hidden="true"></i>
+                </div>
+                <button id="btn-add-holiday" type="button"
+                  class="text-xs bg-amber-500 text-slate-950 font-bold px-2.5 py-1.5 rounded shadow transition flex items-center space-x-1 cursor-pointer shrink-0">
+                  <i class="fa-solid fa-plus text-[10px]" aria-hidden="true"></i>
+                  <span>Neu</span>
+                </button>
+              </div>
+
+              <div id="holiday-list" class="space-y-2 max-h-72 overflow-y-auto pr-1">
+                <!-- Dynamisch generiert -->
+              </div>
+            </div>
+          </details>
+
+          <details class="sidebar-accordion">
+            <summary class="sidebar-accordion-summary">
+              <span>Farben für Ereigniskategorien</span>
+            </summary>
+            <div class="sidebar-accordion-body">
+              <div class="category-color-list">
+                <label class="category-color-row" for="color-category-public-entries">
+                  <span><span class="category-color-title">Feiertage</span><span class="category-color-help">Gesetzliche
+                      und regionale Tage</span></span>
+                  <input type="color" id="color-category-public-entries" value="#fef08a"
+                    aria-label="Farbe für Feiertage" />
+                </label>
+                <label class="category-color-row" for="color-category-vacation-entries">
+                  <span><span class="category-color-title">Ferien</span><span class="category-color-help">Schulferien
+                      und Zeiträume</span></span>
+                  <input type="color" id="color-category-vacation-entries" value="#bfdbfe"
+                    aria-label="Farbe für Ferien" />
+                </label>
+                <label class="category-color-row" for="color-category-custom-entries">
+                  <span><span class="category-color-title">Eigene Termine</span><span
+                      class="category-color-help">Manuelle Einträge &amp; .ics</span></span>
+                  <input type="color" id="color-category-custom-entries" value="#bfdbfe"
+                    aria-label="Farbe für eigene Termine" />
+                </label>
+              </div>
+            </div>
+          </details>
         </div>
 
-        <!-- STICKY LIVE-GEOMETRIE-INSPECTOR -->
-        <div class="card calendar-geometry-inspector" aria-label="Abgeleitete Geometrie">
-          <div class="inspector-grid">
-            <div class="inspector-cell">
-              <span class="inspector-label">Monatsbreite</span>
-              <span id="calc-b-month" class="inspector-value text-amber-400">14.00 cm</span>
+        <!-- TAB 4: VORLAGEN -->
+        <div id="tab-presets" role="tabpanel" aria-labelledby="tab-button-presets" tabindex="0"
+          class="tab-content calendar-tabpanel hidden">
+          <details class="sidebar-accordion" open>
+            <summary class="sidebar-accordion-summary">
+              <span>Vorlage lokal speichern</span>
+            </summary>
+            <div class="sidebar-accordion-body space-y-2">
+              <label for="input-preset-name" class="cs-label">Vorlagenname</label>
+              <div class="flex space-x-2">
+                <input type="text" id="input-preset-name" placeholder="Name (z.B. NRW 32x42 cm)"
+                  class="cs-input flex-1" />
+                <button id="btn-save-preset" type="button"
+                  class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs transition cursor-pointer shrink-0">Speichern</button>
+              </div>
             </div>
-            <div class="inspector-cell">
-              <span class="inspector-label">Tageshöhe</span>
-              <span id="calc-h-day" class="inspector-value text-amber-400">1.000 cm</span>
+          </details>
+
+          <details class="sidebar-accordion" open>
+            <summary class="sidebar-accordion-summary">
+              <span>Lokal gespeicherte Vorlagen</span>
+            </summary>
+            <div class="sidebar-accordion-body">
+              <div id="presets-list" class="space-y-2"></div>
             </div>
-            <div class="inspector-cell">
-              <span class="inspector-label">Gesamtlänge</span>
-              <span id="calc-l-total" class="inspector-value text-emerald-400">226.00 cm</span>
+          </details>
+
+          <details class="sidebar-accordion" open>
+            <summary class="sidebar-accordion-summary">
+              <span>Integrierte Vorlagen</span>
+            </summary>
+            <div class="sidebar-accordion-body">
+              <div id="built-in-presets-list" class="space-y-2"></div>
+            </div>
+          </details>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 3. RECHTER ARBEITSBEREICH -->
+    <main id="app-workspace" class="workspace-stage calendar-stage">
+      <!-- TOOLBAR (VIEW-MODUS, MONATS-ROLLEN & ZOOM) -->
+      <!-- CANVASHÖLLE MIT ZENTRIERUNG, SCROLLUNG & CLICK-TO-EVENT -->
+      <section class="card calendar-preview-card" aria-label="Kalender-Vorschau">
+        <div id="canvas-container" class="calendar-preview-viewport">
+          <canvas id="preview-canvas" class="bg-white transition-transform duration-75"></canvas>
+        </div>
+      </section>
+    </main>
+
+    <div id="cad-mode-root" class="cad-scope" aria-hidden="true">
+      <aside id="cad-sidebar" class="workspace-sidebar" aria-label="CAD-Parameter">
+        <section id="cad-sync-card" class="card cad-sync-card" aria-label="Kalendermaße">
+          <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-link" aria-hidden="true"></i> Kalendermaße</h2>
+          </div>
+          <div class="card-body">
+            <p id="cad-sync-status" class="cad-sync-status" role="status" aria-live="polite">Synchronisiert mit Kalender
+            </p>
+            <button type="button" id="cad-relink-calendar" class="btn btn-secondary cad-relink-button">Kalendermaße
+              erneut übernehmen</button>
+          </div>
+        </section>
+
+        <section id="cad-parameter-groups-container" class="card" aria-label="Konstruktionsparameter"></section>
+
+        <details class="card cad-accordion-card" aria-label="Darstellungsoptionen">
+          <summary class="card-header cad-accordion-summary">
+            <h2 class="card-title"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> Zeichnungs-Layer</h2>
+          </summary>
+          <div class="card-body cad-option-stack">
+            <label for="cad-chk-show-maxroll" class="checkbox-label"><input type="checkbox" id="cad-chk-show-maxroll"
+                checked /> Max. Rollendurchmesser anzeigen</label>
+            <label for="cad-chk-show-centerlines" class="checkbox-label"><input type="checkbox"
+                id="cad-chk-show-centerlines" checked /> Rollenachsen / Mittellinien anzeigen</label>
+            <label for="cad-chk-show-section" class="checkbox-label"><input type="checkbox" id="cad-chk-show-section"
+                checked /> Schnittebene A–A anzeigen</label>
+            <label for="cad-chk-calendar-preview" class="checkbox-label"><input type="checkbox"
+                id="cad-chk-calendar-preview" /> Kalendervorschau im Sichtfenster</label>
+          </div>
+        </details>
+
+        <details class="card cad-accordion-card" aria-label="Schriftfeld-Einstellungen">
+          <summary class="card-header cad-accordion-summary">
+            <h2 class="card-title"><i class="fa-solid fa-file-lines" aria-hidden="true"></i> DIN-Schriftfeld</h2>
+          </summary>
+          <div class="card-body">
+            <div class="form-field">
+              <label for="cad-tb-title-input">Zeichnungstitel</label>
+              <input type="text" id="cad-tb-title-input" value="CHRONOSCROLL – BAUGRUPPENZEICHNUNG" />
+            </div>
+            <div class="form-field">
+              <label for="cad-tb-material-input">Werkstoff / Beschreibung</label>
+              <input type="text" id="cad-tb-material-input" value="Massivholz, Multiplex, PTFE, DIN 466" />
+            </div>
+            <div class="form-grid-2">
+              <div class="form-field">
+                <label for="cad-tb-dwg-input">Zeichnungs-Nr.</label>
+                <input type="text" id="cad-tb-dwg-input" value="CS-CAD-2.1" />
+              </div>
+              <div class="form-field">
+                <label for="cad-tb-author-input">Autor / Datum</label>
+                <input type="text" id="cad-tb-author-input" value="ChronoScroll" />
+              </div>
             </div>
           </div>
-        </div>
+        </details>
+
+        <details class="card cad-accordion-card" aria-label="Modellverwaltung">
+          <summary class="card-header cad-accordion-summary">
+            <h2 class="card-title"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Modellverwaltung &amp;
+              JSON</h2>
+          </summary>
+          <div class="card-body preset-stack">
+            <div class="preset-row">
+              <select id="cad-preset-select" aria-label="Gespeichertes CAD-Modell auswählen">
+                <option value="">-- Gespeicherte Modelle (0) --</option>
+              </select>
+              <button type="button" id="cad-btn-load-preset" class="btn btn-secondary">Laden</button>
+            </div>
+            <div class="preset-row">
+              <input type="text" id="cad-preset-name-input" placeholder="Neuer Modellname..."
+                aria-label="CAD-Modellname" />
+            </div>
+            <div class="preset-actions-grid">
+              <button type="button" id="cad-btn-save-preset" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"
+                  aria-hidden="true"></i> Speichern</button>
+              <button type="button" id="cad-btn-reset-defaults" class="btn btn-secondary"><i
+                  class="fa-solid fa-rotate-left" aria-hidden="true"></i> Standard</button>
+              <button type="button" id="cad-btn-delete-preset" class="btn btn-danger"><i class="fa-solid fa-trash"
+                  aria-hidden="true"></i> Löschen</button>
+            </div>
+            <div class="preset-io-grid">
+              <button type="button" id="cad-btn-export-json" class="btn">JSON Export</button>
+              <button type="button" id="cad-btn-import-json" class="btn">JSON Import</button>
+              <input type="file" id="cad-json-file-input" accept=".json,application/json"
+                aria-label="CAD-Modell als JSON-Datei importieren" hidden />
+            </div>
+          </div>
+        </details>
       </aside>
 
-      <!-- 3. RECHTER ARBEITSBEREICH -->
-      <main id="app-workspace" class="workspace-stage calendar-stage">
-        <!-- TOOLBAR (VIEW-MODUS, MONATS-ROLLEN & ZOOM) -->
-        <!-- CANVASHÖLLE MIT ZENTRIERUNG, SCROLLUNG & CLICK-TO-EVENT -->
-        <section class="card calendar-preview-card" aria-label="Kalender-Vorschau">
-          <div id="canvas-container" class="calendar-preview-viewport">
-            <canvas id="preview-canvas" class="bg-white transition-transform duration-75"></canvas>
+      <section id="cad-stage" class="workspace-stage" aria-label="CAD-Zeichenblatt und Stückliste">
+        <section id="cad-drawing-card" class="card cad-drawing-card" aria-label="Technische Mehrtafelzeichnung">
+          <div id="cad-viewport-wrapper" class="viewport-wrapper">
+            <svg id="cad-drawing-svg" xmlns="http://www.w3.org/2000/svg" role="img"
+              aria-label="Technische CAD-Zeichnung"></svg>
           </div>
         </section>
-      </main>
 
-      <div id="cad-mode-root" class="cad-scope" aria-hidden="true">
-        <aside id="cad-sidebar" class="workspace-sidebar" aria-label="CAD-Parameter">
-          <section id="cad-sync-card" class="card cad-sync-card" aria-label="Kalendermaße">
-            <div class="card-header">
-              <h2 class="card-title"><i class="fa-solid fa-link" aria-hidden="true"></i> Kalendermaße</h2>
-            </div>
-            <div class="card-body">
-              <p id="cad-sync-status" class="cad-sync-status" role="status" aria-live="polite">Synchronisiert mit Kalender</p>
-              <button type="button" id="cad-relink-calendar" class="btn btn-secondary cad-relink-button">Kalendermaße erneut übernehmen</button>
-            </div>
-          </section>
-
-          <section id="cad-parameter-groups-container" class="card" aria-label="Konstruktionsparameter"></section>
-
-          <details class="card cad-accordion-card" aria-label="Darstellungsoptionen">
-            <summary class="card-header cad-accordion-summary">
-              <h2 class="card-title"><i class="fa-solid fa-layer-group" aria-hidden="true"></i> Zeichnungs-Layer</h2>
-            </summary>
-            <div class="card-body cad-option-stack">
-              <label for="cad-chk-show-maxroll" class="checkbox-label"><input type="checkbox" id="cad-chk-show-maxroll" checked /> Max. Rollendurchmesser anzeigen</label>
-              <label for="cad-chk-show-centerlines" class="checkbox-label"><input type="checkbox" id="cad-chk-show-centerlines" checked /> Rollenachsen / Mittellinien anzeigen</label>
-              <label for="cad-chk-show-section" class="checkbox-label"><input type="checkbox" id="cad-chk-show-section" checked /> Schnittebene A–A anzeigen</label>
-              <label for="cad-chk-calendar-preview" class="checkbox-label"><input type="checkbox" id="cad-chk-calendar-preview" /> Kalendervorschau im Sichtfenster</label>
-            </div>
-          </details>
-
-          <details class="card cad-accordion-card" aria-label="Schriftfeld-Einstellungen">
-            <summary class="card-header cad-accordion-summary">
-              <h2 class="card-title"><i class="fa-solid fa-file-lines" aria-hidden="true"></i> DIN-Schriftfeld</h2>
-            </summary>
-            <div class="card-body">
-              <div class="form-field">
-                <label for="cad-tb-title-input">Zeichnungstitel</label>
-                <input type="text" id="cad-tb-title-input" value="CHRONOSCROLL – BAUGRUPPENZEICHNUNG" />
-              </div>
-              <div class="form-field">
-                <label for="cad-tb-material-input">Werkstoff / Beschreibung</label>
-                <input type="text" id="cad-tb-material-input" value="Massivholz, Multiplex, PTFE, DIN 466" />
-              </div>
-              <div class="form-grid-2">
-                <div class="form-field">
-                  <label for="cad-tb-dwg-input">Zeichnungs-Nr.</label>
-                  <input type="text" id="cad-tb-dwg-input" value="CS-CAD-2.1" />
-                </div>
-                <div class="form-field">
-                  <label for="cad-tb-author-input">Autor / Datum</label>
-                  <input type="text" id="cad-tb-author-input" value="ChronoScroll" />
-                </div>
-              </div>
-            </div>
-          </details>
-
-          <details class="card cad-accordion-card" aria-label="Modellverwaltung">
-            <summary class="card-header cad-accordion-summary">
-              <h2 class="card-title"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Modellverwaltung &amp; JSON</h2>
-            </summary>
-            <div class="card-body preset-stack">
-              <div class="preset-row">
-                <select id="cad-preset-select" aria-label="Gespeichertes CAD-Modell auswählen">
-                  <option value="">-- Gespeicherte Modelle (0) --</option>
-                </select>
-                <button type="button" id="cad-btn-load-preset" class="btn btn-secondary">Laden</button>
-              </div>
-              <div class="preset-row">
-                <input type="text" id="cad-preset-name-input" placeholder="Neuer Modellname..." aria-label="CAD-Modellname" />
-              </div>
-              <div class="preset-actions-grid">
-                <button type="button" id="cad-btn-save-preset" class="btn btn-primary"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Speichern</button>
-                <button type="button" id="cad-btn-reset-defaults" class="btn btn-secondary"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Standard</button>
-                <button type="button" id="cad-btn-delete-preset" class="btn btn-danger"><i class="fa-solid fa-trash" aria-hidden="true"></i> Löschen</button>
-              </div>
-              <div class="preset-io-grid">
-                <button type="button" id="cad-btn-export-json" class="btn">JSON Export</button>
-                <button type="button" id="cad-btn-import-json" class="btn">JSON Import</button>
-                <input type="file" id="cad-json-file-input" accept=".json,application/json" aria-label="CAD-Modell als JSON-Datei importieren" hidden />
-              </div>
-            </div>
-          </details>
-        </aside>
-
-        <section id="cad-stage" class="workspace-stage" aria-label="CAD-Zeichenblatt und Stückliste">
-          <section id="cad-drawing-card" class="card cad-drawing-card" aria-label="Technische Mehrtafelzeichnung">
-            <div id="cad-viewport-wrapper" class="viewport-wrapper">
-              <svg id="cad-drawing-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Technische CAD-Zeichnung"></svg>
-            </div>
-          </section>
-
-          <section id="cad-validation-box" class="validation-card" aria-live="polite">
-            <div class="validation-header">
-              <h2 class="validation-heading">Konstruktions- &amp; Kollisionsprüfung</h2>
-              <span id="cad-validation-badge" class="validation-badge">PRÜFUNG</span>
-            </div>
-            <ul id="cad-validation-list" class="validation-list"></ul>
-          </section>
-
-          <section class="kpi-grid" aria-label="Berechnete Konstruktionsmaße">
-            <div class="kpi-box"><span class="kpi-label">Achsabstand Wickelstäbe</span><span id="cad-kpi-axis-distance" class="kpi-value">—</span><span class="kpi-sub">Rückwand + 2×Spalt + Ø Stab</span></div>
-            <div class="kpi-box"><span class="kpi-label">Außenmaße Gehäuse (B × H)</span><span id="cad-kpi-outer-dims" class="kpi-value">—</span><span id="cad-kpi-total-with-nuts" class="kpi-sub">—</span></div>
-            <div class="kpi-box"><span class="kpi-label">Stablänge (Zuschnitt)</span><span id="cad-kpi-rod-cut" class="kpi-value">—</span><span class="kpi-sub">Abzüglich Gleiter- und Münzstapel</span></div>
-            <div class="kpi-box cad-kpi-blue">
-              <span class="kpi-label">Max. Rollendurchmesser D<sub>max</sub></span
-              ><span id="cad-kpi-max-roll" class="kpi-value">—</span><span id="cad-kpi-radial-build" class="kpi-sub">—</span>
-            </div>
-            <div class="kpi-box cad-kpi-amber"><span class="kpi-label">Umlenkwinkel α</span><span id="cad-kpi-wrap-angle" class="kpi-value">—</span><span id="cad-kpi-tangent-len" class="kpi-sub">—</span></div>
-          </section>
-
-          <section class="card cad-bom-card" aria-label="Dynamische Stückliste">
-            <div class="card-header">
-              <h2 class="card-title"><i class="fa-solid fa-list-check" aria-hidden="true"></i> Stückliste (BOM)</h2>
-            </div>
-            <div class="cad-bom-scroll">
-              <table class="cad-bom-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Anz.</th>
-                    <th scope="col">Bauteil</th>
-                    <th scope="col">Zuschnitt / Maß</th>
-                    <th scope="col">Material / Hinweis</th>
-                  </tr>
-                </thead>
-                <tbody id="cad-bom-items"></tbody>
-              </table>
-            </div>
-          </section>
+        <section id="cad-validation-box" class="validation-card" aria-live="polite">
+          <div class="validation-header">
+            <h2 class="validation-heading">Konstruktions- &amp; Kollisionsprüfung</h2>
+            <span id="cad-validation-badge" class="validation-badge">PRÜFUNG</span>
+          </div>
+          <ul id="cad-validation-list" class="validation-list"></ul>
         </section>
 
-        <div id="cad-toast" class="toast" role="status" aria-live="polite"></div>
-      </div>
+        <section class="kpi-grid" aria-label="Berechnete Konstruktionsmaße">
+          <div class="kpi-box"><span class="kpi-label">Achsabstand Wickelstäbe</span><span id="cad-kpi-axis-distance"
+              class="kpi-value">—</span><span class="kpi-sub">Rückwand + 2×Spalt + Ø Stab</span></div>
+          <div class="kpi-box"><span class="kpi-label">Außenmaße Gehäuse (B × H)</span><span id="cad-kpi-outer-dims"
+              class="kpi-value">—</span><span id="cad-kpi-total-with-nuts" class="kpi-sub">—</span></div>
+          <div class="kpi-box"><span class="kpi-label">Stablänge (Zuschnitt)</span><span id="cad-kpi-rod-cut"
+              class="kpi-value">—</span><span class="kpi-sub">Abzüglich Gleiter- und Münzstapel</span></div>
+          <div class="kpi-box cad-kpi-blue">
+            <span class="kpi-label">Max. Rollendurchmesser D<sub>max</sub></span><span id="cad-kpi-max-roll"
+              class="kpi-value">—</span><span id="cad-kpi-radial-build" class="kpi-sub">—</span>
+          </div>
+          <div class="kpi-box cad-kpi-amber"><span class="kpi-label">Umlenkwinkel α</span><span id="cad-kpi-wrap-angle"
+              class="kpi-value">—</span><span id="cad-kpi-tangent-len" class="kpi-sub">—</span></div>
+        </section>
 
-      <!-- UNTERE STATUSLEISTE -->
-      <footer id="app-statusbar" class="bg-slate-900 border-t border-slate-800 px-4 text-[11px] text-slate-400">
-        <div class="status-details">
-          <span id="status-coverage" class="font-mono text-slate-300 whitespace-nowrap" role="status" aria-live="polite" title="Geschätzter mittlerer Farbauftrag über die gesamte Rolle: Schwarz (K) und summierte Farbkanäle (C+M+Y; bis 300 % möglich). Aus einer verkleinerten RGB-Renderung, ohne Drucker-Farbprofil; tatsächlicher Verbrauch und Druckpreis können abweichen.">K — · CMY —</span>
-          <span class="status-separator text-slate-600">|</span>
-          <span class="status-engine flex items-center"><span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5"></span> HiDPI Vektor-Engine bereit</span>
-          <span class="status-separator text-slate-600">|</span>
-          <span id="status-dimensions" class="font-mono text-slate-300">Sichtfenster: 42.0 cm × 32.0 cm</span>
-        </div>
-        <div class="status-brand">
-          <span class="build-label">Build: </span>
-          <span id="build-date"><!-- BUILD_DATE -->22.11.2026 20:47<!-- /BUILD_DATE --></span>
-          <a class="status-logo-link" href="https://github.com/KoljaL/ChronoScroll" target="_blank" rel="noopener noreferrer" aria-label="ChronoScroll auf GitHub (öffnet einen neuen Tab)">
-            <span class="sr-only">Code: </span>
-            <img src="./img/logo.svg" alt="" width="18" height="18" />
-          </a>
-        </div>
-      </footer>
+        <section class="card cad-bom-card" aria-label="Dynamische Stückliste">
+          <div class="card-header">
+            <h2 class="card-title"><i class="fa-solid fa-list-check" aria-hidden="true"></i> Stückliste (BOM)</h2>
+          </div>
+          <div class="cad-bom-scroll">
+            <table class="cad-bom-table">
+              <thead>
+                <tr>
+                  <th scope="col">Anz.</th>
+                  <th scope="col">Bauteil</th>
+                  <th scope="col">Zuschnitt / Maß</th>
+                  <th scope="col">Material / Hinweis</th>
+                </tr>
+              </thead>
+              <tbody id="cad-bom-items"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <div id="cad-toast" class="toast" role="status" aria-live="polite"></div>
     </div>
 
-    <!-- MODAL: TERMIN ANLEGEN / EDITIEREN -->
-    <div id="event-modal" class="modal-overlay hidden">
-      <div class="modal-content p-5 space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-          <h3 class="font-bold text-slate-100 text-sm flex items-center space-x-2">
-            <i class="fa-solid fa-calendar-plus text-amber-400"></i>
-            <span>Termin eintragen</span>
-          </h3>
-          <button type="button" onclick="document.getElementById('event-modal').classList.add('hidden')" aria-label="Dialog schließen" class="text-slate-400 hover:text-slate-200 text-sm cursor-pointer">
-            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-          </button>
+    <!-- UNTERE STATUSLEISTE -->
+    <footer id="app-statusbar" class="bg-slate-900 border-t border-slate-800 px-4 text-[11px] text-slate-400">
+      <div class="status-details">
+        <span id="status-coverage" class="font-mono text-slate-300 whitespace-nowrap" role="status" aria-live="polite"
+          title="Geschätzter mittlerer Farbauftrag über die gesamte Rolle: Schwarz (K) und summierte Farbkanäle (C+M+Y; bis 300 % möglich). Aus einer verkleinerten RGB-Renderung, ohne Drucker-Farbprofil; tatsächlicher Verbrauch und Druckpreis können abweichen.">K
+          — · CMY —</span>
+        <span class="status-separator text-slate-600">|</span>
+        <span class="status-engine flex items-center"><span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5"></span>
+          HiDPI Vektor-Engine bereit</span>
+        <span class="status-separator text-slate-600">|</span>
+        <span id="status-dimensions" class="font-mono text-slate-300">Sichtfenster: 42.0 cm × 32.0 cm</span>
+      </div>
+      <div class="status-brand">
+        <span class="build-label">Build: </span>
+        <span id="build-date"><!-- BUILD_DATE -->22.11.2026 20:47<!-- /BUILD_DATE --></span>
+        <a class="status-logo-link" href="https://github.com/KoljaL/ChronoScroll" target="_blank"
+          rel="noopener noreferrer" aria-label="ChronoScroll auf GitHub (öffnet einen neuen Tab)">
+          <span class="sr-only">Code: </span>
+          <img src="./img/logo.svg" alt="" width="18" height="18" />
+        </a>
+      </div>
+    </footer>
+  </div>
+
+  <!-- MODAL: TERMIN ANLEGEN / EDITIEREN -->
+  <div id="event-modal" class="modal-overlay hidden">
+    <div class="modal-content p-5 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="font-bold text-slate-100 text-sm flex items-center space-x-2">
+          <i class="fa-solid fa-calendar-plus text-amber-400"></i>
+          <span>Termin eintragen</span>
+        </h3>
+        <button type="button" onclick="document.getElementById('event-modal').classList.add('hidden')"
+          aria-label="Dialog schließen" class="text-slate-400 hover:text-slate-200 text-sm cursor-pointer">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label for="modal-event-title" class="cs-label">Bezeichnung / Anlass</label>
+          <input type="text" id="modal-event-title" placeholder="z.B. Sommerurlaub, Geburtstag Lisa, Deadline Projekt"
+            class="cs-input" />
         </div>
 
-        <div class="space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label for="modal-event-title" class="cs-label">Bezeichnung / Anlass</label>
-            <input type="text" id="modal-event-title" placeholder="z.B. Sommerurlaub, Geburtstag Lisa, Deadline Projekt" class="cs-input" />
+            <label for="modal-event-date-start" class="cs-label">Beginn</label>
+            <input type="date" id="modal-event-date-start" class="cs-input font-mono" />
           </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label for="modal-event-date-start" class="cs-label">Beginn</label>
-              <input type="date" id="modal-event-date-start" class="cs-input font-mono" />
-            </div>
-            <div>
-              <label for="modal-event-date-end" class="cs-label">Ende (inklusive)</label>
-              <input type="date" id="modal-event-date-end" class="cs-input font-mono" />
-            </div>
-          </div>
-
           <div>
-            <label for="modal-event-color" class="cs-label">Farbe im Kalender</label>
-            <div class="flex items-center space-x-3">
-              <input type="color" id="modal-event-color" value="#bfdbfe" class="w-8 h-8 rounded bg-transparent cursor-pointer" />
-            </div>
+            <label for="modal-event-date-end" class="cs-label">Ende (inklusive)</label>
+            <input type="date" id="modal-event-date-end" class="cs-input font-mono" />
           </div>
         </div>
 
-        <div class="flex justify-end space-x-2 pt-3 border-t border-slate-800">
-          <button id="btn-modal-event-cancel" type="button" class="px-4 py-1.5 rounded-lg text-xs bg-slate-800 text-slate-300 hover:bg-slate-700 transition cursor-pointer">Abbrechen</button>
-          <button id="btn-modal-event-save" type="button" class="px-4 py-1.5 rounded-lg text-xs bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 transition cursor-pointer">Speichern</button>
+        <div>
+          <label for="modal-event-color" class="cs-label">Farbe im Kalender</label>
+          <div class="flex items-center space-x-3">
+            <input type="color" id="modal-event-color" value="#bfdbfe"
+              class="w-8 h-8 rounded bg-transparent cursor-pointer" />
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- SCRIPT-MODULE (OHNE CORS-BESCHRÄNKUNG / DOULE-CLICK KOMPATIBEL) -->
-    <script src="js/geometry.js"></script>
-    <script src="js/moon.js"></script>
-    <script src="js/holidays.js"></script>
-    <script src="js/icsParser.js"></script>
-    <script src="js/embeddedFonts.js"></script>
-    <script src="js/fontManager.js"></script>
-    <script src="js/themePresets.js"></script>
-    <script src="js/designPresets.js"></script>
-    <script src="js/builtInPresets.js"></script>
-    <script src="js/canvasRenderer.js"></script>
-    <script src="js/shareConfig.js"></script>
-    <script src="js/pdfExport.js"></script>
-    <script src="js/svgExport.js"></script>
-    <script src="js/coverageAdvisor.js"></script>
-    <script src="js/cadPdfExport.js"></script>
-    <script src="js/blossomColorPicker.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/cad-module.js"></script>
-  </body>
+      <div class="flex justify-end space-x-2 pt-3 border-t border-slate-800">
+        <button id="btn-modal-event-cancel" type="button"
+          class="px-4 py-1.5 rounded-lg text-xs bg-slate-800 text-slate-300 hover:bg-slate-700 transition cursor-pointer">Abbrechen</button>
+        <button id="btn-modal-event-save" type="button"
+          class="px-4 py-1.5 rounded-lg text-xs bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 transition cursor-pointer">Speichern</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT-MODULE (OHNE CORS-BESCHRÄNKUNG / DOULE-CLICK KOMPATIBEL) -->
+  <script src="js/geometry.js"></script>
+  <script src="js/moon.js"></script>
+  <script src="js/holidays.js"></script>
+  <script src="js/icsParser.js"></script>
+  <script src="js/embeddedFonts.js"></script>
+  <script src="js/fontManager.js"></script>
+  <script src="js/themePresets.js"></script>
+  <script src="js/designPresets.js"></script>
+  <script src="js/builtInPresets.js"></script>
+  <script src="js/canvasRenderer.js"></script>
+  <script src="js/shareConfig.js"></script>
+  <script src="js/pdfExport.js"></script>
+  <script src="js/svgExport.js"></script>
+  <script src="js/coverageAdvisor.js"></script>
+  <script src="js/cadPdfExport.js"></script>
+  <script src="js/blossomColorPicker.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/cad-module.js"></script>
+</body>
+
 </html>

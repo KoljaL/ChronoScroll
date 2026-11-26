@@ -118,7 +118,7 @@ body {
   max-width: 100%;
   z-index: 30;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
   grid-template-areas: 'brand mode controls theme';
   align-items: center;
   gap: 0.6rem;
@@ -131,6 +131,8 @@ body {
   display: flex;
   align-items: center;
   gap: 0.7rem;
+  text-decoration: none;
+  color: inherit;
 }
 
 .header-logo {
@@ -164,7 +166,8 @@ body {
 
 #app-header > .mode-switch {
   grid-area: mode;
-  justify-self: center;
+  justify-self: start;
+  margin-left: 0.75rem;
 }
 
 #app-header > .header-controls {
@@ -260,16 +263,42 @@ body {
   color: var(--accent-contrast);
 }
 
+.header-share-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.header-share-toast {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 50;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid var(--border-medium);
+  border-radius: 0.4rem;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 0.7rem;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.2);
+  pointer-events: none;
+}
+
+.header-share-toast[hidden] {
+  display: none;
+}
+
 .header-export-slot {
   position: relative;
-  width: 12.25rem;
+  width: auto;
   height: 2rem;
-  flex: 0 0 12.25rem;
+  flex: 0 0 auto;
 }
 
 .header-export-group {
-  position: absolute;
-  inset: 0 auto auto 0;
+  position: relative;
   height: 2rem;
   gap: 0.25rem;
   white-space: nowrap;
@@ -341,6 +370,12 @@ body {
 
 #cad-sidebar {
   grid-row: 1;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+#cad-sidebar::-webkit-scrollbar {
+  display: none;
 }
 
 .calendar-sidebar {
@@ -438,6 +473,12 @@ body {
   flex-direction: column;
   gap: var(--workspace-module-gap);
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.calendar-tabpanels::-webkit-scrollbar {
+  display: none;
 }
 
 .calendar-tabpanel {
@@ -468,7 +509,7 @@ body {
 .sidebar-accordion-summary {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.5rem;
   padding: 0.65rem 0.9rem;
   background: var(--bg-subtle);
@@ -487,15 +528,17 @@ body {
   display: none;
 }
 
-.sidebar-accordion-summary::before {
+.sidebar-accordion-summary::after {
   content: '▸';
   display: inline-block;
-  font-size: 0.72rem;
+  margin-left: auto;
+  font-size: 0.95rem;
+  line-height: 1;
   color: var(--text-muted);
   transition: transform 0.15s ease;
 }
 
-.sidebar-accordion[open] > .sidebar-accordion-summary::before {
+.sidebar-accordion[open] > .sidebar-accordion-summary::after {
   transform: rotate(90deg);
 }
 
@@ -827,7 +870,8 @@ body {
 .mode-switch-button {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  text-align: left;
   gap: 0.4rem;
   padding: 0.45rem 0.65rem;
   border: 0;
@@ -958,10 +1002,6 @@ body {
     padding-inline: 0.45rem;
   }
 
-  .mode-switch-button span {
-    display: none;
-  }
-
   #app-header {
     --header-logo-size: 2.5rem;
   }
@@ -983,10 +1023,6 @@ body {
   .header-nav-slot {
     width: 8rem;
     flex-basis: 8rem;
-  }
-  .header-export-slot {
-    width: 4.25rem;
-    flex-basis: 4.25rem;
   }
   .header-export-primary span {
     display: none;
@@ -1107,16 +1143,27 @@ body {
 
 /* Einheitliche Auswahlkarten für Kalenderdarstellung und Farbwelt */
 .choice-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-height: 14rem;
+  overflow-y: auto;
+  padding-right: 0.1rem;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.choice-grid::-webkit-scrollbar {
+  display: none;
 }
 
 .choice-card,
 .theme-pill {
+  flex: 0 0 auto;
+  width: 100%;
   border: 1px solid var(--border-medium);
   border-radius: 0.5rem;
-  padding: 0.5rem;
+  padding: 0.5rem 0.65rem;
   cursor: pointer;
   text-align: left;
   transition:
@@ -1127,9 +1174,8 @@ body {
 
 .choice-card {
   display: flex;
-  min-height: 4.5rem;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.2rem;
   background: var(--bg-subtle);
 }
 
@@ -1167,25 +1213,10 @@ body {
 
 .theme-pill {
   display: flex;
-  min-height: 5.5rem;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.25rem;
+  gap: 0.2rem;
   background: var(--bg-subtle);
-}
-
-.theme-swatches {
-  display: flex;
-  gap: 0.25rem;
-  margin-top: auto;
-  padding-top: 0.25rem;
-}
-
-.theme-swatch {
-  width: 0.75rem;
-  height: 0.75rem;
-  border: 1px solid rgba(148, 163, 184, 0.45);
-  border-radius: 9999px;
 }
 
 .category-color-list {
@@ -1363,12 +1394,6 @@ body {
   box-sizing: border-box;
   width: 26px;
   height: 26px;
-}
-
-@media (max-width: 350px) {
-  .choice-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* Tailwind bleibt für das Layout; seine bisherigen UI-Farben folgen den Tokens. */
