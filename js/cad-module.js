@@ -86,6 +86,7 @@
     const listeners = [];
     let calendarDimensions = null;
     let usingCalendarDimensions = true;
+    let paperThicknessOverridden = false;
 
     function getDefaults() {
       const defs = {};
@@ -113,6 +114,7 @@
       const num = Number(rawVal);
       if (!Number.isFinite(num)) return;
       state[key] = num;
+      if (key === 'paperThickness') paperThicknessOverridden = true;
       notify();
     }
 
@@ -170,6 +172,12 @@
           next[key] = usingCalendarDimensions ? calendarDimensions[key] : next[key];
         });
       }
+      const thickness = Number(candidate && candidate.paperThickness);
+      if (Number.isFinite(thickness) && calendarDimensions) {
+        paperThicknessOverridden = Math.abs(thickness - calendarDimensions.paperThickness) > 1e-6;
+      } else if (!calendarDimensions) {
+        paperThicknessOverridden = false;
+      }
       state = next;
       notify();
     }
@@ -187,7 +195,7 @@
       if (usingCalendarDimensions) {
         PHYSICAL_KEYS.forEach(key => { state[key] = next[key]; });
         const thickness = Number(dimensions && dimensions.paperThickness);
-        if (Number.isFinite(thickness)) {
+        if (Number.isFinite(thickness) && !paperThicknessOverridden) {
           state.paperThickness = Math.min(META_MAP.paperThickness.max, Math.max(META_MAP.paperThickness.min, thickness));
         }
         notify();
@@ -195,6 +203,7 @@
     }
 
     function reset({ acceptPhysicalOverride = false } = {}) {
+      paperThicknessOverridden = false;
       loadState(getDefaults(), { acceptPhysicalOverride });
     }
 

@@ -328,7 +328,7 @@ window.CronoPDF = (function() {
     // --- 4. NACHLAUF (WICKEL-PUFFER RECHTS) ---
     const leadOutStartMm = geo.lTotalMm - (geo.leadOutMm ?? geo.pufferRightMm);
     doc.setFillColor(...(design ? paperRgb : [248, 250, 252]));
-    doc.rect(leadOutStartMm, 0, geo.pufferRightMm, geo.hVisibleMm, 'F');
+    doc.rect(leadOutStartMm, 0, geo.leadOutMm ?? geo.pufferRightMm, geo.hVisibleMm, 'F');
     if (qrData) {
       const { qr, count: moduleCount, size: qrSizeMm, moduleSize: moduleSizeMm, x: qrX, y: qrY } = qrData;
       doc.setFillColor(255, 255, 255);
@@ -371,8 +371,10 @@ window.CronoPDF = (function() {
       const viewportEndMm = viewportStartMm + geo.bVisibleMm;
       doc.setDrawColor(cropRgb[0], cropRgb[1], cropRgb[2]);
       doc.setLineWidth(0.2);
+      if (typeof doc.setLineDashPattern === 'function') doc.setLineDashPattern([2, 1.5], 0);
       doc.line(viewportStartMm, 0, viewportStartMm, geo.hVisibleMm);
       doc.line(viewportEndMm, 0, viewportEndMm, geo.hVisibleMm);
+      if (typeof doc.setLineDashPattern === 'function') doc.setLineDashPattern([], 0);
     }
 
     const originalVersion = jsPDF.version;

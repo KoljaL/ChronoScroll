@@ -1613,7 +1613,8 @@
       const pxPerCm = 20 * state.zoom;
       const clickXCm = (e.clientX - rect.left) / pxPerCm;
       const geo = window.CronoGeometry.calculate(state);
-      const viewportXCm = geo.pufferLeft + state.currentMonthIndex * geo.bMonth;
+      const leadInCm = (geo.leadInMm ?? geo.pufferLeftMm) / 10;
+      const viewportXCm = leadInCm + state.currentMonthIndex * geo.bMonth;
 
       if (clickXCm >= viewportXCm && clickXCm <= viewportXCm + state.bVisible) {
         state.isDraggingViewport = true;
@@ -1681,7 +1682,13 @@
     const activateTab = bindEvents();
     if (initialMode) setAppMode(initialMode);
     if ((initialMode || 'calendar') === 'calendar' && initialTab) {
-      const tabButton = Array.from(document.querySelectorAll('.tab-btn')).find((button) => button.getAttribute('data-tab') === `tab-${initialTab}`);
+      const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
+      let tabButton = tabButtons.find((button) => button.getAttribute('data-tab') === `tab-${initialTab}`);
+      if (!tabButton && initialTab === 'layout') {
+        tabButton = tabButtons.find((button) => button.getAttribute('data-tab') === 'tab-style');
+      } else if (!tabButton && initialTab === 'presets') {
+        tabButton = tabButtons.find((button) => button.getAttribute('data-tab') === 'tab-holidays');
+      }
       if (tabButton) activateTab(tabButton);
     }
     renderPreview();
