@@ -509,12 +509,20 @@
       gap: 0.2rem;
     }
 
+    /* Wrapper (Eltern des Zeichenbereichs) – Dark-Mode-fähige Umgebung */
+#cad-viewport-wrapper {
+  background: var(--bg-canvas);   /* dunkel im Dark Mode */
+  padding: 1rem;                /* Abstand wie bei Kalender */
+  overflow: auto;
+}
+
     /* Zeichenfläche */
     .viewport-wrapper {
       width: 100%;
       overflow: hidden;
       border-radius: var(--radius-md);
       background-color: #ffffff;
+        box-shadow: 0 2px 16px rgba(0,0,0,0.18); /* optional: hebt Fläche ab */
       background-image:
         linear-gradient(to right, rgba(203, 213, 225, 0.28) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(203, 213, 225, 0.28) 1px, transparent 1px);
