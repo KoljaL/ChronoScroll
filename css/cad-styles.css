@@ -431,82 +431,103 @@
       width: 1.4rem;
     }
 
-    /* Kennzahlen-Leiste */
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
-      gap: 0.65rem;
-    }
-
-    .kpi-box {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-medium);
-      border-radius: var(--radius-md);
-      padding: 0.65rem 0.85rem;
-    }
-
-    .kpi-label {
-      font-size: 0.72rem;
+    .cad-bom-qty-help {
+      margin-left: 0.5rem;
+      font-size: 0.75rem;
       color: var(--text-muted);
-      display: block;
-      margin-bottom: 0.15rem;
     }
 
-    .kpi-value {
-      font-family: var(--font-mono);
-      font-size: 0.95rem;
-      font-weight: 700;
+    .cad-status-badge,
+    .cad-warn-banner {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .cad-status-badge {
+      background: var(--ok-bg);
+      color: var(--ok-text);
+      border-bottom: 1px solid var(--ok-border);
+    }
+
+    .cad-warn-banner {
+      background: var(--warn-bg);
+      color: var(--warn-text);
+      border-bottom: 1px solid var(--warn-border);
+    }
+
+    .cad-warn-dismiss {
+      margin-left: auto;
+      background: none;
+      border: 0;
+      color: inherit;
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+
+    .cad-warn-dismiss:focus-visible {
+      outline: 2px solid currentColor;
+    }
+
+    .cad-error-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      overflow: auto;
+      background: rgba(15, 23, 42, 0.55);
+      z-index: 10;
+      cursor: default;
+      touch-action: auto;
+    }
+
+    .cad-error-overlay-box {
+      background: var(--bg-surface);
+      border: 2px solid var(--err-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1.5rem;
+      max-width: 480px;
+      width: 100%;
+      max-height: 100%;
+      overflow: auto;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .cad-error-overlay-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: var(--err-text);
+      margin-bottom: 0.75rem;
+    }
+
+    .cad-error-overlay-header h3 {
+      margin: 0;
+      font-size: 0.9rem;
+    }
+
+    .cad-error-overlay-list {
+      margin: 0 0 1rem 1.1rem;
+      padding: 0;
+      font-size: 0.8rem;
       color: var(--text-primary);
     }
 
-    .kpi-sub {
-      font-family: var(--font-mono);
-      font-size: 0.68rem;
-      color: var(--text-secondary);
-      display: block;
-      margin-top: 0.15rem;
-    }
-
-    /* Kollisions- & Status-Banner */
-    .validation-card {
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-medium);
-      border-left-width: 5px;
-      padding: 0.75rem 1rem;
-      transition: background-color 0.2s ease, border-color 0.2s ease;
-    }
-
-    .validation-header {
+    .cad-error-overlay-actions {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
       gap: 0.5rem;
-      margin-bottom: 0.35rem;
+      flex-wrap: wrap;
     }
 
-    .validation-heading {
-      margin: 0;
-      font-size: 0.76rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    .validation-badge {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      font-weight: 700;
-      padding: 0.15rem 0.5rem;
-      border-radius: 4px;
-    }
-
-    .validation-list {
-      margin: 0;
-      padding-left: 1.15rem;
-      font-size: 0.8rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
+    .cad-status-badge[hidden],
+    .cad-warn-banner[hidden],
+    .cad-error-overlay[hidden] {
+      display: none;
     }
 
     /* Wrapper (Eltern des Zeichenbereichs) – Dark-Mode-fähige Umgebung */
@@ -602,57 +623,10 @@
     color: var(--text-muted);
   }
 
-  .cad-bom-scroll {
-    overflow-x: auto;
-  }
-
-  .cad-bom-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.75rem;
-  }
-
-  .cad-bom-table th,
-  .cad-bom-table td {
-    padding: 0.55rem 0.7rem;
-    border-bottom: 1px solid var(--border-light);
-    text-align: left;
-    vertical-align: top;
-  }
-
-  .cad-bom-table th {
-    background: var(--bg-subtle);
-    color: var(--text-secondary);
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    white-space: nowrap;
-  }
-
-  .cad-bom-table td:first-child {
-    font-family: var(--font-mono);
-    font-weight: 700;
-    white-space: nowrap;
-  }
-
-  .cad-kpi-blue {
-    background: var(--accent-soft);
-    border-color: var(--accent);
-  }
-
-  .cad-kpi-amber {
-    background: var(--warn-bg);
-    border-color: var(--warn-border);
-  }
-
   .cad-option-stack {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-  }
-
-  #cad-stage.cad-validation-error #cad-validation-box {
-    order: -1;
   }
 
   .cad-drawing-card {

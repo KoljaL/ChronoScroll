@@ -867,6 +867,12 @@
                 <input type="text" id="cad-tb-author-input" value="ChronoScroll" />
               </div>
             </div>
+            <div class="form-field">
+              <label for="cad-bom-qty-input">Anzahl Kalender (Stückliste)</label>
+              <input type="number" id="cad-bom-qty-input" min="1" max="99" step="1" value="1"
+                aria-describedby="cad-bom-qty-help" />
+              <span id="cad-bom-qty-help" class="cad-bom-qty-help" aria-live="polite">1 bis 99 Exemplare</span>
+            </div>
           </div>
         </details>
 
@@ -906,51 +912,31 @@
 
       <section id="cad-stage" class="workspace-stage" aria-label="CAD-Zeichenblatt und Stückliste">
         <section id="cad-drawing-card" class="card cad-drawing-card" aria-label="Technische Mehrtafelzeichnung">
+          <div id="cad-status-badge" class="cad-status-badge" role="status" hidden>
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            <span id="cad-status-badge-text"></span>
+          </div>
+          <div id="cad-warn-banner" class="cad-warn-banner" role="status" hidden>
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <span id="cad-warn-banner-text"></span>
+            <button type="button" id="cad-warn-dismiss" class="cad-warn-dismiss" aria-label="Warnung ausblenden">×</button>
+          </div>
           <div id="cad-viewport-wrapper" class="viewport-wrapper">
-            <svg id="cad-drawing-svg" xmlns="http://www.w3.org/2000/svg" role="img"
-              aria-label="Technische CAD-Zeichnung"></svg>
-          </div>
-        </section>
-
-        <section id="cad-validation-box" class="validation-card" aria-live="polite">
-          <div class="validation-header">
-            <h2 class="validation-heading">Konstruktions- &amp; Kollisionsprüfung</h2>
-            <span id="cad-validation-badge" class="validation-badge">PRÜFUNG</span>
-          </div>
-          <ul id="cad-validation-list" class="validation-list"></ul>
-        </section>
-
-        <section class="kpi-grid" aria-label="Berechnete Konstruktionsmaße">
-          <div class="kpi-box"><span class="kpi-label">Achsabstand Wickelstäbe</span><span id="cad-kpi-axis-distance"
-              class="kpi-value">—</span><span class="kpi-sub">Rückwand + 2×Spalt + Ø Stab</span></div>
-          <div class="kpi-box"><span class="kpi-label">Außenmaße Gehäuse (B × H)</span><span id="cad-kpi-outer-dims"
-              class="kpi-value">—</span><span id="cad-kpi-total-with-nuts" class="kpi-sub">—</span></div>
-          <div class="kpi-box"><span class="kpi-label">Stablänge (Zuschnitt)</span><span id="cad-kpi-rod-cut"
-              class="kpi-value">—</span><span class="kpi-sub">Abzüglich Gleiter- und Münzstapel</span></div>
-          <div class="kpi-box cad-kpi-blue">
-            <span class="kpi-label">Max. Rollendurchmesser D<sub>max</sub></span><span id="cad-kpi-max-roll"
-              class="kpi-value">—</span><span id="cad-kpi-radial-build" class="kpi-sub">—</span>
-          </div>
-          <div class="kpi-box cad-kpi-amber"><span class="kpi-label">Umlenkwinkel α</span><span id="cad-kpi-wrap-angle"
-              class="kpi-value">—</span><span id="cad-kpi-tangent-len" class="kpi-sub">—</span></div>
-        </section>
-
-        <section class="card cad-bom-card" aria-label="Dynamische Stückliste">
-          <div class="card-header">
-            <h2 class="card-title"><i class="fa-solid fa-list-check" aria-hidden="true"></i> Stückliste (BOM)</h2>
-          </div>
-          <div class="cad-bom-scroll">
-            <table class="cad-bom-table">
-              <thead>
-                <tr>
-                  <th scope="col">Anz.</th>
-                  <th scope="col">Bauteil</th>
-                  <th scope="col">Zuschnitt / Maß</th>
-                  <th scope="col">Material / Hinweis</th>
-                </tr>
-              </thead>
-              <tbody id="cad-bom-items"></tbody>
-            </table>
+            <svg id="cad-drawing-svg" xmlns="http://www.w3.org/2000/svg" role="img" tabindex="-1"
+              aria-label="Technische CAD-Zeichnung mit Stückliste"></svg>
+            <div id="cad-error-overlay" class="cad-error-overlay" role="alert" hidden>
+              <div class="cad-error-overlay-box">
+                <div class="cad-error-overlay-header">
+                  <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
+                  <h3>Kollision erkannt</h3>
+                </div>
+                <ul id="cad-error-overlay-list" class="cad-error-overlay-list"></ul>
+                <div class="cad-error-overlay-actions">
+                  <button type="button" id="cad-error-fix-btn" class="btn btn-primary">Parameter korrigieren</button>
+                  <button type="button" id="cad-error-dismiss-btn" class="btn btn-secondary">Trotzdem exportieren</button>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </section>
@@ -972,7 +958,7 @@
       </div>
       <div class="status-brand">
         <span class="build-label">Build: </span>
-        <span id="build-date"><!-- BUILD_DATE -->22.11.2026 20:47<!-- /BUILD_DATE --></span>
+        <span id="build-date"><!-- BUILD_DATE -->26.11.2026 23:56<!-- /BUILD_DATE --></span>
         <a class="status-logo-link" href="https://github.com/KoljaL/ChronoScroll" target="_blank"
           rel="noopener noreferrer" aria-label="ChronoScroll auf GitHub (öffnet einen neuen Tab)">
           <span class="sr-only">Code: </span>

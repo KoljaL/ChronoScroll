@@ -310,6 +310,7 @@
       if (!isDeflectedBackward) {
         checks.push({
           level: 'warning',
+          paramKey: 'rodOffsetZ',
           text: `Keine Umlenkung nach hinten: Die Stabachse (Z = ${p.rodOffsetZ} mm) liegt zu weit vorne gegenüber der Rückwand-Vorderseite (Z = ${backpanelFrontZ} mm).`
         });
       }
@@ -318,6 +319,7 @@
         const overhang = (rollBackZ - p.railDepth).toFixed(2);
         checks.push({
           level: 'error',
+          paramKey: 'railDepth',
           text: `Volle Papierrolle ragt hinten ${overhang} mm über die Leistentiefe (${p.railDepth} mm) hinaus.`
         });
       }
@@ -326,11 +328,13 @@
       if (remainingSideGap < 0) {
         checks.push({
           level: 'error',
+          paramKey: 'sideClearance',
           text: `Seitliche Kollision: Volle Rolle (Ø ${maxRollDiameter.toFixed(2)} mm) überlappt um ${Math.abs(remainingSideGap).toFixed(2)} mm mit der Rückwandkante!`
         });
       } else if (remainingSideGap < minSideGapMm) {
         checks.push({
           level: 'error',
+          paramKey: 'sideClearance',
           text: `Seitlicher Restspalt bei voller Rolle zu gering (${remainingSideGap.toFixed(2)} mm < ${minSideGapMm.toFixed(1).replace('.', ',')} mm).`
         });
       }
@@ -339,11 +343,13 @@
       if (remainingRailHeight <= 0) {
         checks.push({
           level: 'error',
+          paramKey: 'blindHoleDepth',
           text: `Sackloch (${p.blindHoleDepth} mm) durchstößt die Querleiste (${p.railHeight} mm Höhe) komplett!`
         });
       } else if (remainingRailHeight < 5) {
         checks.push({
           level: 'warning',
+          paramKey: 'blindHoleDepth',
           text: `Geringe Restwandstärke über dem Sackloch: ${remainingRailHeight.toFixed(1)} mm (empfohlen ≥ 5,0 mm).`
         });
       }
@@ -353,6 +359,7 @@
       if (frontWallZ < 2 || backWallZ < 2) {
         checks.push({
           level: 'error',
+          paramKey: frontWallZ < 2 ? 'rodOffsetZ' : 'railDepth',
           text: `Sackloch (Ø ${p.rodDiameter} mm) durchbricht Vorder- oder Rückseite der Leiste!`
         });
       }
@@ -379,6 +386,18 @@
     return { analyze };
   })();
 
+
+  function buildBOMRows(p, geom, qty) {
+    return [
+      [`${2 * qty}×`, 'Horizontale Tragleisten', `${geom.totalWidth.toFixed(1)} × ${p.railDepth} × ${p.railHeight} mm`, 'Holz; oben und unten'],
+      [`${2 * qty}×`, 'Wickelstäbe', `Ø ${p.rodDiameter} × ${geom.rodCutLength.toFixed(1)} mm`, geom.blindHoleClearanceMm > 0 ? `Rundstab; Sackloch-Bohrer Ø ${geom.drillDiameterMm.toFixed(1)} mm` : 'Rundstab; Zuschnittlänge'],
+      [`${qty}×`, 'Rückwand / Schreibplatte', `${p.windowWidth + p.backpanelOffsetWidthMm} × ${p.windowHeight + p.backpanelOffsetHeightMm} × ${p.backpanelThickness} mm`, 'Multiplex oder Acrylglas'],
+      [`${qty}×`, 'Papierbahn', `${p.windowHeight} × ${p.paperLength} mm`, 'Breite × Länge'],
+      [`${4 * qty}×`, 'PTFE-Möbelgleiter', `${p.gliderThickness} mm stark`, 'Je zwei pro Wickelstab'],
+      [`${2 * qty}×`, '5-Cent-Münze', `${p.coinThickness} mm stark`, 'Auflage für obere Justierung'],
+      [`${2 * qty}×`, 'Rändelmutter M6 (DIN 466)', `${p.knurledNutHeight} mm hoch`, 'Je eine pro Wickelstab']
+    ];
+  }
 
   /**
    * 4. CAD RENDERER MODULE (mit optionaler Steuerung von D_max, Achsen und Schnittebene)
@@ -564,7 +583,40 @@
       parent.appendChild(group);
     }
 
-    function render(svgEl, p, geom, viewOpts, titleBlock, calendarPreview) {
+    function drawBOMTable(parent, rows, x, y, width, height) {
+      const group = el('g', { id: 'cad-bom-table', transform: `translate(${x}, ${y})` });
+      const titleH = 12;
+      const headerH = 24;
+      const rowH = (height - headerH) / rows.length;
+      const columns = [0, 32, 32 + (width - 32) * 0.28, 32 + (width - 32) * 0.58, width];
+      group.appendChild(el('rect', { x: 0, y: 0, width, height, fill: '#f8fafc', stroke: '#0f172a', 'stroke-width': '1.2' }));
+      group.appendChild(el('rect', { x: 0, y: 0, width, height: headerH, fill: '#e2e8f0', stroke: '#0f172a', 'stroke-width': '0.6' }));
+      group.appendChild(el('text', { x: 4, y: 9, 'font-size': '8', 'font-family': 'monospace', 'font-weight': '700', fill: '#0f172a' }, 'STÜCKLISTE (BOM)'));
+      group.appendChild(el('line', { x1: 0, y1: titleH, x2: width, y2: titleH, stroke: '#0f172a', 'stroke-width': '0.6' }));
+      columns.slice(1, -1).forEach(colX => {
+        group.appendChild(el('line', { x1: colX, y1: titleH, x2: colX, y2: height, stroke: '#0f172a', 'stroke-width': '0.6' }));
+      });
+      const addRow = (values, baseline, header) => values.forEach((value, i) => {
+        const available = columns[i + 1] - columns[i] - 8;
+        group.appendChild(el('text', {
+          x: columns[i] + 4, y: baseline,
+          'font-size': Math.min(header ? 7 : 7.5, available / (value.length * 0.62)),
+          'font-family': 'monospace',
+          'font-weight': header || i === 0 ? '700' : '400', fill: '#0f172a'
+        }, value));
+      });
+      addRow(['ANZ.', 'BAUTEIL', 'ZUSCHNITT / MASS', 'MATERIAL / HINWEIS'], 21, true);
+      rows.forEach((row, i) => {
+        if (i > 0) group.appendChild(el('line', {
+          x1: 0, y1: headerH + i * rowH, x2: width, y2: headerH + i * rowH,
+          stroke: '#0f172a', 'stroke-width': '0.5'
+        }));
+        addRow(row, headerH + i * rowH + rowH * 0.72, false);
+      });
+      parent.appendChild(group);
+    }
+
+    function render(svgEl, p, geom, viewOpts, titleBlock, calendarPreview, bomQty = 1) {
       svgEl.innerHTML = '';
       const defs = createDefs();
       svgEl.appendChild(defs);
@@ -617,8 +669,8 @@
       const detailBoxY = 24;
       const reqDetailH = (p.railHeight * 2 + p.knurledNutHeight) * detailScale + 245;
 
-      const titleBlockH = 74;
-      const contentBottom = Math.max(topBottomY, detailBoxY + reqDetailH + titleBlockH + 20);
+      const titleBlockH = 90;
+      const contentBottom = Math.max(topBottomY, detailBoxY + reqDetailH) + titleBlockH + 20;
       const sheetW = Math.max(detailBoxX + detailPanelW + 18, 980);
       const sheetH = Math.max(contentBottom + 18, 590);
 
@@ -656,6 +708,7 @@
       tb.appendChild(el('text', { x: 10, y: 64.5, 'font-size': '9.5', fill: '#475569' }, `Autor: ${titleBlock.author} | Papier: ${p.paperLength}×${p.windowHeight} mm`));
       tb.appendChild(el('text', { x: 238, y: 64.5, 'font-size': '9.5', 'font-family': 'JetBrains Mono', 'font-weight': '600', fill: '#0284c7' }, `D_max: Ø${geom.maxRollDiameter.toFixed(2)}`));
       drawing.appendChild(tb);
+      drawBOMTable(drawing, buildBOMRows(p, geom, bomQty), 10, sheetH - titleBlockH - 10, sheetW - tbW - 20, titleBlockH);
 
 
       // ====================================================================
@@ -978,6 +1031,8 @@
     const inputMap = {};
     let toastTimeout = null;
     let calendarPreviewSnapshot = null;
+    let bomQty = 1;
+    let currentChecks = [];
 
     let baseViewBox = { x: 0, y: 0, w: 1188, h: 840 };
     let currentViewBox = { x: 0, y: 0, w: 1188, h: 840 };
@@ -1142,81 +1197,30 @@
       return { dimensionsDiffer, invalidDimensions, acceptPhysicalOverride };
     }
 
-    function renderBOM(p, geom) {
-      const rows = [
-        ['2×', 'Horizontale Tragleisten', `${geom.totalWidth.toFixed(1)} × ${p.railDepth} × ${p.railHeight} mm`, 'Holz; oben und unten'],
-        ['2×', 'Wickelstäbe', `Ø ${p.rodDiameter} × ${geom.rodCutLength.toFixed(1)} mm`, geom.blindHoleClearanceMm > 0 ? `Rundstab; Sackloch-Bohrer Ø ${geom.drillDiameterMm.toFixed(1)} mm` : 'Rundstab; Zuschnittlänge'],
-        ['1×', 'Rückwand / Schreibplatte', `${p.windowWidth + p.backpanelOffsetWidthMm} × ${p.windowHeight + p.backpanelOffsetHeightMm} × ${p.backpanelThickness} mm`, 'Multiplex oder Acrylglas'],
-        ['1×', 'Papierbahn', `${p.windowHeight} × ${p.paperLength} mm`, 'Breite × Länge'],
-        ['4×', 'PTFE-Möbelgleiter', `${p.gliderThickness} mm stark`, 'Je zwei pro Wickelstab'],
-        ['2×', '5-Cent-Münze', `${p.coinThickness} mm stark`, 'Auflage für obere Justierung'],
-        ['2×', 'Rändelmutter M6 (DIN 466)', `${p.knurledNutHeight} mm hoch`, 'Je eine pro Wickelstab']
-      ];
-      const tbody = cadElement('bom-items');
-      tbody.replaceChildren();
-      rows.forEach(row => {
-        const tr = document.createElement('tr');
-        row.forEach(value => {
-          const td = document.createElement('td');
-          td.textContent = value;
-          tr.appendChild(td);
+    function updateValidationUI(geom) {
+      currentChecks = geom.checks;
+      const badge = cadElement('status-badge');
+      const banner = cadElement('warn-banner');
+      const overlay = cadElement('error-overlay');
+      badge.hidden = banner.hidden = overlay.hidden = true;
+
+      if (currentChecks.some(c => c.level === 'error')) {
+        const list = cadElement('error-overlay-list');
+        list.replaceChildren();
+        currentChecks.filter(c => c.level !== 'ok').forEach(c => {
+          const li = document.createElement('li');
+          li.textContent = c.text;
+          list.appendChild(li);
         });
-        tbody.appendChild(tr);
-      });
-    }
-
-    function updateKPIsAndValidation(p, geom) {
-      cadElement('kpi-axis-distance').textContent = `${geom.axisDistance.toFixed(1)} mm`;
-      cadElement('kpi-outer-dims').textContent = `${geom.totalWidth.toFixed(0)} × ${geom.totalHeight.toFixed(0)} mm`;
-      cadElement('kpi-total-with-nuts').textContent = `Inkl. Rändelmutter: ${geom.totalHeightWithNuts.toFixed(1)} mm`;
-      cadElement('kpi-rod-cut').textContent = `${geom.rodCutLength.toFixed(1)} mm`;
-      cadElement('kpi-max-roll').textContent = `Ø ${geom.maxRollDiameter.toFixed(2)} mm`;
-      cadElement('kpi-radial-build').textContent = `Auftrag: +${geom.radialBuildUp.toFixed(2)} mm / Seite`;
-
-      const tCore = geom.tangents.coreRight;
-      const tFull = geom.tangents.fullRight;
-      if (tCore.valid && tFull.valid) {
-        cadElement('kpi-wrap-angle').textContent = `${tFull.angleDeg.toFixed(1)}° – ${tCore.angleDeg.toFixed(1)}°`;
-        cadElement('kpi-tangent-len').textContent = `Freie Tangente: ${tFull.length.toFixed(1)}–${tCore.length.toFixed(1)} mm`;
+        overlay.hidden = false;
+      } else if (currentChecks.some(c => c.level === 'warning')) {
+        cadElement('warn-banner-text').textContent = currentChecks
+          .filter(c => c.level === 'warning').map(c => c.text).join(' · ');
+        banner.hidden = false;
       } else {
-        cadElement('kpi-wrap-angle').textContent = 'Kollision / Ungültig';
-        cadElement('kpi-tangent-len').textContent = 'Tangente nicht berechenbar';
+        cadElement('status-badge-text').textContent = currentChecks.find(c => c.level === 'ok').text;
+        badge.hidden = false;
       }
-
-      const box = cadElement('validation-box');
-      const badge = cadElement('validation-badge');
-      const list = cadElement('validation-list');
-
-      const hasErr = geom.checks.some(c => c.level === 'error');
-      const hasWarn = geom.checks.some(c => c.level === 'warning');
-      cadElement('stage').classList.toggle('cad-validation-error', hasErr);
-
-      if (hasErr) {
-        box.style.backgroundColor = 'var(--err-bg)';
-        box.style.borderColor = 'var(--err-border)';
-        box.style.color = 'var(--err-text)';
-        badge.style.backgroundColor = 'var(--err-bg)';
-        badge.textContent = 'FEHLER / KOLLISION';
-      } else if (hasWarn) {
-        box.style.backgroundColor = 'var(--warn-bg)';
-        box.style.borderColor = 'var(--warn-border)';
-        box.style.color = 'var(--warn-text)';
-        badge.style.backgroundColor = 'var(--warn-bg)';
-        badge.textContent = 'WARNUNG';
-      } else {
-        box.style.backgroundColor = 'var(--ok-bg)';
-        box.style.borderColor = 'var(--ok-border)';
-        box.style.color = 'var(--ok-text)';
-        badge.style.backgroundColor = 'var(--ok-bg)';
-        badge.textContent = 'OK / KOLLISIONSFREI';
-      }
-
-      list.innerHTML = '';
-      geom.checks.forEach(c => {
-        const li = document.createElement('li');
-        li.textContent = c.text;
-        list.appendChild(li);
-      });
     }
 
     function applyViewBox(svgEl) {
@@ -1269,6 +1273,7 @@
       });
 
       wrapper.addEventListener('wheel', (e) => {
+        if (cadElement('error-overlay').contains(e.target)) return;
         e.preventDefault();
         const rect = wrapper.getBoundingClientRect();
         const normX = (e.clientX - rect.left) / rect.width;
@@ -1278,6 +1283,7 @@
       }, { passive: false });
 
       wrapper.addEventListener('pointerdown', (e) => {
+        if (cadElement('error-overlay').contains(e.target)) return;
         isPanning = true;
         wrapper.setPointerCapture(e.pointerId);
         panStart = { clientX: e.clientX, clientY: e.clientY, vbX: currentViewBox.x, vbY: currentViewBox.y };
@@ -1371,10 +1377,9 @@
       const viewOpts = getViewOptions();
       const titleBlock = getTitleBlockData();
 
-      updateKPIsAndValidation(state, geom);
-      renderBOM(state, geom);
+      updateValidationUI(geom);
       updateSyncStatus();
-      CADRenderer.render(svgEl, state, geom, viewOpts, titleBlock, calendarPreviewSnapshot);
+      CADRenderer.render(svgEl, state, geom, viewOpts, titleBlock, calendarPreviewSnapshot, bomQty);
 
       const vbParts = svgEl.getAttribute('viewBox').split(' ').map(Number);
       baseViewBox = { x: vbParts[0], y: vbParts[1], w: vbParts[2], h: vbParts[3] };
@@ -1384,6 +1389,39 @@
     }
 
     function bindActions(svgEl) {
+      const qtyInput = cadElement('bom-qty-input');
+      qtyInput.addEventListener('input', () => {
+        const qty = Number(qtyInput.value);
+        if (qtyInput.value !== '' && Number.isInteger(qty) && qty >= 1 && qty <= 99) {
+          qtyInput.setCustomValidity('');
+          cadElement('bom-qty-help').textContent = '1 bis 99 Exemplare';
+          bomQty = qty;
+          scheduleUpdate();
+        } else {
+          qtyInput.setCustomValidity('Bitte eine ganze Zahl zwischen 1 und 99 eingeben.');
+          cadElement('bom-qty-help').textContent = `Ungültige Anzahl; Stückliste weiterhin für ${bomQty} Exemplare.`;
+        }
+      });
+      qtyInput.addEventListener('change', () => {
+        if (!qtyInput.reportValidity()) return;
+        triggerUpdate();
+      });
+      cadElement('warn-dismiss').addEventListener('click', () => {
+        cadElement('warn-banner').hidden = true;
+        cadElement('drawing-svg').focus();
+      });
+      cadElement('error-dismiss-btn').addEventListener('click', () => {
+        cadElement('error-overlay').hidden = true;
+        sharedElement('cad-export-menu-toggle').focus();
+      });
+      cadElement('error-fix-btn').addEventListener('click', () => {
+        const firstError = currentChecks.find(c => c.level === 'error');
+        const target = inputMap[firstError.paramKey].numInput;
+        target.closest('details').open = true;
+        cadElement('error-overlay').hidden = true;
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.focus();
+      });
       const exportMenu = sharedElement('cad-export-menu');
       const exportMenuToggle = sharedElement('cad-export-menu-toggle');
       const exportMenuItems = Array.from(exportMenu.querySelectorAll('[role="menuitem"]'));
