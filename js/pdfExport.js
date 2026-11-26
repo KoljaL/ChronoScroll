@@ -131,7 +131,7 @@ window.CronoPDF = (function() {
     doc.rect(0, 0, geo.lTotalMm, geo.hVisibleMm, 'F');
 
     // --- 2. VORLAUF (WICKEL-PUFFER LINKS) ---
-    const leadInMm = geo.pufferLeftMm;
+    const leadInMm = geo.leadInMm ?? geo.pufferLeftMm;
     doc.setFillColor(...(design ? paperRgb : [248, 250, 252]));
     doc.rect(0, 0, leadInMm, geo.hVisibleMm, 'F');
 
@@ -326,9 +326,9 @@ window.CronoPDF = (function() {
     }
 
     // --- 4. NACHLAUF (WICKEL-PUFFER RECHTS) ---
-    const leadOutStartMm = geo.lTotalMm - geo.pufferRightMm;
+    const leadOutStartMm = geo.lTotalMm - (geo.leadOutMm ?? geo.pufferRightMm);
     doc.setFillColor(...(design ? paperRgb : [248, 250, 252]));
-    doc.rect(leadOutStartMm, 0, geo.pufferRightMm, geo.hVisibleMm, 'F');
+    doc.rect(leadOutStartMm, 0, geo.leadOutMm ?? geo.pufferRightMm, geo.hVisibleMm, 'F');
     if (qrData) {
       const { qr, count: moduleCount, size: qrSizeMm, moduleSize: moduleSizeMm, x: qrX, y: qrY } = qrData;
       doc.setFillColor(255, 255, 255);
@@ -354,7 +354,10 @@ window.CronoPDF = (function() {
     if (state.designStyle !== 'zen') doc.rect(0, 0, geo.lTotalMm, geo.hVisibleMm, 'D');
 
     // --- 6. SCHNEIDEMARKEN ---
-    if (state.showCropMarks) {
+    const cropStyle = ['none', 'corners', 'lines'].includes(state.cropMarkStyle)
+      ? state.cropMarkStyle
+      : (state.showCropMarks ? 'corners' : 'none');
+    if (cropStyle === 'corners') {
       const cropColor = design ? state.colorText : design;
       const viewportStartMm = leadInMm + (state.currentMonthIndex * geo.bMonthMm);
       const viewportEndMm = viewportStartMm + geo.bVisibleMm;
@@ -362,6 +365,16 @@ window.CronoPDF = (function() {
       drawPdfCropMark(doc, viewportEndMm, 0, 4, 1.5, cropColor);
       drawPdfCropMark(doc, viewportStartMm, geo.hVisibleMm, 4, 1.5, cropColor);
       drawPdfCropMark(doc, viewportEndMm, geo.hVisibleMm, 4, 1.5, cropColor);
+    } else if (cropStyle === 'lines') {
+      const cropRgb = hexToRgb((design ? state.colorText : null) || '#0f172a');
+      const viewportStartMm = leadInMm + (state.currentMonthIndex * geo.bMonthMm);
+      const viewportEndMm = viewportStartMm + geo.bVisibleMm;
+      doc.setDrawColor(cropRgb[0], cropRgb[1], cropRgb[2]);
+      doc.setLineWidth(0.2);
+      if (typeof doc.setLineDashPattern === 'function') doc.setLineDashPattern([2, 1.5], 0);
+      doc.line(viewportStartMm, 0, viewportStartMm, geo.hVisibleMm);
+      doc.line(viewportEndMm, 0, viewportEndMm, geo.hVisibleMm);
+      if (typeof doc.setLineDashPattern === 'function') doc.setLineDashPattern([], 0);
     }
 
     const originalVersion = jsPDF.version;

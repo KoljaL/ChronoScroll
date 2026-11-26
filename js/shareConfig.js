@@ -43,7 +43,11 @@ window.CronoShare = (function() {
     ['qrEnabled', boolean], ['qrGapMm', number(0, 100)], ['showVacations', boolean],
     ['monthHeaderTextColor', color], ['monthHeaderTextSize', number(0.5, 3)],
     ['calendarWeekTextColor', color], ['calendarWeekTextSize', number(0.5, 3)],
-    ['moonOpacity', number(0, 1)]
+    ['moonOpacity', number(0, 1)],
+    ['paperGrammage', number(60, 250)],
+    ['windingAllowanceLeftMm', number(0, 200)],
+    ['windingAllowanceRightMm', number(0, 200)],
+    ['cropMarkStyle', choice('none', 'corners', 'lines')]
   ];
   const separatorFields = [
     ['enabled', boolean], ['widthMm', number(0.1, 20)],
@@ -53,7 +57,22 @@ window.CronoShare = (function() {
   function validateCalendarSettings(state) {
     const errors = [];
     fields.forEach(([name, valid]) => {
+      if ([
+        'paperGrammage',
+        'windingAllowanceLeftMm',
+        'windingAllowanceRightMm',
+        'cropMarkStyle',
+      ].includes(name) && state[name] === undefined) return;
       if (!valid(state[name])) errors.push(name);
+    });
+    const optionalPhase3Fields = [
+      ['paperGrammage', number(60, 250)],
+      ['windingAllowanceLeftMm', number(0, 200)],
+      ['windingAllowanceRightMm', number(0, 200)],
+      ['cropMarkStyle', choice('none', 'corners', 'lines')],
+    ];
+    optionalPhase3Fields.forEach(([name, valid]) => {
+      if (state[name] !== undefined && !valid(state[name])) errors.push(name);
     });
     if (!Object.hasOwn(regions, state.country) || !regions[state.country].includes(state.bundesland)) {
       errors.push('country/bundesland');
@@ -107,6 +126,12 @@ window.CronoShare = (function() {
       if (name === 'calendarWeekTextColor' && value === undefined) value = '#64748b';
       if (name === 'calendarWeekTextSize' && value === undefined) value = 1;
       if (name === 'moonOpacity' && value === undefined) value = 0.89;
+      if (name === 'paperGrammage' && value === undefined) value = 80;
+      if (name === 'windingAllowanceLeftMm' && value === undefined) value = 0;
+      if (name === 'windingAllowanceRightMm' && value === undefined) value = 0;
+      if (name === 'cropMarkStyle' && value === undefined) {
+        value = state.showCropMarks ? 'corners' : 'none';
+      }
       if (name === 'year' && nextYear) value++;
       if (name === 'bannerCustomTitle' && nextYear && typeof value === 'string') {
         value = value.replace(new RegExp(`(^|[^0-9])${state.year}(?=[^0-9]|$)`, 'g'), `$1${state.year + 1}`);
@@ -146,9 +171,18 @@ window.CronoShare = (function() {
     const themeIndex = fields.findIndex(([name]) => name === 'themeKey');
     if (data[1].length <= designIndex) state.designStyle = 'classic';
     if (data[1].length <= themeIndex) state.themeKey = null;
+    state.paperGrammage = 80;
+    state.windingAllowanceLeftMm = 0;
+    state.windingAllowanceRightMm = 0;
+    state.cropMarkStyle = state.showCropMarks ? 'corners' : 'none';
     fields.forEach(([name, valid], index) => {
       if (valid(data[1][index])) state[name] = data[1][index];
     });
+    const validCropStyles = ['none', 'corners', 'lines'];
+    if (!validCropStyles.includes(state.cropMarkStyle)) {
+      state.cropMarkStyle = state.showCropMarks ? 'corners' : 'none';
+    }
+    state.showCropMarks = state.cropMarkStyle !== 'none';
     if (Object.hasOwn(regions, data[2]) && regions[data[2]].includes(data[3])) {
       state.country = data[2];
       state.bundesland = data[3];

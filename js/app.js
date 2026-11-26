@@ -45,6 +45,9 @@
     backpanelOffsetWidthMm: 4.0,
     pufferLeft: 15.0, // cm
     pufferRight: 15.0, // cm
+    windingAllowanceLeftMm: 0,
+    windingAllowanceRightMm: 0,
+    paperGrammage: 80, // g/m²
     pufferLeftContent: 'blank', // 'blank', 'title', 'year_overview', 'notes'
     pufferRightContent: 'blank', // 'blank', 'notes'
     bannerCustomTitle: 'CRONOSCROLL 2027',
@@ -62,6 +65,7 @@
     showKW: true,
     showMoon: true,
     showCropMarks: false,
+    cropMarkStyle: 'none', // 'none', 'corners', 'lines'
     headerStyle: 'uppercase', // 'uppercase', 'titlecase', 'numbered'
     headerAlign: 'center',
     monthHeaderTextColor: '#0f172a',
@@ -140,6 +144,7 @@
         windowWidth: geo.bVisible * 10,
         windowHeight: geo.hVisible * 10,
         paperLength: geo.lTotal * 10,
+        paperThickness: Math.min(0.25, Math.max(0.05, Number(((state.paperGrammage ?? 80) * 0.00125).toFixed(4)))),
       },
       calendarPreview: {
         monthLayout: state.monthLayout,
@@ -312,24 +317,27 @@
     state.holidays.forEach((event) => {
       if (categoryForEvent(event) === category) event.color = color;
     });
+    setColorInput(document.getElementById(`color-category-${category}`), color);
+    setColorInput(document.getElementById(`color-category-${category}-entries`), color);
+    if (window.CronoBlossomColorPicker) window.CronoBlossomColorPicker.sync();
     renderHolidaysList();
     renderPreview();
   }
 
+  const DESIGN_STYLE_OPTIONS = [
+    { value: 'classic', title: 'Klassisch', description: 'Freie Gestaltung mit Kalenderkopf und Tagesraster' },
+    { value: 'midcentury', title: 'Mid-Century', description: 'Markante Typografie im Instrumenten-Look' },
+    { value: 'bauhaus', title: 'Bauhaus', description: 'Geometrische Akzente und klare Formen' },
+    { value: 'gantt', title: 'Gantt', description: 'Wochenraster für Projekt- und Zeitplanung' },
+    { value: 'zen', title: 'Zen', description: 'Reduzierte Darstellung mit viel Weißraum' },
+    { value: 'kursbuch', title: 'Kursbuch', description: 'Fortlaufende Tagesnummern wie im Fahrplan' },
+  ];
+
   function renderDesignOptions() {
     const container = document.getElementById('design-options');
-    const select = document.getElementById('select-design-style');
-    if (!container || !select) return;
-    const descriptions = {
-      classic: 'Freie Gestaltung mit Kalenderkopf und Tagesraster',
-      midcentury: 'Markante Typografie im Instrumenten-Look',
-      bauhaus: 'Geometrische Akzente und klare Formen',
-      gantt: 'Wochenraster für Projekt- und Zeitplanung',
-      zen: 'Reduzierte Darstellung mit viel Weißraum',
-      kursbuch: 'Fortlaufende Tagesnummern wie im Fahrplan',
-    };
+    if (!container) return;
     container.innerHTML = '';
-    Array.from(select.options).forEach((option) => {
+    DESIGN_STYLE_OPTIONS.forEach((option) => {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'choice-card design-card';
@@ -337,10 +345,10 @@
       button.setAttribute('aria-pressed', 'false');
       const label = document.createElement('span');
       label.className = 'choice-card-title';
-      label.textContent = option.textContent.split(' – ')[0].split(' / ')[0];
+      label.textContent = option.title;
       const description = document.createElement('span');
       description.className = 'choice-card-description';
-      description.textContent = descriptions[option.value];
+      description.textContent = option.description;
       button.appendChild(label);
       button.appendChild(description);
       container.appendChild(button);
@@ -355,8 +363,44 @@
     });
   }
 
+  let renderFrameId = null;
+  let coverageTimerId = null;
+  let nextYearLinkTimerId = null;
+
+  function scheduleNextYearLink() {
+    if (nextYearLinkTimerId !== null && typeof clearTimeout === 'function') {
+      clearTimeout(nextYearLinkTimerId);
+    }
+    if (typeof setTimeout !== 'function') {
+      updateNextYearLink();
+      return;
+    }
+    nextYearLinkTimerId = setTimeout(() => {
+      nextYearLinkTimerId = null;
+      updateNextYearLink();
+    }, 250);
+  }
+
+  function scheduleCoverageStatus() {
+    if (coverageTimerId !== null && typeof clearTimeout === 'function') {
+      clearTimeout(coverageTimerId);
+    }
+    if (typeof setTimeout !== 'function') {
+      updateCoverageStatus();
+      return;
+    }
+    coverageTimerId = setTimeout(() => {
+      coverageTimerId = null;
+      updateCoverageStatus();
+    }, 400);
+  }
+
   function renderPreview() {
-    updateNextYearLink();
+    if (renderFrameId !== null && typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(renderFrameId);
+      renderFrameId = null;
+    }
+    scheduleNextYearLink();
     window.CronoCanvas.render(canvas, container, state, {
       qrErrorHandler(error) {
         const status = document.getElementById('qr-status');
@@ -364,8 +408,20 @@
       }
     });
     publishCadSnapshot();
-    updateCoverageStatus();
+    scheduleCoverageStatus();
     invalidateStaleCoverageAdvice();
+  }
+
+  function scheduleRenderPreview() {
+    if (typeof requestAnimationFrame !== 'function') {
+      renderPreview();
+      return;
+    }
+    if (renderFrameId !== null) return;
+    renderFrameId = requestAnimationFrame(() => {
+      renderFrameId = null;
+      renderPreview();
+    });
   }
 
   function renderThemeOptions() {
@@ -380,22 +436,13 @@
       button.setAttribute('data-theme', key);
       button.setAttribute('aria-pressed', 'false');
       const label = document.createElement('span');
-      label.className = 'text-xs font-semibold block text-slate-200';
+      label.className = 'choice-card-title';
       label.textContent = theme.label;
       const description = document.createElement('span');
-      description.className = 'text-[10px] text-slate-400';
+      description.className = 'choice-card-description';
       description.textContent = theme.description;
-      const swatches = document.createElement('span');
-      swatches.className = 'theme-swatches';
-      [theme.paperColor, theme.colorHeaderBg, theme.colorSaturdayBg, theme.colorSundayBg].forEach((color) => {
-        const swatch = document.createElement('span');
-        swatch.className = 'theme-swatch';
-        swatch.style.backgroundColor = color;
-        swatches.appendChild(swatch);
-      });
       button.appendChild(label);
       button.appendChild(description);
-      button.appendChild(swatches);
       container.appendChild(button);
     });
   }
@@ -404,6 +451,7 @@
     const link = document.getElementById('next-year-link');
     const button = document.getElementById('btn-copy-next-year-link');
     const status = document.getElementById('next-year-link-status');
+    if (!link || !button) return;
     let currentLink = document.getElementById('current-year-link');
     if (!currentLink && link && link.parentElement) {
       currentLink = document.createElement('a');
@@ -459,6 +507,9 @@
     setChecked('checkbox-show-vacations', state.showVacations);
     setVal('input-puffer-left', state.pufferLeft);
     setVal('input-puffer-right', state.pufferRight);
+    setVal('input-winding-allowance-left', state.windingAllowanceLeftMm);
+    setVal('input-winding-allowance-right', state.windingAllowanceRightMm);
+    setVal('input-paper-grammage', state.paperGrammage);
     setVal('select-puffer-left-content', state.pufferLeftContent);
     setVal('select-puffer-right-content', state.pufferRightContent);
     setVal('input-custom-title', state.bannerCustomTitle);
@@ -476,6 +527,7 @@
     setChecked('checkbox-show-kw', state.showKW);
     setChecked('checkbox-show-moon', state.showMoon);
     setChecked('checkbox-show-cropmarks', state.showCropMarks);
+    setVal('select-crop-mark-style', state.cropMarkStyle);
     setVal('select-header-style', state.headerStyle);
     setVal('select-header-align', state.headerAlign);
     setColor('input-month-header-text-color', state.monthHeaderTextColor);
@@ -517,12 +569,31 @@
     setColor('color-category-public', state.categoryColors.public);
     setColor('color-category-vacation', state.categoryColors.vacation);
     setColor('color-category-custom', state.categoryColors.custom);
+    setColor('color-category-public-entries', state.categoryColors.public);
+    setColor('color-category-vacation-entries', state.categoryColors.vacation);
+    setColor('color-category-custom-entries', state.categoryColors.custom);
 
     // Land & Region
     setVal('select-country', state.country);
     updateRegionDropdown();
     setVal('select-bundesland', state.bundesland);
+    syncDependentControls();
     if (window.CronoBlossomColorPicker) window.CronoBlossomColorPicker.sync();
+  }
+
+  function syncDependentControls() {
+    const setDisabled = (id, disabled) => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = !!disabled;
+    };
+    const sep = state.monthSeparators[state.monthLayout === 'double' ? 'double' : 'single'];
+    setDisabled('input-qr-gap', !state.qrEnabled);
+    setDisabled('input-month-separator-width', !sep.enabled);
+    setDisabled('color-month-separator', !sep.enabled);
+    setDisabled('checkbox-month-separator-header', !sep.enabled);
+    setDisabled('input-calendar-week-text-color', !state.showKW);
+    setDisabled('input-calendar-week-text-size', !state.showKW);
+    setDisabled('input-moon-opacity', !state.showMoon);
   }
 
   function updateRegionDropdown() {
@@ -700,6 +771,28 @@
   function savePresets(p) {
     localStorage.setItem('cronoscroll_v2_presets', JSON.stringify(p));
   }
+  function normalizePhase3Settings(rawPreset = {}) {
+    const clampNum = (val, min, max, fallback) => {
+      const n = Number(val);
+      return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+    };
+    const paperGrammage = clampNum(rawPreset.paperGrammage ?? 80, 60, 250, 80);
+    const windingAllowanceLeftMm = clampNum(rawPreset.windingAllowanceLeftMm ?? 0, 0, 200, 0);
+    const windingAllowanceRightMm = clampNum(rawPreset.windingAllowanceRightMm ?? 0, 0, 200, 0);
+    const validCropStyles = ['none', 'corners', 'lines'];
+    const legacyCropStyle = rawPreset.showCropMarks ? 'corners' : 'none';
+    const cropMarkStyle = validCropStyles.includes(rawPreset.cropMarkStyle)
+      ? rawPreset.cropMarkStyle
+      : legacyCropStyle;
+    return {
+      paperGrammage,
+      windingAllowanceLeftMm,
+      windingAllowanceRightMm,
+      cropMarkStyle,
+      showCropMarks: cropMarkStyle !== 'none',
+    };
+  }
+
   function applyPreset(name, data) {
     const preset = data.fontFamily === 'custom' && !window.CronoFonts.hasCustomFont() ? { ...data, fontFamily: 'sans' } : data;
     if (preset !== data) {
@@ -716,6 +809,7 @@
       },
       preset,
     );
+    Object.assign(state, normalizePhase3Settings(preset));
     state.categoryColors = { ...defaultCategoryColors(), ...preset.categoryColors };
     if (!Array.isArray(preset.holidays)) loadDefaultHolidays();
     if (!state.showVacations) {
@@ -916,7 +1010,7 @@
       if (el)
         el.addEventListener('input', (e) => {
           state[prop] = parseFloat(e.target.value) || 0;
-          renderPreview();
+          scheduleRenderPreview();
         });
     };
     bindNum('input-h-visible', 'hVisible');
@@ -927,6 +1021,9 @@
     bindNum('input-moon-opacity', 'moonOpacity');
     bindNum('input-puffer-left', 'pufferLeft');
     bindNum('input-puffer-right', 'pufferRight');
+    bindNum('input-winding-allowance-left', 'windingAllowanceLeftMm');
+    bindNum('input-winding-allowance-right', 'windingAllowanceRightMm');
+    bindNum('input-paper-grammage', 'paperGrammage');
     bindNum('input-font-header-scale', 'fontHeaderScale');
     bindNum('input-font-day-scale', 'fontDayScale');
     bindNum('input-line-grid', 'lineGrid');
@@ -941,23 +1038,29 @@
     });
 
     // Puffer & Layout
-    document.getElementById('select-puffer-left-content').addEventListener('change', (e) => {
-      state.pufferLeftContent = e.target.value;
-      renderPreview();
-    });
-    document.getElementById('select-puffer-right-content').addEventListener('change', (e) => {
-      state.pufferRightContent = e.target.value;
-      renderPreview();
-    });
+    const pufferLeftSelect = document.getElementById('select-puffer-left-content');
+    if (pufferLeftSelect) {
+      pufferLeftSelect.addEventListener('change', (e) => {
+        state.pufferLeftContent = e.target.value;
+        renderPreview();
+      });
+    }
+    const pufferRightSelect = document.getElementById('select-puffer-right-content');
+    if (pufferRightSelect) {
+      pufferRightSelect.addEventListener('change', (e) => {
+        state.pufferRightContent = e.target.value;
+        renderPreview();
+      });
+    }
     document.getElementById('input-custom-title').addEventListener('input', (e) => {
       state.bannerCustomTitle = e.target.value;
       document.getElementById('input-preset-name').value = state.bannerCustomTitle;
-      renderPreview();
+      scheduleRenderPreview();
     });
     document.getElementById('input-preset-name').addEventListener('input', (e) => {
       state.bannerCustomTitle = e.target.value;
       document.getElementById('input-custom-title').value = state.bannerCustomTitle;
-      renderPreview();
+      scheduleRenderPreview();
     });
     document.getElementById('select-month-layout').addEventListener('change', (e) => {
       state.monthLayout = e.target.value;
@@ -967,6 +1070,8 @@
     const currentSeparator = () => state.monthSeparators[state.monthLayout === 'double' ? 'double' : 'single'];
     document.getElementById('checkbox-month-separator').addEventListener('change', (e) => {
       currentSeparator().enabled = e.target.checked;
+      syncDependentControls();
+      if (window.CronoBlossomColorPicker) window.CronoBlossomColorPicker.sync();
       renderPreview();
     });
     document.getElementById('input-month-separator-width').addEventListener('input', (e) => {
@@ -979,12 +1084,12 @@
       }
       e.target.removeAttribute('aria-invalid');
       currentSeparator().widthMm = width;
-      renderPreview();
+      scheduleRenderPreview();
     });
     document.getElementById('color-month-separator').addEventListener('input', (e) => {
       currentSeparator().colorMode = 'custom';
       currentSeparator().color = colorInputValue(e.target);
-      renderPreview();
+      scheduleRenderPreview();
     });
     document.getElementById('checkbox-month-separator-header').addEventListener('change', (e) => {
       currentSeparator().header = e.target.checked;
@@ -992,15 +1097,19 @@
     });
     document.getElementById('checkbox-show-kw').addEventListener('change', (e) => {
       state.showKW = e.target.checked;
+      syncDependentControls();
+      if (window.CronoBlossomColorPicker) window.CronoBlossomColorPicker.sync();
       renderPreview();
     });
     document.getElementById('checkbox-show-moon').addEventListener('change', (e) => {
       state.showMoon = e.target.checked;
+      syncDependentControls();
       renderPreview();
     });
     const checkboxQr = document.getElementById('checkbox-show-qr');
     if (checkboxQr) checkboxQr.addEventListener('change', (e) => {
       state.qrEnabled = e.target.checked;
+      syncDependentControls();
       renderPreview();
     });
     const checkboxVacations = document.getElementById('checkbox-show-vacations');
@@ -1012,8 +1121,21 @@
     });
     document.getElementById('checkbox-show-cropmarks').addEventListener('change', (e) => {
       state.showCropMarks = e.target.checked;
+      state.cropMarkStyle = e.target.checked ? (state.cropMarkStyle === 'lines' ? 'lines' : 'corners') : 'none';
+      const cropSelect = document.getElementById('select-crop-mark-style');
+      if (cropSelect) cropSelect.value = state.cropMarkStyle;
       renderPreview();
     });
+    const cropMarkSelect = document.getElementById('select-crop-mark-style');
+    if (cropMarkSelect) {
+      cropMarkSelect.addEventListener('change', (e) => {
+        state.cropMarkStyle = ['none', 'corners', 'lines'].includes(e.target.value) ? e.target.value : 'none';
+        state.showCropMarks = state.cropMarkStyle !== 'none';
+        const cropChk = document.getElementById('checkbox-show-cropmarks');
+        if (cropChk) cropChk.checked = state.showCropMarks;
+        renderPreview();
+      });
+    }
     document.getElementById('select-header-style').addEventListener('change', (e) => {
       state.headerStyle = e.target.value;
       renderPreview();
@@ -1040,16 +1162,19 @@
       state.fontFamily = e.target.value;
       renderPreview();
     });
-    document.getElementById('select-design-style').addEventListener('change', (e) => {
-      state.designStyle = e.target.value;
-      localStorage.setItem('cronoscroll_design_style', state.designStyle);
-      syncChoiceCards();
-      renderPreview();
-    });
+    const designSelect = document.getElementById('select-design-style');
+    if (designSelect) {
+      designSelect.addEventListener('change', (e) => {
+        state.designStyle = e.target.value;
+        localStorage.setItem('cronoscroll_design_style', state.designStyle);
+        syncChoiceCards();
+        renderPreview();
+      });
+    }
     document.querySelectorAll('.design-card').forEach((button) => {
       button.addEventListener('click', () => {
         state.designStyle = button.getAttribute('data-design-style');
-        document.getElementById('select-design-style').value = state.designStyle;
+        if (designSelect) designSelect.value = state.designStyle;
         localStorage.setItem('cronoscroll_design_style', state.designStyle);
         syncChoiceCards();
         renderPreview();
@@ -1097,10 +1222,16 @@
       ['color-category-public', 'public'],
       ['color-category-vacation', 'vacation'],
       ['color-category-custom', 'custom'],
+      ['color-category-public-entries', 'public'],
+      ['color-category-vacation-entries', 'vacation'],
+      ['color-category-custom-entries', 'custom'],
     ].forEach(([id, category]) => {
-      document.getElementById(id).addEventListener('input', (event) => {
-        applyCategoryColor(category, colorInputValue(event.target));
-      });
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', (event) => {
+          applyCategoryColor(category, colorInputValue(event.target));
+        });
+      }
     });
 
     // 3. 1-Klick Theme Buttons
@@ -1247,16 +1378,48 @@
       }
     });
 
-    // 9. Vorlagen-Verwaltung
-    document.getElementById('btn-copy-next-year-link').addEventListener('click', async () => {
-      const status = document.getElementById('next-year-link-status');
-      try {
-        await navigator.clipboard.writeText(window.CronoShare.createNextYearUrl(state));
-        status.textContent = 'Link kopiert.';
-      } catch (error) {
-        status.textContent = `Link konnte nicht kopiert werden: ${error.message}`;
-      }
-    });
+    // 9. Vorlagen-Verwaltung & Header-Share
+    const headerShareBtn = document.getElementById('btn-header-share');
+    if (headerShareBtn) {
+      let headerShareTimerId = null;
+      headerShareBtn.addEventListener('click', async () => {
+        const toast = document.getElementById('header-share-status');
+        const showToast = (msg) => {
+          if (!toast) return;
+          toast.textContent = msg;
+          toast.hidden = false;
+          if (headerShareTimerId !== null && typeof clearTimeout === 'function') {
+            clearTimeout(headerShareTimerId);
+          }
+          if (typeof setTimeout === 'function') {
+            headerShareTimerId = setTimeout(() => {
+              headerShareTimerId = null;
+              toast.hidden = true;
+              toast.textContent = '';
+            }, 2200);
+          }
+        };
+        try {
+          const url = window.CronoShare.createCurrentUrl(state);
+          await navigator.clipboard.writeText(url);
+          showToast('Link kopiert');
+        } catch (error) {
+          showToast(`Kopieren fehlgeschlagen: ${error.message}`);
+        }
+      });
+    }
+    const copyNextYearBtn = document.getElementById('btn-copy-next-year-link');
+    if (copyNextYearBtn) {
+      copyNextYearBtn.addEventListener('click', async () => {
+        const status = document.getElementById('next-year-link-status');
+        try {
+          await navigator.clipboard.writeText(window.CronoShare.createNextYearUrl(state));
+          if (status) status.textContent = 'Link kopiert.';
+        } catch (error) {
+          if (status) status.textContent = `Link konnte nicht kopiert werden: ${error.message}`;
+        }
+      });
+    }
     document.getElementById('btn-save-preset').addEventListener('click', () => {
       const input = document.getElementById('input-preset-name');
       const name = input.value.trim();
@@ -1318,8 +1481,13 @@
     function activateTabFromUrl() {
       const requestedTab = new URLSearchParams(window.location.search).get('tab');
       if (!['geometry', 'layout', 'style', 'holidays', 'presets'].includes(requestedTab)) return;
-      const tabButton = Array.from(document.querySelectorAll('.tab-btn'))
-        .find((button) => button.getAttribute('data-tab') === `tab-${requestedTab}`);
+      const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
+      let tabButton = tabButtons.find((button) => button.getAttribute('data-tab') === `tab-${requestedTab}`);
+      if (!tabButton && requestedTab === 'layout') {
+        tabButton = tabButtons.find((button) => button.getAttribute('data-tab') === 'tab-style');
+      } else if (!tabButton && requestedTab === 'presets') {
+        tabButton = tabButtons.find((button) => button.getAttribute('data-tab') === 'tab-holidays');
+      }
       if (tabButton) activateTab(tabButton);
     }
     document.querySelectorAll('.tab-btn').forEach((btn, index, buttons) => {
@@ -1401,11 +1569,14 @@
       if (document.getElementById('app-container').classList.contains('cad-mode')) return;
       adjustManualZoom(-0.2);
     });
-    document.getElementById('btn-zoom-reset').addEventListener('click', () => {
-      if (document.getElementById('app-container').classList.contains('cad-mode')) return;
-      state.zoom = 1.0;
-      renderPreview();
-    });
+    const btnZoomReset = document.getElementById('btn-zoom-reset');
+    if (btnZoomReset) {
+      btnZoomReset.addEventListener('click', () => {
+        if (document.getElementById('app-container').classList.contains('cad-mode')) return;
+        state.zoom = 1.0;
+        renderPreview();
+      });
+    }
     btnFitBanner.addEventListener('click', () => {
       if (document.getElementById('app-container').classList.contains('cad-mode')) return;
       if (state.viewMode !== 'banner') return;
@@ -1442,7 +1613,8 @@
       const pxPerCm = 20 * state.zoom;
       const clickXCm = (e.clientX - rect.left) / pxPerCm;
       const geo = window.CronoGeometry.calculate(state);
-      const viewportXCm = geo.pufferLeft + state.currentMonthIndex * geo.bMonth;
+      const leadInCm = (geo.leadInMm ?? geo.pufferLeftMm) / 10;
+      const viewportXCm = leadInCm + state.currentMonthIndex * geo.bMonth;
 
       if (clickXCm >= viewportXCm && clickXCm <= viewportXCm + state.bVisible) {
         state.isDraggingViewport = true;
@@ -1510,7 +1682,13 @@
     const activateTab = bindEvents();
     if (initialMode) setAppMode(initialMode);
     if ((initialMode || 'calendar') === 'calendar' && initialTab) {
-      const tabButton = Array.from(document.querySelectorAll('.tab-btn')).find((button) => button.getAttribute('data-tab') === `tab-${initialTab}`);
+      const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
+      let tabButton = tabButtons.find((button) => button.getAttribute('data-tab') === `tab-${initialTab}`);
+      if (!tabButton && initialTab === 'layout') {
+        tabButton = tabButtons.find((button) => button.getAttribute('data-tab') === 'tab-style');
+      } else if (!tabButton && initialTab === 'presets') {
+        tabButton = tabButtons.find((button) => button.getAttribute('data-tab') === 'tab-holidays');
+      }
       if (tabButton) activateTab(tabButton);
     }
     renderPreview();

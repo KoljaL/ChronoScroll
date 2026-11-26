@@ -38,6 +38,8 @@ Die Maße bestimmen die Kalendergeometrie und die Basis der Zuschnittliste. Die 
 | [ ] | Sichtbare Höhe der Schreibplatte einstellen | Ja | Ja | Standard 32 cm; je nach Monatslayout wird die Höhe in 32 (einspaltig) oder 17 (zweispaltig) Zeilen aufgeteilt. |
 | [ ] | Breite des Drei-Monats-Sichtfensters einstellen | Ja | Ja | Standard 42 cm; eine Monatsspalte ist ein Drittel davon breit. |
 | [ ] | Vorlauf und Nachlauf getrennt einstellen | Teilw. | Ja | Standard jeweils 15 cm; die README beschreibt einen gemeinsamen Puffer. **Achtung:** Der Geometriecode ersetzt den Wert `0` durch 15 cm. |
+| [ ] | Wickelzugabe links und rechts einstellen | Nein | Ja | (`input-winding-allowance-left/right`, 0–200 mm, Standard 0 mm) Verlängern den effektiven Vorlauf (`leadInMm`) bzw. Nachlauf (`leadOutMm`) und damit die Gesamtlänge `lTotalMm`; gedacht für Papier, das auf den Walzen aufgewickelt bleibt. |
+| [ ] | Papiergrammatur einstellen | Nein | Ja | (`input-paper-grammage`, 60–250 g/m², Standard 80 g/m²) Rein deklarativer Parameter; wird als Näherung für die Papierdicke an das CAD-Modul weitergegeben und beeinflusst dort den berechneten Rollendurchmesser. |
 | [ ] | Automatisch berechnete Monatsbreite, Tagesfeldhöhe und Rollenlänge ablesen | Ja | Ja | Bei Standardmaßen 14 cm, 1 cm im einspaltigen oder ca. 1,88 cm im zweispaltigen Layout sowie 226 cm; die Rollenlänge bleibt layoutunabhängig. |
 | [ ] | Inhalt des linken Vorlaufs auswählen | Nein | Teilw. | Vorschau: Montagebereich, Titel, Jahresübersicht oder Notiz-/To-do-Bereich. PDF berücksichtigt nur Titel oder Montagebeschriftung; SVG nur Montagebeschriftung. |
 | [ ] | Eigenen Titel für den Vorlauf eingeben | Nein | Teilw. | In Vorschau und PDF bei Auswahl „Großer Kalendertitel“; nicht im SVG. |
@@ -119,6 +121,7 @@ Die Exporte werden aus dem aktuellen Stand erzeugt. Vorschau, PDF, SVG und PNG v
 | Noch benötigt? | Funktion | README | Webseite | Details / Einschränkungen |
 |---|---|---|---|---|
 | [ ] | Rollen-PDF für Plotter herunterladen | Ja | Ja | Vektor-PDF `Rollkalender-[Jahr].pdf` mit deutschem Kalendarium und eingebetteter Schrift; benötigt jsPDF. |
+| [ ] | Schnittmarken-Stil wählen | Nein | Ja | (`select-crop-mark-style`: `none` / `corners` / `lines`) Ersetzt den binären Schalter `showCropMarks`. `corners` zeichnet L-förmige Ecken, `lines` gestrichelte Vollbreitenlinien an Vorlauf- und Nachlaufkante; gilt für Canvas-Vorschau, PDF und SVG. |
 | [ ] | Geschätzten Schwarz- und Farbauftrag der ganzen Rolle anzeigen und Farbdeckung reduzieren | Nein | Ja | Statusleiste: K und summiertes C+M+Y aus einer verkleinerten RGB-Renderung; im Tab „Erscheinung“ lassen sich Änderungsvorschläge vergleichen und einzeln anwenden. Ohne Druckerprofil keine verbindliche Verbrauchs- oder Preisangabe. |
 | [ ] | Rollen-SVG herunterladen | Nein | Ja | `Rollkalender-[Jahr].svg`; verwendet einen eigenen Renderer und übernimmt nicht alle Vorschau-Einstellungen. |
 | [ ] | Rollen-PNG herunterladen | Nein | Teilw. | Als „300 DPI“ angeboten und aus der Rollenansicht gerendert. Das rote Sichtfenster wird mitgezeichnet; die tatsächliche Pixelgröße hängt auch vom Geräte-Pixelverhältnis ab. |
@@ -135,3 +138,24 @@ Diese Handlungen gehören zum in der README beschriebenen Gesamtkonzept, sind ab
 | [ ] | Papierbanner drucken und in den Rahmen einsetzen | Ja | Nein | Physischer Druck und Montage erfolgen außerhalb der Webanwendung. |
 | [ ] | Papierrolle auf- und abwickeln | Ja | Nein | Physische Walzen bewegen das Banner über die Schreibplatte; die Webseite simuliert das Drei-Monats-Fenster. |
 | [ ] | Termine handschriftlich auf dem Kalender notieren | Ja | Nein | Geschieht auf dem gedruckten Banner; die digitalen Termine der Webseite sind davon unabhängig. |
+
+## 9. CAD-Toleranzparameter
+
+Diese Einstellungen steuern die Passungsberechnung im CAD-Modul und haben keinen Einfluss auf den Kalender-Export.
+
+| Noch benötigt? | Funktion | README | Webseite | Details / Einschränkungen |
+|---|---|---|---|---|
+| [ ] | Sackloch-Bohrspiel einstellen | Nein | Ja | (`blindHoleClearanceMm`, CAD-Gruppe 4) Zusätzliche Bohrtoleranz für die Stabaufnahme; bei Wert > 0 wird der empfohlene Bohrdurchmesser in der BOM ausgegeben. |
+| [ ] | Stab-Axialspiel einstellen | Nein | Ja | (`rodAxialPlayMm`, CAD-Gruppe 4) Spielraum des Rundstabs in Längsrichtung; beeinflusst die Mindestlänge der Stababschnitte. |
+| [ ] | Mindest-Restspalt-Warnschwelle einstellen | Nein | Ja | (`minSideGapMm`, CAD-Gruppe 3) Auslöser für eine Kollisionswarnung, wenn der seitliche Abstand zwischen Papierbahn und Stab die angegebene Schwelle unterschreitet. |
+
+## 10. Rendering-Optimierungen (intern)
+
+Diese Maßnahmen sind für den Endnutzer nicht direkt sichtbar, verbessern jedoch die Reaktionsgeschwindigkeit der Anwendung.
+
+| Maßnahme | Beschreibung |
+|---|---|
+| `requestAnimationFrame`-Guard für Kalender-Vorschau | `scheduleRenderPreview()` unterdrückt überflüssige Neuzeichnungen zwischen zwei Bildschirm-Refreshes; insbesondere bei schnell aufeinanderfolgenden Slider-Ereignissen. |
+| Debounce für Farbdeckungsanalyse (400 ms) | `scheduleCoverageStatus()` verzögert die aufwändige Offscreen-Pixelanalyse, die mit `updateCoverageStatus()` den gesamten 14-Monats-Canvas auswertet. |
+| Debounce für Folgejahres-URL (250 ms) | `scheduleNextYearLink()` serialisiert die Einstellungen erst nach einer Pause, um unnötige URL-Berechnungen beim Tippen zu vermeiden. |
+| `requestAnimationFrame`-Guard für CAD-Zeichnung | `scheduleUpdate()` im CAD-Modul bündelt parallele Parameteränderungen zu einem einzigen Neuzeichenlauf. |
